@@ -7,19 +7,21 @@ class TourFlowSidebarItem {
     required this.label,
     required this.icon,
     required this.navigationIndex,
+    this.routeName,
   });
 
   final String label;
   final IconData icon;
   final int navigationIndex;
+  final String? routeName;
 }
 
 const List<TourFlowSidebarItem> userSidebarItems = [
-  TourFlowSidebarItem(label: 'Home', icon: Icons.home_outlined, navigationIndex: 0),
-  TourFlowSidebarItem(label: 'Discover Attractions', icon: Icons.explore_outlined, navigationIndex: 1),
-  TourFlowSidebarItem(label: 'My Trips & Bookings', icon: Icons.confirmation_num_outlined, navigationIndex: 2),
-  TourFlowSidebarItem(label: 'Chatbot & Support', icon: Icons.chat_bubble_outline_rounded, navigationIndex: 3),
-  TourFlowSidebarItem(label: 'My Profile', icon: Icons.person_outline_rounded, navigationIndex: 4),
+  TourFlowSidebarItem(label: 'Home', icon: Icons.home_outlined, navigationIndex: 0, routeName: '/user/home'),
+  TourFlowSidebarItem(label: 'Discover Attractions', icon: Icons.explore_outlined, navigationIndex: 1, routeName: '/attraction-discovery'),
+  TourFlowSidebarItem(label: 'My Trips & Bookings', icon: Icons.confirmation_num_outlined, navigationIndex: 2, routeName: '/user/trips'),
+  TourFlowSidebarItem(label: 'Chatbot & Support', icon: Icons.chat_bubble_outline_rounded, navigationIndex: 3, routeName: '/user/chat'),
+  TourFlowSidebarItem(label: 'My Profile', icon: Icons.person_outline_rounded, navigationIndex: 4, routeName: '/profile-security'),
 ];
 
 class TourFlowSidebar extends StatelessWidget {
@@ -30,7 +32,7 @@ class TourFlowSidebar extends StatelessWidget {
     required this.email,
     required this.items,
     required this.selectedIndex,
-    required this.onItemSelected,
+    this.onItemSelected,
     required this.onLogout,
     this.avatarUrl,
     super.key,
@@ -43,7 +45,7 @@ class TourFlowSidebar extends StatelessWidget {
   final String? avatarUrl;
   final List<TourFlowSidebarItem> items;
   final int selectedIndex;
-  final ValueChanged<int> onItemSelected;
+  final ValueChanged<int>? onItemSelected;
   final VoidCallback onLogout;
 
   @override
@@ -95,7 +97,12 @@ class TourFlowSidebar extends StatelessWidget {
                     ),
                     onTap: () {
                       Navigator.of(context).pop();
-                      onItemSelected(item.navigationIndex);
+                      final routeName = item.routeName;
+                      if (routeName != null) {
+                        Navigator.pushNamedAndRemoveUntil(context, routeName, (route) => false);
+                      } else {
+                        onItemSelected?.call(item.navigationIndex);
+                      }
                     },
                   );
                 },
@@ -215,7 +222,7 @@ class UserSidebar extends StatelessWidget {
     required this.displayName,
     required this.email,
     required this.selectedIndex,
-    required this.onItemSelected,
+    this.onItemSelected,
     required this.onLogout,
     this.avatarUrl,
     super.key,
@@ -225,7 +232,7 @@ class UserSidebar extends StatelessWidget {
   final String email;
   final String? avatarUrl;
   final int selectedIndex;
-  final ValueChanged<int> onItemSelected;
+  final ValueChanged<int>? onItemSelected;
   final VoidCallback onLogout;
 
   @override

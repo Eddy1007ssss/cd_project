@@ -14,10 +14,10 @@ class UserHomePage extends StatelessWidget {
 
   static const List<String> _navigationRoutes = [
     '/user/home',
-    '/user/discover',
+    '/attraction-discovery',
     '/user/trips',
     '/user/chat',
-    '/user/profile',
+    '/profile-security',
   ];
 
   void _changePage(BuildContext context, int index) {
@@ -29,7 +29,7 @@ class UserHomePage extends StatelessWidget {
   }
 
   void _logout(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/sign-in', (route) => false);
   }
 
   @override

@@ -15,32 +15,34 @@ class TourFlowNavigationItem {
     required this.label,
     required this.icon,
     required this.selectedIcon,
+    this.routeName,
   });
 
   final String label;
   final IconData icon;
   final IconData selectedIcon;
+  final String? routeName;
 }
 
 const List<TourFlowNavigationItem> userNavigationItems = [
-  TourFlowNavigationItem(label: 'Home', icon: Icons.home_outlined, selectedIcon: Icons.home_rounded),
-  TourFlowNavigationItem(label: 'Discover', icon: Icons.explore_outlined, selectedIcon: Icons.explore_rounded),
-  TourFlowNavigationItem(label: 'Trips', icon: Icons.confirmation_num_outlined, selectedIcon: Icons.confirmation_num_rounded),
-  TourFlowNavigationItem(label: 'Chat', icon: Icons.chat_bubble_outline_rounded, selectedIcon: Icons.chat_bubble_rounded),
-  TourFlowNavigationItem(label: 'Profile', icon: Icons.person_outline_rounded, selectedIcon: Icons.person_rounded),
+  TourFlowNavigationItem(label: 'Home', icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, routeName: '/user/home'),
+  TourFlowNavigationItem(label: 'Discover', icon: Icons.explore_outlined, selectedIcon: Icons.explore_rounded, routeName: '/attraction-discovery'),
+  TourFlowNavigationItem(label: 'Trips', icon: Icons.confirmation_num_outlined, selectedIcon: Icons.confirmation_num_rounded, routeName: '/user/trips'),
+  TourFlowNavigationItem(label: 'Chat', icon: Icons.chat_bubble_outline_rounded, selectedIcon: Icons.chat_bubble_rounded, routeName: '/user/chat'),
+  TourFlowNavigationItem(label: 'Profile', icon: Icons.person_outline_rounded, selectedIcon: Icons.person_rounded, routeName: '/profile-security'),
 ];
 
 class TourFlowBottomNavigationBar extends StatelessWidget {
   const TourFlowBottomNavigationBar({
     required this.items,
     required this.selectedIndex,
-    required this.onItemSelected,
+    this.onItemSelected,
     super.key,
   });
 
   final List<TourFlowNavigationItem> items;
   final int selectedIndex;
-  final ValueChanged<int> onItemSelected;
+  final ValueChanged<int>? onItemSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +68,16 @@ class TourFlowBottomNavigationBar extends StatelessWidget {
                 child: _NavigationButton(
                   item: items[index],
                   isSelected: index == selectedIndex,
-                  onTap: () => onItemSelected(index),
+                  onTap: () {
+                    final routeName = items[index].routeName;
+                    if (routeName != null) {
+                      if (ModalRoute.of(context)?.settings.name != routeName) {
+                        Navigator.pushNamedAndRemoveUntil(context, routeName, (route) => false);
+                      }
+                      return;
+                    }
+                    onItemSelected?.call(index);
+                  },
                 ),
               ),
             ),
@@ -134,12 +145,12 @@ class _NavigationButton extends StatelessWidget {
 class UserBottomNavigationBar extends StatelessWidget {
   const UserBottomNavigationBar({
     required this.selectedIndex,
-    required this.onItemSelected,
+    this.onItemSelected,
     super.key,
   });
 
   final int selectedIndex;
-  final ValueChanged<int> onItemSelected;
+  final ValueChanged<int>? onItemSelected;
 
   @override
   Widget build(BuildContext context) {
