@@ -23,7 +23,7 @@ class _AttractionConfigurationPageState
       title: 'Attraction Configuration',
       role: 'TOURFLOW · OPERATOR',
       isStaff: true,
-      selectedNavigationIndex: 0,
+      selectedNavigationIndex: 1,
       child: Column(
         children: [
           const ModuleCard(

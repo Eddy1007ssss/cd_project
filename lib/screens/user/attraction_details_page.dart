@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import '../../widgets/navigation/user_sidebar.dart';
 import 'smart_recommendations_page.dart';
+import 'time_slot_selection_page.dart';
 
 class AttractionDetailsPage extends StatelessWidget {
   const AttractionDetailsPage({super.key});
 
-  static const routeName = '/attraction-details';
+  static const routeName = '/user/attraction-details';
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +89,7 @@ class AttractionDetailsPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Available visit slots', style: TextStyle(color: Color(0xFF131B2E), fontSize: 18, fontWeight: FontWeight.w700)),
-                  TextButton(onPressed: () {}, child: const Text('See all')),
+                  TextButton(onPressed: () => Navigator.pushNamed(context, TimeSlotSelectionPage.routeName), child: const Text('See all')),
                 ],
               ),
               const _SlotTile(time: '10:00 – 11:30', remaining: '12 spaces left', crowd: 'Moderate'),
@@ -108,7 +109,7 @@ class AttractionDetailsPage extends StatelessWidget {
                 width: double.infinity,
                 height: 52,
                 child: FilledButton.icon(
-                  onPressed: () {},
+                  onPressed: () => Navigator.pushNamed(context, TimeSlotSelectionPage.routeName),
                   icon: const Icon(Icons.confirmation_num_outlined),
                   label: const Text('Choose a Visit Slot'),
                   style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFD08B), foregroundColor: const Color(0xFF79571E)),

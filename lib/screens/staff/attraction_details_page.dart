@@ -14,7 +14,7 @@ class AttractionDetailsPage extends StatelessWidget {
       title: 'Attraction Details',
       role: 'TOURFLOW · OPERATOR',
       isStaff: true,
-      selectedNavigationIndex: 0,
+      selectedNavigationIndex: 1,
       child: Column(
         children: [
           const ModuleCard(

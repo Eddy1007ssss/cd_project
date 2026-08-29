@@ -3,11 +3,36 @@ import 'package:flutter/material.dart';
 import 'user_sidebar.dart';
 
 const List<TourFlowSidebarItem> staffSidebarItems = [
-  TourFlowSidebarItem(label: 'Staff Dashboard', icon: Icons.dashboard_outlined, navigationIndex: 0),
-  TourFlowSidebarItem(label: 'Scan Visitor QR', icon: Icons.qr_code_scanner_rounded, navigationIndex: 1),
-  TourFlowSidebarItem(label: 'Visitor Records', icon: Icons.groups_outlined, navigationIndex: 2),
-  TourFlowSidebarItem(label: 'Crowd Alerts', icon: Icons.notifications_none_rounded, navigationIndex: 3),
-  TourFlowSidebarItem(label: 'Staff Profile', icon: Icons.badge_outlined, navigationIndex: 4),
+  TourFlowSidebarItem(
+    label: 'Operator Dashboard',
+    icon: Icons.dashboard_outlined,
+    navigationIndex: 0,
+    routeName: '/operator-dashboard',
+  ),
+  TourFlowSidebarItem(
+    label: 'Attraction Details',
+    icon: Icons.attractions_outlined,
+    navigationIndex: 1,
+    routeName: '/attraction-details',
+  ),
+  TourFlowSidebarItem(
+    label: 'Slot Manager',
+    icon: Icons.event_available_outlined,
+    navigationIndex: 2,
+    routeName: '/slot-manager',
+  ),
+  TourFlowSidebarItem(
+    label: 'User Management',
+    icon: Icons.manage_accounts_outlined,
+    navigationIndex: 3,
+    routeName: '/admin-user-management',
+  ),
+  TourFlowSidebarItem(
+    label: 'Attraction Review',
+    icon: Icons.fact_check_outlined,
+    navigationIndex: 4,
+    routeName: '/admin-attraction-review',
+  ),
 ];
 
 class StaffSidebar extends StatelessWidget {

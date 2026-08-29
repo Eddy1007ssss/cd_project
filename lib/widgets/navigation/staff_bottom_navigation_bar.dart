@@ -3,11 +3,36 @@ import 'package:flutter/material.dart';
 import 'user_bottom_navigation_bar.dart';
 
 const List<TourFlowNavigationItem> staffNavigationItems = [
-  TourFlowNavigationItem(label: 'Dashboard', icon: Icons.dashboard_outlined, selectedIcon: Icons.dashboard_rounded),
-  TourFlowNavigationItem(label: 'Scan', icon: Icons.qr_code_scanner_outlined, selectedIcon: Icons.qr_code_scanner_rounded),
-  TourFlowNavigationItem(label: 'Visitors', icon: Icons.groups_outlined, selectedIcon: Icons.groups_rounded),
-  TourFlowNavigationItem(label: 'Alerts', icon: Icons.notifications_none_rounded, selectedIcon: Icons.notifications_rounded),
-  TourFlowNavigationItem(label: 'Profile', icon: Icons.person_outline_rounded, selectedIcon: Icons.person_rounded),
+  TourFlowNavigationItem(
+    label: 'Dashboard',
+    icon: Icons.dashboard_outlined,
+    selectedIcon: Icons.dashboard_rounded,
+    routeName: '/operator-dashboard',
+  ),
+  TourFlowNavigationItem(
+    label: 'Attractions',
+    icon: Icons.attractions_outlined,
+    selectedIcon: Icons.attractions_rounded,
+    routeName: '/attraction-details',
+  ),
+  TourFlowNavigationItem(
+    label: 'Slots',
+    icon: Icons.event_available_outlined,
+    selectedIcon: Icons.event_available_rounded,
+    routeName: '/slot-manager',
+  ),
+  TourFlowNavigationItem(
+    label: 'Users',
+    icon: Icons.manage_accounts_outlined,
+    selectedIcon: Icons.manage_accounts_rounded,
+    routeName: '/admin-user-management',
+  ),
+  TourFlowNavigationItem(
+    label: 'Reviews',
+    icon: Icons.fact_check_outlined,
+    selectedIcon: Icons.fact_check_rounded,
+    routeName: '/admin-attraction-review',
+  ),
 ];
 
 class StaffBottomNavigationBar extends StatelessWidget {
