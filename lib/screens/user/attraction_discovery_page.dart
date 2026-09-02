@@ -5,6 +5,8 @@ import '../../widgets/navigation/user_sidebar.dart';
 import 'attraction_details_page.dart';
 import 'nearby_attractions_page.dart';
 import 'smart_recommendations_page.dart';
+import '../../models/attraction.dart';
+import '../../services/attraction_service.dart';
 
 class AttractionDiscoveryPage extends StatefulWidget {
   const AttractionDiscoveryPage({super.key});
@@ -18,6 +20,39 @@ class AttractionDiscoveryPage extends StatefulWidget {
 
 class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
   int _selectedCategory = 0;
+  final AttractionService _attractionService = AttractionService();
+  late Future<List<Attraction>> _attractionsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _attractionsFuture = _attractionService.getApprovedAttractions();
+  }
+
+  IconData _iconForCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'nature':
+        return Icons.local_florist_rounded;
+      case 'history':
+        return Icons.account_balance_rounded;
+      case 'food & culture':
+        return Icons.directions_walk_rounded;
+      default:
+        return Icons.place_rounded;
+    }
+  }
+
+  Color _colorForCrowdLevel(String crowdLevel) {
+    switch (crowdLevel.toLowerCase()) {
+      case 'low':
+        return const Color(0xFF16A34A);
+      case 'high':
+        return const Color(0xFFF59E0B);
+      default:
+        return const Color(0xFF65A30D);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -192,49 +227,57 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                 ],
               ),
               const SizedBox(height: 10),
-              _AttractionCard(
-                name: 'Old Town Square',
-                category: 'Historical Landmark',
-                location: 'Kuala Lumpur City Centre · 1.2 km',
-                rating: '4.9',
-                price: 'Free entry',
-                crowd: 'Moderate crowd',
-                crowdColor: const Color(0xFF65A30D),
-                icon: Icons.account_balance_rounded,
-                onTap: () => Navigator.pushNamed(
-                  context,
-                  AttractionDetailsPage.routeName,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _AttractionCard(
-                name: 'Lumina Botanical Gardens',
-                category: 'Nature & Photography',
-                location: 'Perdana Botanical Gardens · 2.8 km',
-                rating: '4.8',
-                price: 'From RM 12',
-                crowd: 'Low crowd',
-                crowdColor: const Color(0xFF16A34A),
-                icon: Icons.local_florist_rounded,
-                onTap: () => Navigator.pushNamed(
-                  context,
-                  AttractionDetailsPage.routeName,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _AttractionCard(
-                name: 'Heritage Walking Tour',
-                category: 'Guided Cultural Tour',
-                location: 'Merdeka Square · 3.1 km',
-                rating: '4.8',
-                price: 'From RM 35',
-                crowd: 'High crowd',
-                crowdColor: const Color(0xFFF59E0B),
-                icon: Icons.directions_walk_rounded,
-                onTap: () => Navigator.pushNamed(
-                  context,
-                  AttractionDetailsPage.routeName,
-                ),
+              FutureBuilder<List<Attraction>>(
+                future: _attractionsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Text('Error loading attractions: ${snapshot.error}'),
+                    );
+                  }
+
+                  final attractions = snapshot.data ?? [];
+
+                  if (attractions.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Text('No attractions available yet.'),
+                    );
+                  }
+
+                  return Column(
+                    children: attractions.map((attraction) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _AttractionCard(
+                          name: attraction.name,
+                          category: attraction.category,
+                          location: attraction.location,
+                          rating: attraction.rating.toString(),
+                          price: attraction.price == 0
+                              ? 'Free entry'
+                              : 'From RM ${attraction.price.toStringAsFixed(0)}',
+                          crowd: '${attraction.crowdLevel} crowd',
+                          crowdColor: _colorForCrowdLevel(attraction.crowdLevel),
+                          icon: _iconForCategory(attraction.category),
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AttractionDetailsPage.routeName,
+                            arguments: attraction.id,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
               ),
             ],
           ),
