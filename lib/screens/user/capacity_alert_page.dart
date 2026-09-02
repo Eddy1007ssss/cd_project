@@ -160,8 +160,6 @@ class CapacityAlertPage extends StatelessWidget {
                   height: 48,
                   child: FilledButton.icon(
                     onPressed: () {
-                      // Capacity Alert 是从 QR page 进来的，
-                      // 所以直接回上一页最适合。
                       Navigator.pop(context);
                     },
                     style: FilledButton.styleFrom(
@@ -196,18 +194,10 @@ class CapacityAlertPage extends StatelessWidget {
                   height: 48,
                   child: FilledButton.icon(
                     onPressed: () {
-                      // 下一步做好 Geofence page 后，
-                      // 再把这里连接到 GeofencePage。
-
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Geofence page will be added next.',
-                            ),
-                          ),
-                        );
+                      Navigator.pushNamed(
+                        context,
+                        '/geofence',
+                      );
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFFFCD84),

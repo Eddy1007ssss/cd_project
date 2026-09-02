@@ -137,12 +137,20 @@ class OperatorDashboardPage extends StatelessWidget {
           // =========================
           Row(
             children: [
-              const Expanded(
-                child: MetricCard(
-                  label: 'Average Rating',
-                  value: '4.9 / 5.0',
-                  icon: Icons.star_outline_rounded,
-                  note: '+0.2 this month',
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/operator-feedback',
+                    );
+                  },
+                  child: const MetricCard(
+                    label: 'Average Rating',
+                    value: '4.9 / 5.0',
+                    icon: Icons.star_outline_rounded,
+                    note: '+0.2 this month',
+                  ),
                 ),
               ),
 
