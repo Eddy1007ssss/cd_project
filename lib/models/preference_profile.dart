@@ -1,88 +1,66 @@
 class PreferenceProfile {
-  final String touristId;
-  final List<String> interestedCategories; // e.g. ['Nature', 'Culture', 'Adventure']
-  final double minBudget;
-  final double maxBudget;
-  final double preferredDistanceKm;
-  final String crowdTolerance; // 'Low', 'Medium', 'High'
-  final bool needsAccessibility;
-  final String environmentPreference; // 'Indoor', 'Outdoor', 'Both'
-  final String travellingType; // 'Solo', 'Family', 'Group', 'Couple'
-  final DateTime? updatedAt;
-
-  PreferenceProfile({
+  const PreferenceProfile({
     required this.touristId,
-    required this.interestedCategories,
-    required this.minBudget,
-    required this.maxBudget,
-    required this.preferredDistanceKm,
-    required this.crowdTolerance,
-    required this.needsAccessibility,
-    required this.environmentPreference,
-    required this.travellingType,
-    this.updatedAt,
+    this.interests = const [],
+    this.maxBudgetMyr,
+    this.preferredLocation,
+    this.preferredLatitude,
+    this.preferredLongitude,
+    this.travelRadiusKm = 10,
+    this.preferredCrowdLevel = 'moderate',
+    this.preferredVisitStart = '09:00',
+    this.preferredVisitEnd = '17:00',
+    this.requiredFacilities = const [],
   });
 
-  factory PreferenceProfile.fromMap(Map<String, dynamic> map) {
-    return PreferenceProfile(
-      touristId: map['tourist_id'] as String,
-      interestedCategories: (map['interested_categories'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
-      minBudget: (map['min_budget'] as num?)?.toDouble() ?? 0.0,
-      maxBudget: (map['max_budget'] as num?)?.toDouble() ?? 0.0,
-      preferredDistanceKm:
-      (map['preferred_distance_km'] as num?)?.toDouble() ?? 0.0,
-      crowdTolerance: map['crowd_tolerance'] as String? ?? 'Medium',
-      needsAccessibility: map['needs_accessibility'] as bool? ?? false,
-      environmentPreference: map['environment_preference'] as String? ?? 'Both',
-      travellingType: map['travelling_type'] as String? ?? 'Solo',
-      updatedAt: map['updated_at'] != null
-          ? DateTime.tryParse(map['updated_at'] as String)
-          : null,
-    );
-  }
+  final String touristId;
+  final List<String> interests;
+  final double? maxBudgetMyr;
+  final String? preferredLocation;
+  final double? preferredLatitude;
+  final double? preferredLongitude;
+  final double travelRadiusKm;
+  final String preferredCrowdLevel;
+  final String preferredVisitStart;
+  final String preferredVisitEnd;
+  final List<String> requiredFacilities;
 
-  Map<String, dynamic> toMap() {
-    return {
-      'tourist_id': touristId,
-      'interested_categories': interestedCategories,
-      'min_budget': minBudget,
-      'max_budget': maxBudget,
-      'preferred_distance_km': preferredDistanceKm,
-      'crowd_tolerance': crowdTolerance,
-      'needs_accessibility': needsAccessibility,
-      'environment_preference': environmentPreference,
-      'travelling_type': travellingType,
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-  }
+  factory PreferenceProfile.fromMap(Map<String, dynamic> map) =>
+      PreferenceProfile(
+        touristId: map['tourist_id'] as String,
+        interests: ((map['interests'] as List?) ?? const [])
+            .map((value) => value.toString())
+            .toList(),
+        maxBudgetMyr: (map['max_budget_myr'] as num?)?.toDouble(),
+        preferredLocation: map['preferred_location'] as String?,
+        preferredLatitude: (map['preferred_latitude'] as num?)?.toDouble(),
+        preferredLongitude: (map['preferred_longitude'] as num?)?.toDouble(),
+        travelRadiusKm: (map['travel_radius_km'] as num?)?.toDouble() ?? 10,
+        preferredCrowdLevel:
+            map['preferred_crowd_level'] as String? ?? 'moderate',
+        preferredVisitStart:
+            _shortTime(map['preferred_visit_start'] as String?) ?? '09:00',
+        preferredVisitEnd:
+            _shortTime(map['preferred_visit_end'] as String?) ?? '17:00',
+        requiredFacilities: ((map['required_facilities'] as List?) ?? const [])
+            .map((value) => value.toString())
+            .toList(),
+      );
 
-  // Helpful for the "Update Preference Profile" screen (UC-M2-05):
-  // create a copy with only some fields changed
-  PreferenceProfile copyWith({
-    List<String>? interestedCategories,
-    double? minBudget,
-    double? maxBudget,
-    double? preferredDistanceKm,
-    String? crowdTolerance,
-    bool? needsAccessibility,
-    String? environmentPreference,
-    String? travellingType,
-  }) {
-    return PreferenceProfile(
-      touristId: touristId,
-      interestedCategories: interestedCategories ?? this.interestedCategories,
-      minBudget: minBudget ?? this.minBudget,
-      maxBudget: maxBudget ?? this.maxBudget,
-      preferredDistanceKm: preferredDistanceKm ?? this.preferredDistanceKm,
-      crowdTolerance: crowdTolerance ?? this.crowdTolerance,
-      needsAccessibility: needsAccessibility ?? this.needsAccessibility,
-      environmentPreference:
-      environmentPreference ?? this.environmentPreference,
-      travellingType: travellingType ?? this.travellingType,
-      updatedAt: DateTime.now(),
-    );
-  }
+  Map<String, dynamic> toMap() => {
+    'tourist_id': touristId,
+    'interests': interests,
+    'max_budget_myr': maxBudgetMyr,
+    'preferred_location': preferredLocation,
+    'preferred_latitude': preferredLatitude,
+    'preferred_longitude': preferredLongitude,
+    'travel_radius_km': travelRadiusKm,
+    'preferred_crowd_level': preferredCrowdLevel,
+    'preferred_visit_start': preferredVisitStart,
+    'preferred_visit_end': preferredVisitEnd,
+    'required_facilities': requiredFacilities,
+  };
+
+  static String? _shortTime(String? value) =>
+      value?.substring(0, value.length >= 5 ? 5 : value.length);
 }
