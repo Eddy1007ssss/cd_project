@@ -17,6 +17,7 @@ import 'screens/user/attraction_details_page.dart' as user;
 import 'screens/user/attraction_discovery_page.dart';
 import 'screens/user/booking_confirmation_page.dart';
 import 'screens/user/booking_history_page.dart';
+import 'screens/user/booking_review_page.dart';
 import 'screens/user/chat_history_page.dart';
 import 'screens/user/chat_support_page.dart';
 import 'screens/user/itinerary_planner_page.dart';
@@ -76,6 +77,7 @@ class MyApp extends StatelessWidget {
         SmartRecommendationsPage.routeName: (_) => const SmartRecommendationsPage(),
         NearbyAttractionsPage.routeName: (_) => const NearbyAttractionsPage(),
         TimeSlotSelectionPage.routeName: (_) => const TimeSlotSelectionPage(),
+        BookingReviewPage.routeName: (_) => const BookingReviewPage(),
         BookingConfirmationPage.routeName: (_) => const BookingConfirmationPage(),
         BookingHistoryPage.routeName: (_) => const BookingHistoryPage(),
         CapacityAlertPage.routeName: (_) => const CapacityAlertPage(),

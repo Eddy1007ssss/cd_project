@@ -1,30 +1,42 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:cd_project/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cd_project/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('sign-in presents every supported role', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Tourist'), findsOneWidget);
+    expect(find.text('Operator'), findsOneWidget);
+    expect(find.text('Staff'), findsOneWidget);
+    expect(find.text('Admin'), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('sign-in requires credentials before role routing', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.text('Admin'));
     await tester.pump();
+    await tester.ensureVisible(find.text('Sign In'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sign In'));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Enter your email address and password.'), findsOneWidget);
+  });
+
+  testWidgets('tourist registration defaults to Malaysia calling code', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.ensureVisible(find.text('Create Tourist Account'));
+    await tester.tap(find.text('Create Tourist Account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('MY +60'), findsOneWidget);
+    expect(find.text('Phone Number'), findsOneWidget);
   });
 }

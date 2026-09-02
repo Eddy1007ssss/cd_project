@@ -85,63 +85,183 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
             ),
           ),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Operator Verification Requests',
-                style: TextStyle(
-                  color: TourFlowColors.heading,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.filter_list_rounded, size: 17),
-                label: const Text('Filter'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _OperatorRequestCard(
-            initials: 'MS',
-            name: 'Marco Santoro',
-            business: 'Santoro Cultural Experiences',
-            submitted: 'Submitted 2 hours ago',
-            onReview: () {},
-          ),
-          const SizedBox(height: 12),
-          _OperatorRequestCard(
-            initials: 'AL',
-            name: 'Alyssa Lim',
-            business: 'KL Heritage Walks Sdn. Bhd.',
-            submitted: 'Submitted yesterday',
-            onReview: () {},
-          ),
-          const SizedBox(height: 12),
-          _OperatorRequestCard(
-            initials: 'RK',
-            name: 'Raj Kumar',
-            business: 'Eco Nature Adventures',
-            submitted: 'Submitted 2 days ago',
-            onReview: () {},
-          ),
-          const SizedBox(height: 20),
-          PrimaryButton(
-            label: 'Review Pending Attraction',
-            icon: Icons.fact_check_outlined,
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                AdminAttractionReviewPage.routeName,
-              );
-            },
-          ),
+          _buildSelectedTab(context),
         ],
       ),
     );
   }
+
+  Widget _buildSelectedTab(BuildContext context) {
+    if (_selectedTab == 1) {
+      return const Column(
+        children: [
+          _AccountCard(
+            initials: 'AT',
+            name: 'Alex Thompson',
+            detail: 'Tourist · alex.thompson@tourflow.com',
+            status: 'ACTIVE',
+            actionLabel: 'Deactivate',
+            actionIcon: Icons.person_off_outlined,
+          ),
+          SizedBox(height: 12),
+          _AccountCard(
+            initials: 'LH',
+            name: 'Lim Hui Min',
+            detail: 'Operator · lim@heritage.my',
+            status: 'ACTIVE',
+            actionLabel: 'Deactivate',
+            actionIcon: Icons.person_off_outlined,
+          ),
+        ],
+      );
+    }
+    if (_selectedTab == 2) {
+      return const Column(
+        children: [
+          _AccountCard(
+            initials: 'JD',
+            name: 'Jordan David',
+            detail: 'Tourist · Deactivated 18 Aug 2026',
+            status: 'DEACTIVATED',
+            actionLabel: 'Reactivate',
+            actionIcon: Icons.person_add_alt_1_rounded,
+          ),
+        ],
+      );
+    }
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Operator Verification Requests',
+              style: TextStyle(
+                color: TourFlowColors.heading,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.filter_list_rounded, size: 17),
+              label: const Text('Filter'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        _OperatorRequestCard(
+          initials: 'MS',
+          name: 'Marco Santoro',
+          business: 'Santoro Cultural Experiences',
+          submitted: 'Submitted 2 hours ago',
+          onReview: () => _showOperatorReview('Marco Santoro'),
+        ),
+        const SizedBox(height: 12),
+        _OperatorRequestCard(
+          initials: 'AL',
+          name: 'Alyssa Lim',
+          business: 'KL Heritage Walks Sdn. Bhd.',
+          submitted: 'Submitted yesterday',
+          onReview: () => _showOperatorReview('Alyssa Lim'),
+        ),
+        const SizedBox(height: 20),
+        PrimaryButton(
+          label: 'Review Pending Attraction',
+          icon: Icons.fact_check_outlined,
+          onPressed: () =>
+              Navigator.pushNamed(context, AdminAttractionReviewPage.routeName),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showOperatorReview(String applicant) => showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text('Review $applicant'),
+      content: const Text(
+        'Business details and supporting documents are ready for administrator review.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Reject'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Approve'),
+        ),
+      ],
+    ),
+  );
+}
+
+class _AccountCard extends StatelessWidget {
+  const _AccountCard({
+    required this.initials,
+    required this.name,
+    required this.detail,
+    required this.status,
+    required this.actionLabel,
+    required this.actionIcon,
+  });
+
+  final String initials;
+  final String name;
+  final String detail;
+  final String status;
+  final String actionLabel;
+  final IconData actionIcon;
+
+  @override
+  Widget build(BuildContext context) => ModuleCard(
+    child: Column(
+      children: [
+        Row(
+          children: [
+            CircleAvatar(child: Text(initials)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    detail,
+                    style: const TextStyle(
+                      color: TourFlowColors.muted,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            StatusChip(
+              label: status,
+              color: status == 'ACTIVE'
+                  ? TourFlowColors.success
+                  : TourFlowColors.danger,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$name: $actionLabel selected.')),
+            ),
+            icon: Icon(actionIcon),
+            label: Text(actionLabel),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _TabButton extends StatelessWidget {
@@ -240,10 +360,7 @@ class _OperatorRequestCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const StatusChip(
-                label: 'PENDING',
-                color: TourFlowColors.warning,
-              ),
+              const StatusChip(label: 'PENDING', color: TourFlowColors.warning),
             ],
           ),
           const SizedBox(height: 12),

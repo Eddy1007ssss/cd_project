@@ -1,11 +1,17 @@
 import 'package:cd_project/screens/user/user_home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../models/user_profile.dart';
+import '../../repositories/auth_repository.dart';
 import '../../widgets/tourflow_widgets.dart';
+import '../staff/admin_user_management_page.dart';
 import '../staff/operator_dashboard_page.dart';
 import '../staff/operator_registration_page.dart';
-import 'profile_security_page.dart';
+import '../staff/operator_qr_scanner_page.dart';
 import 'tourist_registration_page.dart';
+
+enum _DemoRole { tourist, operator, staff, administrator }
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -17,8 +23,79 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
-  bool _operator = false;
+  _DemoRole _role = _DemoRole.tourist;
   bool _showPassword = false;
+  bool _isSubmitting = false;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  AuthRepository get _authRepository => AuthRepository();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signIn() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Enter your email address and password.');
+      return;
+    }
+    setState(() => _isSubmitting = true);
+    try {
+      final profile = await _authRepository.signIn(
+        email: email,
+        password: password,
+      );
+      if (!profile.isActive) {
+        await _authRepository.signOut();
+        throw const AuthException('This account has been deactivated.');
+      }
+      if (profile.role.name != _role.name) {
+        await _authRepository.signOut();
+        throw AuthException(
+          'This account is registered as ${profile.role.name}, not ${_role.name}.',
+        );
+      }
+      if (!mounted) return;
+      final routeName = switch (profile.role) {
+        UserRole.tourist => UserHomePage.routeName,
+        UserRole.operator => OperatorDashboardPage.routeName,
+        UserRole.staff => OperatorQrScannerPage.routeName,
+        UserRole.administrator => AdminUserManagementPage.routeName,
+      };
+      Navigator.pushNamedAndRemoveUntil(context, routeName, (route) => false);
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } catch (_) {
+      if (mounted) _showMessage('Unable to sign in. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _sendPasswordReset() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showMessage('Enter your email address first.');
+      return;
+    }
+    try {
+      await _authRepository.sendPasswordReset(email);
+      if (mounted) _showMessage('Password reset link sent to $email.');
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,65 +205,88 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    SegmentedButton<bool>(
-                      segments: const [
-                        ButtonSegment(
-                          value: false,
-                          icon: Icon(Icons.person_outline),
-                          label: Text('Tourist'),
-                        ),
-                        ButtonSegment(
-                          value: true,
-                          icon: Icon(Icons.business_outlined),
-                          label: Text('Operator'),
-                        ),
-                      ],
-                      selected: {_operator},
-                      onSelectionChanged: (value) {
-                        setState(() => _operator = value.first);
-                      },
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SegmentedButton<_DemoRole>(
+                        segments: const [
+                          ButtonSegment(
+                            value: _DemoRole.tourist,
+                            icon: Icon(Icons.person_outline),
+                            label: Text('Tourist'),
+                          ),
+                          ButtonSegment(
+                            value: _DemoRole.operator,
+                            icon: Icon(Icons.business_outlined),
+                            label: Text('Operator'),
+                          ),
+                          ButtonSegment(
+                            value: _DemoRole.staff,
+                            icon: Icon(Icons.badge_outlined),
+                            label: Text('Staff'),
+                          ),
+                          ButtonSegment(
+                            value: _DemoRole.administrator,
+                            icon: Icon(Icons.admin_panel_settings_outlined),
+                            label: Text('Admin'),
+                          ),
+                        ],
+                        selected: {_role},
+                        showSelectedIcon: false,
+                        onSelectionChanged: (value) {
+                          setState(() => _role = value.first);
+                        },
+                      ),
                     ),
                     const SizedBox(height: 18),
-                    const StaticField(
-                      label: 'Email Address',
-                      value: 'alex@example.com',
-                      icon: Icons.email_outlined,
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
+                      decoration: const InputDecoration(
+                        labelText: 'Email Address',
+                        hintText: 'name@example.com',
+                        prefixIcon: Icon(Icons.email_outlined),
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     const SizedBox(height: 14),
-                    StaticField(
-                      label: 'Password',
-                      value: _showPassword ? 'TourFlow123!' : '••••••••••',
-                      icon: Icons.lock_outline_rounded,
-                      trailing: IconButton(
-                        onPressed: () {
-                          setState(() => _showPassword = !_showPassword);
-                        },
-                        icon: Icon(
-                          _showPassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          size: 19,
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: !_showPassword,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.password],
+                      onSubmitted: (_) {
+                        if (!_isSubmitting) _signIn();
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        hintText: 'Enter your password',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          onPressed: () =>
+                              setState(() => _showPassword = !_showPassword),
+                          icon: Icon(
+                            _showPassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 19,
+                          ),
                         ),
                       ),
                     ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: _sendPasswordReset,
                         child: const Text('Forgot Password?'),
                       ),
                     ),
                     PrimaryButton(
-                      label: 'Sign In',
+                      label: _isSubmitting ? 'Signing In...' : 'Sign In',
                       icon: Icons.arrow_forward_rounded,
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          _operator
-                              ? OperatorDashboardPage.routeName
-                              : UserHomePage.routeName,
-                        );
-                      },
+                      onPressed: _isSubmitting ? () {} : _signIn,
                     ),
                   ],
                 ),
@@ -202,23 +302,43 @@ class _SignInPageState extends State<SignInPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlineActionButton(
-                  label: _operator
-                      ? 'Register as Attraction Operator'
-                      : 'Create Tourist Account',
-                  icon: Icons.person_add_alt_1_rounded,
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      _operator
-                          ? OperatorRegistrationPage.routeName
-                          : TouristRegistrationPage.routeName,
-                    );
-                  },
+              if (_role == _DemoRole.tourist || _role == _DemoRole.operator)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlineActionButton(
+                    label: _role == _DemoRole.operator
+                        ? 'Register as Attraction Operator'
+                        : 'Create Tourist Account',
+                    icon: Icons.person_add_alt_1_rounded,
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        _role == _DemoRole.operator
+                            ? OperatorRegistrationPage.routeName
+                            : TouristRegistrationPage.routeName,
+                      );
+                    },
+                  ),
+                )
+              else
+                const ModuleCard(
+                  color: TourFlowColors.lavender,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.admin_panel_settings_outlined,
+                        color: TourFlowColors.primaryText,
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Staff and administrator accounts are provisioned by an administrator.',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),
