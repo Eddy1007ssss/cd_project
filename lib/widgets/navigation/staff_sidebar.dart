@@ -33,6 +33,12 @@ const List<TourFlowSidebarItem> staffSidebarItems = [
     navigationIndex: 4,
     routeName: '/admin-attraction-review',
   ),
+  TourFlowSidebarItem(
+    label: 'Support Tickets',
+    icon: Icons.support_agent_outlined,
+    navigationIndex: 5,
+    routeName: '/staff/support-tickets',
+  ),
 ];
 
 class StaffSidebar extends StatelessWidget {

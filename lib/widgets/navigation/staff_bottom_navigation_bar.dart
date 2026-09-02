@@ -33,6 +33,12 @@ const List<TourFlowNavigationItem> staffNavigationItems = [
     selectedIcon: Icons.fact_check_rounded,
     routeName: '/admin-attraction-review',
   ),
+  TourFlowNavigationItem(
+    label: 'Support',
+    icon: Icons.support_agent_outlined,
+    selectedIcon: Icons.support_agent_rounded,
+    routeName: '/staff/support-tickets',
+  ),
 ];
 
 class StaffBottomNavigationBar extends StatelessWidget {

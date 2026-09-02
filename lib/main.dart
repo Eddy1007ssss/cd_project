@@ -8,16 +8,24 @@ import 'screens/staff/attraction_details_page.dart';
 import 'screens/staff/operator_dashboard_page.dart';
 import 'screens/staff/operator_registration_page.dart';
 import 'screens/staff/slot_manager_page.dart';
+import 'screens/staff/staff_support_ticket_details_page.dart';
+import 'screens/staff/support_ticket_management_page.dart';
 import 'screens/user/attraction_details_page.dart' as user;
 import 'screens/user/attraction_discovery_page.dart';
 import 'screens/user/booking_confirmation_page.dart';
 import 'screens/user/booking_history_page.dart';
+import 'screens/user/chat_history_page.dart';
+import 'screens/user/chat_support_page.dart';
 import 'screens/user/itinerary_planner_page.dart';
+import 'screens/user/language_settings_page.dart';
 import 'screens/user/nearby_attractions_page.dart';
 import 'screens/user/profile_security_page.dart';
 import 'screens/user/reschedule_booking_page.dart';
 import 'screens/user/sign_in_page.dart';
 import 'screens/user/smart_recommendations_page.dart';
+import 'screens/user/support_ticket_details_page.dart';
+import 'screens/user/support_ticket_form_page.dart';
+import 'screens/user/support_ticket_list_page.dart';
 import 'screens/user/time_slot_selection_page.dart';
 import 'screens/user/tourist_registration_page.dart';
 import 'screens/user/user_home_page.dart';
@@ -67,6 +75,14 @@ class MyApp extends StatelessWidget {
         SlotManagerPage.routeName: (_) => const SlotManagerPage(),
         BookingDetailsPage.routeName: (_) => const BookingDetailsPage(),
         BookingQrPage.routeName: (_) => const BookingQrPage(),
+        ChatSupportPage.routeName: (_) => const ChatSupportPage(),
+        ChatHistoryPage.routeName: (_) => const ChatHistoryPage(),
+        LanguageSettingsPage.routeName: (_) => const LanguageSettingsPage(),
+        SupportTicketFormPage.routeName: (_) => const SupportTicketFormPage(),
+        SupportTicketListPage.routeName: (_) => const SupportTicketListPage(),
+        SupportTicketDetailsPage.routeName: (_) => const SupportTicketDetailsPage(),
+        SupportTicketManagementPage.routeName: (_) => const SupportTicketManagementPage(),
+        StaffSupportTicketDetailsPage.routeName: (_) => const StaffSupportTicketDetailsPage(),
       },
     );
   }
