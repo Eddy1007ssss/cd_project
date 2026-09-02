@@ -13,7 +13,7 @@ class AdminAttractionReviewPage extends StatelessWidget {
       title: 'Attraction Review',
       role: 'TOURFLOW · ADMINISTRATOR',
       isStaff: true,
-      selectedNavigationIndex: 4,
+      selectedNavigationIndex: 0,
       child: Column(
         children: [
           const ModuleCard(

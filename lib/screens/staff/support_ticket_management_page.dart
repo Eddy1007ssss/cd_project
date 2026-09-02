@@ -86,7 +86,7 @@ class _SupportTicketManagementPageState
       role: 'TOURFLOW · ADMIN / OPERATOR',
       showBackButton: false,
       isStaff: true,
-      selectedNavigationIndex: 5,
+      selectedNavigationIndex: 4,
       displayName: 'Alex Thompson',
       email: 'alex.thompson@tourflow.com',
       child: Column(

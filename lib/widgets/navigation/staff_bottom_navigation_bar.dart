@@ -9,30 +9,28 @@ const List<TourFlowNavigationItem> staffNavigationItems = [
     selectedIcon: Icons.dashboard_rounded,
     routeName: '/operator-dashboard',
   ),
+
   TourFlowNavigationItem(
     label: 'Attractions',
     icon: Icons.attractions_outlined,
     selectedIcon: Icons.attractions_rounded,
     routeName: '/attraction-details',
   ),
+
   TourFlowNavigationItem(
     label: 'Slots',
     icon: Icons.event_available_outlined,
     selectedIcon: Icons.event_available_rounded,
     routeName: '/slot-manager',
   ),
+
   TourFlowNavigationItem(
-    label: 'Users',
-    icon: Icons.manage_accounts_outlined,
-    selectedIcon: Icons.manage_accounts_rounded,
-    routeName: '/admin-user-management',
+    label: 'Check-In',
+    icon: Icons.qr_code_scanner_outlined,
+    selectedIcon: Icons.qr_code_scanner_rounded,
+    routeName: '/operator-qr-scanner',
   ),
-  TourFlowNavigationItem(
-    label: 'Reviews',
-    icon: Icons.fact_check_outlined,
-    selectedIcon: Icons.fact_check_rounded,
-    routeName: '/admin-attraction-review',
-  ),
+
   TourFlowNavigationItem(
     label: 'Support',
     icon: Icons.support_agent_outlined,

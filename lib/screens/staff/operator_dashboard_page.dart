@@ -69,61 +69,158 @@ class OperatorDashboardPage extends StatelessWidget {
               ],
             ),
           ),
+
           const SizedBox(height: 16),
+
           PrimaryButton(
             label: 'Register New Attraction',
             icon: Icons.add_location_alt_outlined,
             onPressed: () {
-              Navigator.pushNamed(context, AttractionDetailsPage.routeName);
+              Navigator.pushNamed(
+                context,
+                AttractionDetailsPage.routeName,
+              );
             },
           ),
+
           const SizedBox(height: 16),
-          const Row(
+
+          // =========================
+          // ROW 1
+          // Revenue + Visitors
+          // =========================
+          Row(
             children: [
               Expanded(
-                child: MetricCard(
-                  label: 'Total Revenue',
-                  value: 'RM 42,850',
-                  icon: Icons.payments_outlined,
-                  note: '+12% this month',
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/revenue-promotion',
+                    );
+                  },
+                  child: const MetricCard(
+                    label: 'Total Revenue',
+                    value: 'RM 42,850',
+                    icon: Icons.payments_outlined,
+                    note: '+12% this month',
+                  ),
                 ),
               ),
-              SizedBox(width: 10),
+
+              const SizedBox(width: 10),
+
               Expanded(
-                child: MetricCard(
-                  label: 'Total Visitors',
-                  value: '1,248',
-                  icon: Icons.groups_outlined,
-                  note: '+8% this month',
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/visitor-statistics',
+                    );
+                  },
+                  child: const MetricCard(
+                    label: 'Total Visitors',
+                    value: '1,248',
+                    icon: Icons.groups_outlined,
+                    note: '+8% this month',
+                  ),
                 ),
               ),
             ],
           ),
+
           const SizedBox(height: 10),
-          const MetricCard(
-            label: 'Average Rating',
-            value: '4.9 / 5.0',
-            icon: Icons.star_outline_rounded,
-            note: '+0.2 this month',
+
+          // =========================
+          // ROW 2
+          // Average Rating + Live Crowd
+          // =========================
+          Row(
+            children: [
+              const Expanded(
+                child: MetricCard(
+                  label: 'Average Rating',
+                  value: '4.9 / 5.0',
+                  icon: Icons.star_outline_rounded,
+                  note: '+0.2 this month',
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/live-crowd',
+                    );
+                  },
+                  child: const MetricCard(
+                    label: 'Live Crowd',
+                    value: '68 / 120',
+                    icon: Icons.groups_outlined,
+                    note: 'MODERATE · 57%',
+                  ),
+                ),
+              ),
+            ],
           ),
+
+          // =========================
+          // VIEW REPORT BUTTON
+          // =========================
+          const SizedBox(height: 16),
+
+          PrimaryButton(
+            label: 'View Report',
+            icon: Icons.assignment_outlined,
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                '/operator-report-queue',
+              );
+            },
+          ),
+
           const SizedBox(height: 22),
+
+          // =========================
+          // YOUR ATTRACTIONS
+          // =========================
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const SectionTitle('Your Attractions'),
-              TextButton(onPressed: () {}, child: const Text('View all')),
+              TextButton(
+                onPressed: () {},
+                child: const Text('View all'),
+              ),
             ],
           ),
+
           const SizedBox(height: 10),
+
           const Wrap(
             spacing: 8,
             children: [
-              StatusChip(label: 'All (12)', color: TourFlowColors.primaryText),
-              StatusChip(label: 'Draft (2)', color: TourFlowColors.muted),
-              StatusChip(label: 'Pending (3)', color: TourFlowColors.warning),
+              StatusChip(
+                label: 'All (12)',
+                color: TourFlowColors.primaryText,
+              ),
+              StatusChip(
+                label: 'Draft (2)',
+                color: TourFlowColors.muted,
+              ),
+              StatusChip(
+                label: 'Pending (3)',
+                color: TourFlowColors.warning,
+              ),
             ],
           ),
+
           const SizedBox(height: 14),
+
           _AttractionSummaryCard(
             name: 'Old Town Square',
             location: 'Kuala Lumpur City Centre',
@@ -133,10 +230,15 @@ class OperatorDashboardPage extends StatelessWidget {
             statusColor: TourFlowColors.success,
             icon: Icons.account_balance_rounded,
             onTap: () {
-              Navigator.pushNamed(context, AttractionDetailsPage.routeName);
+              Navigator.pushNamed(
+                context,
+                AttractionDetailsPage.routeName,
+              );
             },
           ),
+
           const SizedBox(height: 12),
+
           _AttractionSummaryCard(
             name: 'Heritage Walking Tour',
             location: 'Merdeka Square',
@@ -147,7 +249,9 @@ class OperatorDashboardPage extends StatelessWidget {
             icon: Icons.directions_walk_rounded,
             onTap: () {},
           ),
+
           const SizedBox(height: 12),
+
           _AttractionSummaryCard(
             name: 'Lumina Botanical Gardens',
             location: 'Perdana Botanical Gardens',
@@ -158,14 +262,19 @@ class OperatorDashboardPage extends StatelessWidget {
             icon: Icons.local_florist_rounded,
             onTap: () {},
           ),
+
           const SizedBox(height: 20),
+
           SizedBox(
             width: double.infinity,
             child: OutlineActionButton(
               label: 'Open Slot Manager',
               icon: Icons.schedule_rounded,
               onPressed: () {
-                Navigator.pushNamed(context, SlotManagerPage.routeName);
+                Navigator.pushNamed(
+                  context,
+                  SlotManagerPage.routeName,
+                );
               },
             ),
           ),
@@ -214,9 +323,15 @@ class _AttractionSummaryCard extends StatelessWidget {
                   color: TourFlowColors.lavenderStrong,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: TourFlowColors.primaryText, size: 32),
+                child: Icon(
+                  icon,
+                  color: TourFlowColors.primaryText,
+                  size: 32,
+                ),
               ),
+
               const SizedBox(width: 12),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,10 +347,15 @@ class _AttractionSummaryCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        StatusChip(label: status, color: statusColor),
+                        StatusChip(
+                          label: status,
+                          color: statusColor,
+                        ),
                       ],
                     ),
+
                     const SizedBox(height: 4),
+
                     Text(
                       location,
                       style: const TextStyle(
@@ -243,7 +363,9 @@ class _AttractionSummaryCard extends StatelessWidget {
                         fontSize: 10,
                       ),
                     ),
+
                     const SizedBox(height: 9),
+
                     Row(
                       children: [
                         Expanded(

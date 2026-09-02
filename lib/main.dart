@@ -7,9 +7,12 @@ import 'screens/staff/attraction_configuration_page.dart';
 import 'screens/staff/attraction_details_page.dart';
 import 'screens/staff/operator_dashboard_page.dart';
 import 'screens/staff/operator_registration_page.dart';
+import 'screens/staff/resolve_report_page.dart';
 import 'screens/staff/slot_manager_page.dart';
 import 'screens/staff/staff_support_ticket_details_page.dart';
 import 'screens/staff/support_ticket_management_page.dart';
+import 'screens/staff/operator_feedback_page.dart';
+
 import 'screens/user/attraction_details_page.dart' as user;
 import 'screens/user/attraction_discovery_page.dart';
 import 'screens/user/booking_confirmation_page.dart';
@@ -31,6 +34,18 @@ import 'screens/user/tourist_registration_page.dart';
 import 'screens/user/user_home_page.dart';
 import 'screens/user/booking_qr_page.dart';
 import 'screens/user/booking_details_page.dart';
+import 'screens/user/feedback_centre_page.dart';
+import 'screens/user/submit_feedback_page.dart';
+import 'screens/user/report_issue_page.dart';
+import 'screens/user/report_status_page.dart';
+import 'screens/user/capacity_alert_page.dart';
+import 'screens/user/geofence_page.dart';
+import 'screens/staff/operator_qr_scanner_page.dart';
+import 'screens/staff/live_crowd_page.dart';
+import 'screens/staff/operator_report_queue_page.dart';
+import 'screens/staff/revenue_promotion_page.dart';
+import 'screens/staff/promotion_suggestion_page.dart';
+import 'screens/staff/visitor_statistics_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,9 +78,16 @@ class MyApp extends StatelessWidget {
         TimeSlotSelectionPage.routeName: (_) => const TimeSlotSelectionPage(),
         BookingConfirmationPage.routeName: (_) => const BookingConfirmationPage(),
         BookingHistoryPage.routeName: (_) => const BookingHistoryPage(),
+        CapacityAlertPage.routeName: (_) => const CapacityAlertPage(),
         RescheduleBookingPage.routeName: (_) => const RescheduleBookingPage(),
         ItineraryPlannerPage.routeName: (_) => const ItineraryPlannerPage(),
         ProfileSecurityPage.routeName: (_) => const ProfileSecurityPage(),
+        FeedbackCentrePage.routeName: (_) => const FeedbackCentrePage(),
+        SubmitFeedbackPage.routeName: (_) => const SubmitFeedbackPage(),
+        ReportIssuePage.routeName: (_) => const ReportIssuePage(),
+        ReportStatusPage.routeName: (_) => const ReportStatusPage(),
+        GeofencePage.routeName: (_) => const GeofencePage(),
+
         OperatorRegistrationPage.routeName: (_) => const OperatorRegistrationPage(),
         AdminUserManagementPage.routeName: (_) => const AdminUserManagementPage(),
         OperatorDashboardPage.routeName: (_) => const OperatorDashboardPage(),
@@ -83,6 +105,14 @@ class MyApp extends StatelessWidget {
         SupportTicketDetailsPage.routeName: (_) => const SupportTicketDetailsPage(),
         SupportTicketManagementPage.routeName: (_) => const SupportTicketManagementPage(),
         StaffSupportTicketDetailsPage.routeName: (_) => const StaffSupportTicketDetailsPage(),
+        OperatorFeedbackPage.routeName: (_) => const OperatorFeedbackPage(),
+        OperatorQrScannerPage.routeName: (_) => const OperatorQrScannerPage(),
+        LiveCrowdPage.routeName: (_) => const LiveCrowdPage(),
+        OperatorReportQueuePage.routeName: (_) => const OperatorReportQueuePage(),
+        ResolveReportPage.routeName: (_) => const ResolveReportPage(),
+        RevenuePromotionPage.routeName: (_) => const RevenuePromotionPage(),
+        PromotionSuggestionPage.routeName: (_) => const PromotionSuggestionPage(),
+        VisitorStatisticsPage.routeName: (_) => const VisitorStatisticsPage(),
       },
     );
   }

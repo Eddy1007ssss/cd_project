@@ -23,7 +23,7 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
       role: 'TOURFLOW · ADMINISTRATOR',
       showBackButton: false,
       isStaff: true,
-      selectedNavigationIndex: 3,
+      selectedNavigationIndex: 0,
       actions: [
         IconButton(onPressed: () {}, icon: const Icon(Icons.search_rounded)),
       ],

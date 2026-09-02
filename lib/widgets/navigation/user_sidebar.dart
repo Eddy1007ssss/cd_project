@@ -22,6 +22,7 @@ const List<TourFlowSidebarItem> userSidebarItems = [
   TourFlowSidebarItem(label: 'My Trips & Bookings', icon: Icons.confirmation_num_outlined, navigationIndex: 2, routeName: '/user/trips'),
   TourFlowSidebarItem(label: 'Itinerary Planner', icon: Icons.route_rounded, navigationIndex: 5, routeName: '/itinerary-planner'),
   TourFlowSidebarItem(label: 'Chatbot & Support', icon: Icons.chat_bubble_outline_rounded, navigationIndex: 3, routeName: '/user/chat'),
+  TourFlowSidebarItem(label: 'Feedback', icon: Icons.rate_review_outlined, navigationIndex: 6, routeName: '/feedback-centre',),
   TourFlowSidebarItem(label: 'My Profile', icon: Icons.person_outline_rounded, navigationIndex: 4, routeName: '/profile-security'),
 ];
 

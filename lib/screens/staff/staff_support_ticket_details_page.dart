@@ -78,7 +78,7 @@ class _StaffSupportTicketDetailsPageState
       title: 'Support Ticket Details',
       role: 'TOURFLOW · ADMIN / OPERATOR',
       isStaff: true,
-      selectedNavigationIndex: 5,
+      selectedNavigationIndex: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

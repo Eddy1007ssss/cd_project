@@ -100,6 +100,23 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
             ),
           ),
           const SizedBox(height: 16),
+
+          ModuleCard(
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.rate_review_outlined),
+              title: const Text('View Feedback'),
+              subtitle: const Text('Ratings, feedback and issue reports'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/feedback-centre',
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
           ModuleCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
