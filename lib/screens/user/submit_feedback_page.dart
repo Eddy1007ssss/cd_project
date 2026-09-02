@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/tourflow_widgets.dart';
+import 'my_feedback_page.dart';
 
 class SubmitFeedbackPage extends StatefulWidget {
   const SubmitFeedbackPage({super.key});
@@ -330,12 +331,50 @@ class _SubmitFeedbackPageState extends State<SubmitFeedbackPage> {
   }
 
   void _submitFeedback() {
+    if (_overallRating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select an overall rating.'),
+        ),
+      );
+      return;
+    }
+
+    if (_crowdComfort == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a crowd comfort rating.'),
+        ),
+      );
+      return;
+    }
+
+    // Save the submitted feedback temporarily
+    MyFeedbackPage.latestFeedback = {
+      'attraction': 'National Museum',
+      'booking': 'NM-170926-1600-A1',
+      'overallRating': _overallRating,
+      'crowdComfort': _crowdComfort,
+      'tags': _selectedTags.toList(),
+      'comment': _commentController.text.trim(),
+      'submittedDate': '17 September 2026',
+    };
+
+    // Debug: check whether feedback has been saved
+    debugPrint(
+      'SAVED FEEDBACK: ${MyFeedbackPage.latestFeedback}',
+    );
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Feedback submitted successfully.'),
       ),
     );
 
-    Navigator.pop(context);
+    // Return to Feedback Centre
+    Navigator.pushReplacementNamed(
+      context,
+      '/feedback-centre',
+    );
   }
 }

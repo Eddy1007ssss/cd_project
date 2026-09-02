@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
-import '../../widgets/navigation/user_sidebar.dart';
 import '../../widgets/tourflow_widgets.dart';
-
-import 'submit_feedback_page.dart';
 
 class FeedbackCentrePage extends StatelessWidget {
   const FeedbackCentrePage({super.key});
@@ -13,187 +9,128 @@ class FeedbackCentrePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: TourFlowColors.background,
-
-      // Sidebar
-      drawer: UserSidebar(
-        displayName: 'Alex Thompson',
-        email: 'alex.thompson@tourflow.com',
-        selectedIndex: 6,
-        onLogout: () {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/sign-in',
-                (route) => false,
-          );
-        },
-      ),
-
-      // Header
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 1,
-        shadowColor: const Color(0x140F172A),
-        automaticallyImplyLeading: false,
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu_rounded),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Feedback Centre',
-              style: TextStyle(
-                color: TourFlowColors.heading,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(
-              'TourFlow',
-              style: TextStyle(
-                color: TourFlowColors.primaryText,
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        actions: [
+    return TourFlowPage(
+      title: 'Feedback Centre',
+      role: 'TOURIST',
+      showBackButton: false,
+      selectedNavigationIndex: 4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // =========================
+          // INTRODUCTION CARD
+          // =========================
           Container(
-            margin: const EdgeInsets.only(right: 14, top: 10, bottom: 10),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 6,
-            ),
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF5E6),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFFFE0B2),
-              ),
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: const Center(
-              child: Text(
-                'TOURIST',
-                style: TextStyle(
-                  color: Color(0xFF8A5A00),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'How was your visit?',
+                  style: TextStyle(
+                    color: Color(0xFF8A5700),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
+                SizedBox(height: 8),
+                Text(
+                  'Your feedback improves crowd planning and attraction quality.',
+                  style: TextStyle(
+                    color: TourFlowColors.body,
+                    fontSize: 10,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
+
+          const SizedBox(height: 16),
+
+          // =========================
+          // SUBMIT RATING & FEEDBACK
+          // =========================
+          _FeedbackMenuCard(
+            icon: Icons.rate_review_outlined,
+            iconColor: const Color(0xFF00C853),
+            title: 'Submit Rating & Feedback',
+            subtitle: 'Share your experience',
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/submit-feedback',
+              );
+            },
+          ),
+
+          const SizedBox(height: 10),
+
+          // =========================
+          // MY FEEDBACK
+          // =========================
+          _FeedbackMenuCard(
+            icon: Icons.history_rounded,
+            iconColor: const Color(0xFF7E57C2),
+            title: 'My Feedback',
+            subtitle: 'View your submitted ratings and feedback',
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/my-feedback',
+              );
+            },
+          ),
+
+          const SizedBox(height: 10),
+
+          // =========================
+          // REPORT ISSUE
+          // =========================
+          _FeedbackMenuCard(
+            icon: Icons.warning_amber_rounded,
+            iconColor: const Color(0xFFFF5252),
+            title: 'Report Issue',
+            subtitle: 'Let us know the problem',
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/report-issue',
+              );
+            },
+          ),
+
+          const SizedBox(height: 10),
+
+          // =========================
+          // VIEW REPORT STATUS
+          // =========================
+          _FeedbackMenuCard(
+            icon: Icons.analytics_outlined,
+            iconColor: const Color(0xFFFF6D00),
+            title: 'View Report Status',
+            subtitle: 'Track your reports',
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/report-status',
+              );
+            },
+          ),
         ],
-      ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            // How was your visit?
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E2),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'How was your visit?',
-                    style: TextStyle(
-                      color: Color(0xFF8A5A00),
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Your feedback improves crowd planning and attraction quality.',
-                    style: TextStyle(
-                      color: TourFlowColors.body,
-                      fontSize: 12,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Submit Rating & Feedback
-            _FeedbackMenuCard(
-              icon: Icons.reviews_outlined,
-              iconColor: Color(0xFF22C55E),
-              title: 'Submit Rating & Feedback',
-              subtitle: 'Share your experience',
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  SubmitFeedbackPage.routeName,
-                );
-              },
-            ),
-
-            const SizedBox(height: 10),
-
-            // Report Issue
-            _FeedbackMenuCard(
-              icon: Icons.warning_amber_rounded,
-              iconColor: Color(0xFFFF4D5A),
-              title: 'Report Issue',
-              subtitle: 'Let us know the problem',
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  '/report-issue',
-                );
-              },
-            ),
-
-            const SizedBox(height: 10),
-
-            // View Report Status
-            _FeedbackMenuCard(
-              icon: Icons.analytics_outlined,
-              iconColor: Color(0xFFFF7A00),
-              title: 'View Report Status',
-              subtitle: 'Track your reports',
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  '/report-status',
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-
-      // Follow your screenshot:
-      // Profile remains selected at bottom
-      bottomNavigationBar: const UserBottomNavigationBar(
-        selectedIndex: 4,
       ),
     );
   }
 }
 
+// ==========================================================
+// FEEDBACK MENU CARD
+// ==========================================================
 class _FeedbackMenuCard extends StatelessWidget {
   const _FeedbackMenuCard({
     required this.icon,
@@ -215,8 +152,8 @@ class _FeedbackMenuCard extends StatelessWidget {
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(
@@ -226,18 +163,21 @@ class _FeedbackMenuCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE3E6EC),
+              color: const Color(0xFFE0E0E0),
             ),
           ),
           child: Row(
             children: [
+              // ICON
               Icon(
                 icon,
                 color: iconColor,
-                size: 28,
+                size: 22,
               ),
+
               const SizedBox(width: 14),
 
+              // TITLE + SUBTITLE
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,26 +186,31 @@ class _FeedbackMenuCard extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         color: TourFlowColors.heading,
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 4),
+
+                    const SizedBox(height: 5),
+
                     Text(
                       subtitle,
                       style: const TextStyle(
                         color: TourFlowColors.muted,
-                        fontSize: 10,
+                        fontSize: 9,
                       ),
                     ),
                   ],
                 ),
               ),
 
+              const SizedBox(width: 8),
+
+              // ARROW
               const Icon(
                 Icons.chevron_right_rounded,
-                size: 30,
                 color: Colors.black,
+                size: 25,
               ),
             ],
           ),
