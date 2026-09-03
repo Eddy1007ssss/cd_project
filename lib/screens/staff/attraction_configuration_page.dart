@@ -15,7 +15,7 @@ class AttractionConfigurationPage extends StatefulWidget {
 
 class _AttractionConfigurationPageState
     extends State<AttractionConfigurationPage> {
-  int _checkInMethod = 2;
+  bool _isOutdoor = false;
 
   @override
   Widget build(BuildContext context) {
@@ -73,33 +73,62 @@ class _AttractionConfigurationPageState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SectionTitle(
-                  'Check-In Method',
-                  subtitle: 'Choose how staff will verify tourist bookings.',
+                  'Attraction Type & Check-In',
+                  subtitle:
+                      'The attraction type determines the required check-in method.',
                 ),
                 const SizedBox(height: 14),
-                _ChoiceTile(
-                  icon: Icons.qr_code_rounded,
-                  title: 'Fixed QR Scanner',
-                  subtitle: 'Use a scanner installed at the entrance.',
-                  selected: _checkInMethod == 0,
-                  onTap: () => setState(() => _checkInMethod = 0),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(
+                        value: false,
+                        icon: Icon(Icons.apartment_rounded),
+                        label: Text('Indoor'),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        icon: Icon(Icons.park_outlined),
+                        label: Text('Outdoor'),
+                      ),
+                    ],
+                    selected: {_isOutdoor},
+                    onSelectionChanged: (selection) =>
+                        setState(() => _isOutdoor = selection.first),
+                  ),
                 ),
                 const SizedBox(height: 9),
                 _ChoiceTile(
-                  icon: Icons.phone_android_rounded,
-                  title: 'Mobile Staff Check-In',
-                  subtitle: 'Staff scan bookings with a mobile device.',
-                  selected: _checkInMethod == 1,
-                  onTap: () => setState(() => _checkInMethod = 1),
+                  icon: _isOutdoor
+                      ? Icons.location_on_outlined
+                      : Icons.qr_code_scanner_rounded,
+                  title: _isOutdoor
+                      ? 'GPS Geofence Self Check-In'
+                      : 'Fixed Entrance QR Check-In',
+                  subtitle: _isOutdoor
+                      ? 'Tourists check in inside the configured attraction boundary.'
+                      : 'Staff scan booking QR codes at the fixed entrance.',
+                  selected: true,
+                  onTap: () {},
                 ),
-                const SizedBox(height: 9),
-                _ChoiceTile(
-                  icon: Icons.compare_arrows_rounded,
-                  title: 'Both Methods',
-                  subtitle: 'Allow fixed and mobile QR verification.',
-                  selected: _checkInMethod == 2,
-                  onTap: () => setState(() => _checkInMethod = 2),
-                ),
+                if (_isOutdoor) ...[
+                  const SizedBox(height: 9),
+                  _ChoiceTile(
+                    icon: Icons.phone_android_rounded,
+                    title: 'Roaming Staff QR Fallback',
+                    subtitle:
+                        'Required fallback when GPS self check-in is unavailable.',
+                    selected: true,
+                    onTap: () {},
+                  ),
+                  const SizedBox(height: 13),
+                  const StaticField(
+                    label: 'Geofence Radius',
+                    value: '150 metres',
+                    icon: Icons.radar_rounded,
+                  ),
+                ],
               ],
             ),
           ),
@@ -154,9 +183,15 @@ class _AttractionConfigurationPageState
                 SectionTitle('Maintenance & Closure'),
                 SizedBox(height: 14),
                 StaticField(
-                  label: 'Blocked Date',
-                  value: '24 September 2026',
+                  label: 'Start Date',
+                  value: '24 September 2026 · 08:00',
                   icon: Icons.event_busy_outlined,
+                ),
+                SizedBox(height: 14),
+                StaticField(
+                  label: 'End Date',
+                  value: '25 September 2026 · 18:00',
+                  icon: Icons.event_available_outlined,
                 ),
                 SizedBox(height: 14),
                 StaticField(
@@ -185,7 +220,9 @@ class _AttractionConfigurationPageState
             child: OutlineActionButton(
               label: 'Save as Draft',
               icon: Icons.save_outlined,
-              onPressed: () {},
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Attraction draft saved.')),
+              ),
             ),
           ),
         ],
@@ -336,10 +373,7 @@ class _ThresholdRow extends StatelessWidget {
           ),
           Text(
             range,
-            style: const TextStyle(
-              color: TourFlowColors.muted,
-              fontSize: 11,
-            ),
+            style: const TextStyle(color: TourFlowColors.muted, fontSize: 11),
           ),
         ],
       ),

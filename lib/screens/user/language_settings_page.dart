@@ -98,7 +98,10 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline_rounded, color: TourFlowColors.primaryText),
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: TourFlowColors.primaryText,
+                ),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(

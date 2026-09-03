@@ -124,7 +124,9 @@ class _SlotManagerPageState extends State<SlotManagerPage> {
                   PrimaryButton(
                     label: 'Create Slot',
                     icon: Icons.add_task_rounded,
-                    onPressed: () {},
+                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('New Open slot created.')),
+                    ),
                   ),
                 ],
               ),
@@ -169,6 +171,15 @@ class _SlotManagerPageState extends State<SlotManagerPage> {
             status: 'CLOSED',
             statusColor: TourFlowColors.danger,
           ),
+          const SizedBox(height: 11),
+          const _SlotCard(
+            date: 'AUG\n27',
+            time: '09:00 – 10:30',
+            title: 'Morning Heritage Visit',
+            capacity: '24 / 30 registered',
+            status: 'EXPIRED',
+            statusColor: TourFlowColors.muted,
+          ),
           const SizedBox(height: 22),
           const SectionTitle(
             'Maintenance Blocks',
@@ -176,7 +187,7 @@ class _SlotManagerPageState extends State<SlotManagerPage> {
           ),
           const SizedBox(height: 10),
           const _MaintenanceCard(
-            date: '24 September 2026',
+            date: '24 Sep 08:00 – 25 Sep 18:00',
             reason: 'Landscape and facility maintenance',
           ),
           const SizedBox(height: 10),
@@ -190,7 +201,11 @@ class _SlotManagerPageState extends State<SlotManagerPage> {
             child: OutlineActionButton(
               label: 'Block Another Date',
               icon: Icons.event_busy_outlined,
-              onPressed: () {},
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Maintenance period form opened for demo.'),
+                ),
+              ),
             ),
           ),
         ],
@@ -285,16 +300,30 @@ class _SlotCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Icon(
-                      Icons.edit_outlined,
-                      size: 17,
-                      color: TourFlowColors.primaryText,
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(
-                      Icons.more_vert_rounded,
-                      size: 18,
-                      color: TourFlowColors.muted,
+                    PopupMenuButton<String>(
+                      tooltip: 'Manage slot',
+                      onSelected: (action) =>
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('$action selected for $time.'),
+                            ),
+                          ),
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(value: 'Edit', child: Text('Edit slot')),
+                        PopupMenuItem(
+                          value: 'Close',
+                          child: Text('Close slot'),
+                        ),
+                        PopupMenuItem(
+                          value: 'Cancel',
+                          child: Text('Cancel slot'),
+                        ),
+                      ],
+                      icon: const Icon(
+                        Icons.more_vert_rounded,
+                        size: 18,
+                        color: TourFlowColors.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -345,10 +374,7 @@ class _MaintenanceCard extends StatelessWidget {
               ],
             ),
           ),
-          const StatusChip(
-            label: 'BLOCKED',
-            color: TourFlowColors.danger,
-          ),
+          const StatusChip(label: 'BLOCKED', color: TourFlowColors.danger),
         ],
       ),
     );

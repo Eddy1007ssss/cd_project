@@ -50,10 +50,7 @@ class PromotionSuggestionPage extends StatelessWidget {
                 SizedBox(height: 8),
                 Text(
                   'Generated based on recent visitor trend analysis.',
-                  style: TextStyle(
-                    color: TourFlowColors.body,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: TourFlowColors.body, fontSize: 11),
                 ),
               ],
             ),
@@ -233,23 +230,15 @@ class PromotionSuggestionPage extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(context);
               },
-              icon: const Icon(
-                Icons.arrow_back_rounded,
-              ),
+              icon: const Icon(Icons.arrow_back_rounded),
               label: const Text(
                 'Back to Revenue & Promotion',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: TourFlowColors.primaryText,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                ),
-                side: const BorderSide(
-                  color: TourFlowColors.primary,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: TourFlowColors.primary),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),

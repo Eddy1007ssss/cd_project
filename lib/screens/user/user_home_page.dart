@@ -173,15 +173,26 @@ class _SearchAndCategories extends StatelessWidget {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.search_rounded, size: 20, color: Color(0xFF6B7280)),
+                    Icon(
+                      Icons.search_rounded,
+                      size: 20,
+                      color: Color(0xFF6B7280),
+                    ),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Search Kuala Lumpur attractions...',
-                        style: TextStyle(color: Color(0xFF6B7280), fontSize: 14),
+                        style: TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 14,
+                        ),
                       ),
                     ),
-                    Icon(Icons.tune_rounded, size: 20, color: Color(0xFF4F4539)),
+                    Icon(
+                      Icons.tune_rounded,
+                      size: 20,
+                      color: Color(0xFF4F4539),
+                    ),
                   ],
                 ),
               ),
@@ -198,7 +209,10 @@ class _SearchAndCategories extends StatelessWidget {
               itemBuilder: (context, index) {
                 final selected = index == 0;
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: selected
                         ? const Color(0xFFFFD08B)
@@ -360,12 +374,22 @@ class _RecommendedCard extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: const [
-                BoxShadow(color: Color(0x140F172A), blurRadius: 8, offset: Offset(0, 2)),
+                BoxShadow(
+                  color: Color(0x140F172A),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
               ],
             ),
             child: Stack(
               children: [
-                Center(child: Icon(icon, size: 92, color: Colors.white.withOpacity(0.88))),
+                Center(
+                  child: Icon(
+                    icon,
+                    size: 92,
+                    color: Colors.white.withOpacity(0.88),
+                  ),
+                ),
                 Positioned(
                   top: 12,
                   right: 12,
@@ -382,12 +406,20 @@ class _RecommendedCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             name,
-            style: const TextStyle(color: Color(0xFF131B2E), fontSize: 16, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              color: Color(0xFF131B2E),
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF4F4539)),
+              const Icon(
+                Icons.location_on_outlined,
+                size: 14,
+                color: Color(0xFF4F4539),
+              ),
               const SizedBox(width: 4),
               Text(
                 '$distance  •  $category',
@@ -416,7 +448,11 @@ class _FeaturedAttractionCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(color: Color(0x1A0F172A), blurRadius: 8, offset: Offset(0, 2)),
+          BoxShadow(
+            color: Color(0x1A0F172A),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Stack(
@@ -424,7 +460,11 @@ class _FeaturedAttractionCard extends StatelessWidget {
           Positioned(
             right: 20,
             top: 28,
-            child: Icon(Icons.park_rounded, size: 130, color: Colors.white.withOpacity(0.28)),
+            child: Icon(
+              Icons.park_rounded,
+              size: 130,
+              color: Colors.white.withOpacity(0.28),
+            ),
           ),
           const Positioned(
             left: 16,
@@ -437,17 +477,41 @@ class _FeaturedAttractionCard extends StatelessWidget {
                 SizedBox(height: 8),
                 Text(
                   'KL Tower & Eco Park',
-                  style: TextStyle(color: Colors.white, fontSize: 25, height: 1.05, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                    height: 1.05,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.location_on_outlined, size: 14, color: Colors.white),
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                     SizedBox(width: 4),
-                    Expanded(child: Text('Bukit Nanas, KL', style: TextStyle(color: Colors.white, fontSize: 12))),
-                    Icon(Icons.star_rounded, size: 18, color: Color(0xFFFFD166)),
+                    Expanded(
+                      child: Text(
+                        'Bukit Nanas, KL',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 18,
+                      color: Color(0xFFFFD166),
+                    ),
                     SizedBox(width: 3),
-                    Text('4.8', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                    Text(
+                      '4.8',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -485,7 +549,11 @@ class _CompactAttractionCard extends StatelessWidget {
         border: Border.all(color: const Color(0x4DD2C4B4)),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(color: Color(0x120F172A), blurRadius: 4, offset: Offset(0, 2)),
+          BoxShadow(
+            color: Color(0x120F172A),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
@@ -504,13 +572,30 @@ class _CompactAttractionCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(color: Color(0xFF131B2E), fontSize: 15, fontWeight: FontWeight.w700)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Color(0xFF131B2E),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.location_city_rounded, size: 13, color: Color(0xFF4F4539)),
+                    const Icon(
+                      Icons.location_city_rounded,
+                      size: 13,
+                      color: Color(0xFF4F4539),
+                    ),
                     const SizedBox(width: 4),
-                    Text(location, style: const TextStyle(color: Color(0xFF4F4539), fontSize: 12)),
+                    Text(
+                      location,
+                      style: const TextStyle(
+                        color: Color(0xFF4F4539),
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -548,7 +633,14 @@ class _RatingBadge extends StatelessWidget {
         children: [
           const Icon(Icons.star_rounded, size: 14, color: Color(0xFFFACC15)),
           const SizedBox(width: 2),
-          Text(rating, style: const TextStyle(color: Color(0xFF131B2E), fontSize: 11, fontWeight: FontWeight.w700)),
+          Text(
+            rating,
+            style: const TextStyle(
+              color: Color(0xFF131B2E),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -565,10 +657,17 @@ class _CrowdBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(4),
+      ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -591,23 +690,51 @@ class _CrowdLevelGuide extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, size: 17, color: Color(0xFF4F4539)),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 17,
+                color: Color(0xFF4F4539),
+              ),
               SizedBox(width: 8),
-              Text('CROWD LEVEL GUIDE', style: TextStyle(color: Color(0xFF4F4539), fontSize: 12, fontWeight: FontWeight.w700)),
+              Text(
+                'CROWD LEVEL GUIDE',
+                style: TextStyle(
+                  color: Color(0xFF4F4539),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _GuideItem(color: Color(0xFF16A34A), text: 'Low: < 25%')),
-              Expanded(child: _GuideItem(color: Color(0xFFF97316), text: 'Mod: 25-60%')),
+              Expanded(
+                child: _GuideItem(color: Color(0xFF16A34A), text: 'Low: < 25%'),
+              ),
+              Expanded(
+                child: _GuideItem(
+                  color: Color(0xFFF97316),
+                  text: 'Mod: 25-60%',
+                ),
+              ),
             ],
           ),
           SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: _GuideItem(color: Color(0xFFF59E0B), text: 'Busy: 60-85%')),
-              Expanded(child: _GuideItem(color: Color(0xFFDC2626), text: 'Peak: > 85%')),
+              Expanded(
+                child: _GuideItem(
+                  color: Color(0xFFF59E0B),
+                  text: 'Busy: 60-85%',
+                ),
+              ),
+              Expanded(
+                child: _GuideItem(
+                  color: Color(0xFFDC2626),
+                  text: 'Peak: > 85%',
+                ),
+              ),
             ],
           ),
         ],
@@ -626,9 +753,20 @@ class _GuideItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 7),
-        Text(text, style: const TextStyle(color: Color(0xFF131B2E), fontSize: 10, fontWeight: FontWeight.w600)),
+        Text(
+          text,
+          style: const TextStyle(
+            color: Color(0xFF131B2E),
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }

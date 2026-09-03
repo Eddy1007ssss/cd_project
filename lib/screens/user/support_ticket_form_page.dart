@@ -91,21 +91,22 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                   DropdownButtonFormField<String>(
                     initialValue: _category,
                     decoration: _inputDecoration(Icons.category_outlined),
-                    items: const [
-                      'General Enquiry',
-                      'Booking Problem',
-                      'Attraction Information',
-                      'Overcrowding Complaint',
-                      'Safety Concern',
-                      'Technical Issue',
-                    ]
-                        .map(
-                          (value) => DropdownMenuItem(
-                            value: value,
-                            child: Text(value),
-                          ),
-                        )
-                        .toList(),
+                    items:
+                        const [
+                              'General Enquiry',
+                              'Booking Problem',
+                              'Attraction Information',
+                              'Overcrowding Complaint',
+                              'Safety Concern',
+                              'Technical Issue',
+                            ]
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value),
+                              ),
+                            )
+                            .toList(),
                     onChanged: (value) {
                       if (value != null) setState(() => _category = value);
                     },
@@ -116,20 +117,21 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                   DropdownButtonFormField<String>(
                     initialValue: _relatedAttraction,
                     decoration: _inputDecoration(Icons.attractions_outlined),
-                    items: const [
-                      'Not related to an attraction',
-                      'National Museum',
-                      'Old Town Square',
-                      'Lake Garden',
-                      'Lumina Botanical Gardens',
-                    ]
-                        .map(
-                          (value) => DropdownMenuItem(
-                            value: value,
-                            child: Text(value),
-                          ),
-                        )
-                        .toList(),
+                    items:
+                        const [
+                              'Not related to an attraction',
+                              'National Museum',
+                              'Old Town Square',
+                              'Lake Garden',
+                              'Lumina Botanical Gardens',
+                            ]
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value),
+                              ),
+                            )
+                            .toList(),
                     onChanged: (value) {
                       if (value != null) {
                         setState(() => _relatedAttraction = value);
@@ -141,9 +143,9 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                   const SizedBox(height: 7),
                   TextFormField(
                     controller: _subjectController,
-                    decoration: _inputDecoration(Icons.title_rounded).copyWith(
-                      hintText: 'Briefly describe your issue',
-                    ),
+                    decoration: _inputDecoration(
+                      Icons.title_rounded,
+                    ).copyWith(hintText: 'Briefly describe your issue'),
                     validator: (value) {
                       if (value == null || value.trim().length < 5) {
                         return 'Enter a subject with at least 5 characters.';
@@ -174,7 +176,9 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                   OutlinedButton.icon(
                     onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Static UI: attachment picker will be added later.'),
+                        content: Text(
+                          'Static UI: attachment picker will be added later.',
+                        ),
                       ),
                     ),
                     icon: const Icon(Icons.attach_file_rounded),

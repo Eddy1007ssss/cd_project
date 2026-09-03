@@ -17,10 +17,22 @@ class TouristTripsPage extends StatelessWidget {
         displayName: 'Alex Tan',
         email: 'alex@example.com',
         selectedIndex: 2,
-        onLogout: () => Navigator.pushNamedAndRemoveUntil(context, '/sign-in', (route) => false),
+        onLogout: () => Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/sign-in',
+          (route) => false,
+        ),
       ),
-      appBar: AppBar(backgroundColor: Colors.white, surfaceTintColor: Colors.transparent, title: const Text('My Trips & Bookings')),
-      body: const Center(child: Text('Your bookings will appear here when Module 3 is completed.')),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        title: const Text('My Trips & Bookings'),
+      ),
+      body: const Center(
+        child: Text(
+          'Your bookings will appear here when Module 3 is completed.',
+        ),
+      ),
       bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 2),
     );
   }

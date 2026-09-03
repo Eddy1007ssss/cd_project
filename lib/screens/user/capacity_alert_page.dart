@@ -24,7 +24,7 @@ class CapacityAlertPage extends StatelessWidget {
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/sign-in',
-                (route) => false,
+            (route) => false,
           );
         },
       ),
@@ -62,9 +62,7 @@ class CapacityAlertPage extends StatelessWidget {
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 14),
-            child: Center(
-              child: _RoleBadge(),
-            ),
+            child: Center(child: _RoleBadge()),
           ),
         ],
       ),
@@ -74,16 +72,9 @@ class CapacityAlertPage extends StatelessWidget {
       // =========================
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 760,
-          ),
+          constraints: const BoxConstraints(maxWidth: 760),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              18,
-              16,
-              30,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -170,10 +161,7 @@ class CapacityAlertPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(9),
                       ),
                     ),
-                    icon: const Icon(
-                      Icons.qr_code_2_rounded,
-                      size: 20,
-                    ),
+                    icon: const Icon(Icons.qr_code_2_rounded, size: 20),
                     label: const Text(
                       'Open QR Code',
                       style: TextStyle(
@@ -194,10 +182,7 @@ class CapacityAlertPage extends StatelessWidget {
                   height: 48,
                   child: FilledButton.icon(
                     onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/geofence',
-                      );
+                      Navigator.pushNamed(context, '/geofence');
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFFFFCD84),
@@ -207,10 +192,7 @@ class CapacityAlertPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(9),
                       ),
                     ),
-                    icon: const Icon(
-                      Icons.location_on_outlined,
-                      size: 20,
-                    ),
+                    icon: const Icon(Icons.location_on_outlined, size: 20),
                     label: const Text(
                       'View Geofence',
                       style: TextStyle(
@@ -229,8 +211,7 @@ class CapacityAlertPage extends StatelessWidget {
       // =========================
       // BOTTOM NAVIGATION
       // =========================
-      bottomNavigationBar:
-      const UserBottomNavigationBar(selectedIndex: 2),
+      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 2),
     );
   }
 }
@@ -240,10 +221,7 @@ class CapacityAlertPage extends StatelessWidget {
 // ============================================================
 
 class _InformationCard extends StatelessWidget {
-  const _InformationCard({
-    required this.title,
-    required this.value,
-  });
+  const _InformationCard({required this.title, required this.value});
 
   final String title;
   final String value;
@@ -255,9 +233,7 @@ class _InformationCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(
-          color: const Color(0xFFE0E2E8),
-        ),
+        border: Border.all(color: const Color(0xFFE0E2E8)),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -296,15 +272,10 @@ class _RoleBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF6E8),
-        border: Border.all(
-          color: const Color(0xFFE8D3B7),
-        ),
+        border: Border.all(color: const Color(0xFFE8D3B7)),
         borderRadius: BorderRadius.circular(20),
       ),
       child: const Text(

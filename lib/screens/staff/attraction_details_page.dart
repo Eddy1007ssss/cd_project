@@ -52,6 +52,19 @@ class AttractionDetailsPage extends StatelessWidget {
                   value: 'Kuala Lumpur, Malaysia',
                   icon: Icons.location_on_outlined,
                 ),
+                SizedBox(height: 14),
+                StaticField(
+                  label: 'Entrance Price',
+                  value: 'RM 25.00 per adult · RM 12.00 per child',
+                  icon: Icons.payments_outlined,
+                ),
+                SizedBox(height: 14),
+                StaticField(
+                  label: 'Facilities',
+                  value: 'Accessible toilets · Prayer room · Café · Parking',
+                  icon: Icons.accessible_forward_outlined,
+                  maxLines: 2,
+                ),
               ],
             ),
           ),
@@ -123,7 +136,10 @@ class AttractionDetailsPage extends StatelessWidget {
                     _GalleryTile(icon: Icons.account_balance_rounded),
                     _GalleryTile(icon: Icons.location_city_rounded),
                     _GalleryTile(icon: Icons.groups_rounded),
-                    _GalleryTile(icon: Icons.add_photo_alternate_outlined, add: true),
+                    _GalleryTile(
+                      icon: Icons.add_photo_alternate_outlined,
+                      add: true,
+                    ),
                   ],
                 ),
               ],
@@ -169,7 +185,9 @@ class AttractionDetailsPage extends StatelessWidget {
             child: OutlineActionButton(
               label: 'Save as Draft',
               icon: Icons.save_outlined,
-              onPressed: () {},
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Attraction draft saved.')),
+              ),
             ),
           ),
         ],
@@ -188,9 +206,7 @@ class _GalleryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: add
-            ? TourFlowColors.background
-            : TourFlowColors.lavenderStrong,
+        color: add ? TourFlowColors.background : TourFlowColors.lavenderStrong,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: add
@@ -201,9 +217,7 @@ class _GalleryTile extends StatelessWidget {
       child: Icon(
         icon,
         size: 38,
-        color: add
-            ? TourFlowColors.primaryText
-            : TourFlowColors.body,
+        color: add ? TourFlowColors.primaryText : TourFlowColors.body,
       ),
     );
   }

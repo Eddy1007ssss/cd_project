@@ -1,139 +1,231 @@
 import 'package:flutter/material.dart';
 
+import '../../models/recommendation_result.dart';
+import '../../services/attraction_service.dart';
+import '../../services/location_service.dart';
 import '../../widgets/navigation/user_bottom_navigation_bar.dart';
-import '../../widgets/navigation/user_sidebar.dart';
 import 'attraction_details_page.dart';
+import 'discovery_preferences_page.dart';
+import 'time_slot_selection_page.dart';
 
-class SmartRecommendationsPage extends StatelessWidget {
+class SmartRecommendationsPage extends StatefulWidget {
   const SmartRecommendationsPage({super.key});
-
   static const routeName = '/smart-recommendations';
+  @override
+  State<SmartRecommendationsPage> createState() =>
+      _SmartRecommendationsPageState();
+}
+
+class _SmartRecommendationsPageState extends State<SmartRecommendationsPage> {
+  final _service = AttractionService();
+  late Future<List<RecommendationResult>> _results;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FF),
-      drawer: UserSidebar(displayName: 'Alex Tan', email: 'alex@example.com', selectedIndex: 1, onLogout: () => Navigator.pushNamedAndRemoveUntil(context, '/sign-in', (route) => false)),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        title: const Text('Smart Recommendations', style: TextStyle(color: Color(0xFF131B2E), fontWeight: FontWeight.w700)),
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(17),
-              decoration: BoxDecoration(color: const Color(0xFFF2F3FF), borderRadius: BorderRadius.circular(17)),
-              child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [CircleAvatar(backgroundColor: Color(0xFFFFD08B), foregroundColor: Color(0xFF79571E), child: Icon(Icons.auto_awesome_rounded)), SizedBox(width: 10), Text('Picked for you, Alex', style: TextStyle(color: Color(0xFF131B2E), fontSize: 18, fontWeight: FontWeight.w800))]),
-                SizedBox(height: 10),
-                Text('Based on your interest in history, nature, your budget and your current location.', style: TextStyle(color: Color(0xFF4F4539), fontSize: 12, height: 1.45)),
-              ]),
-            ),
-            const SizedBox(height: 22),
-            const Text('Best matches today', style: TextStyle(color: Color(0xFF131B2E), fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 11),
-            _RecommendationCard(
-              rank: '98%',
-              name: 'Lumina Botanical Gardens',
-              reason: 'Matches your nature interest and has low crowd levels now.',
-              time: 'Best time: 09:00 – 11:00',
-              icon: Icons.local_florist_rounded,
-              onTap: () => Navigator.pushNamed(context, AttractionDetailsPage.routeName),
-            ),
-            const SizedBox(height: 12),
-            _RecommendationCard(
-              rank: '93%',
-              name: 'Old Town Square',
-              reason: 'Popular history stop near your current location.',
-              time: 'Best time: 04:00 – 05:30',
-              icon: Icons.account_balance_rounded,
-              onTap: () => Navigator.pushNamed(context, AttractionDetailsPage.routeName),
-            ),
-            const SizedBox(height: 22),
-            const Text('Avoid the crowd', style: TextStyle(color: Color(0xFF131B2E), fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 10),
-            const _AlternativeTile(
-              title: 'Heritage Walking Tour is busy at 12:00 PM',
-              suggestion: 'Try the 04:00 PM slot — 18 spaces available.',
-              icon: Icons.schedule_outlined,
-            ),
-            const SizedBox(height: 10),
-            const _AlternativeTile(
-              title: 'National Museum is at high crowd level',
-              suggestion: 'Visit Old Town Square nearby instead.',
-              icon: Icons.swap_horiz_rounded,
-            ),
-            const SizedBox(height: 22),
-            const Text('Plan a better day', style: TextStyle(color: Color(0xFF131B2E), fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0x33D2C4B4))),
-              child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Suggested mini itinerary', style: TextStyle(color: Color(0xFF131B2E), fontWeight: FontWeight.w700)),
-                SizedBox(height: 12),
-                Text('09:30  Lumina Botanical Gardens', style: TextStyle(color: Color(0xFF4F4539), fontSize: 12)),
-                SizedBox(height: 7),
-                Text('12:00  Lunch near Perdana Gardens', style: TextStyle(color: Color(0xFF4F4539), fontSize: 12)),
-                SizedBox(height: 7),
-                Text('04:00  Old Town Square', style: TextStyle(color: Color(0xFF4F4539), fontSize: 12)),
-              ]),
-            ),
-          ]),
-        ),
-      ),
-      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 1),
-    );
+  void initState() {
+    super.initState();
+    _results = _load();
   }
+
+  Future<List<RecommendationResult>> _load() async => _service
+      .getRecommendations(origin: await LocationService().currentLocation());
+  void _reload() => setState(() => _results = _load());
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Smart Recommendations'),
+      actions: [
+        IconButton(
+          tooltip: 'Edit preferences',
+          onPressed: () async {
+            await Navigator.pushNamed(
+              context,
+              DiscoveryPreferencesPage.routeName,
+            );
+            _reload();
+          },
+          icon: const Icon(Icons.tune),
+        ),
+      ],
+    ),
+    body: RefreshIndicator(
+      onRefresh: () async => _reload(),
+      child: FutureBuilder<List<RecommendationResult>>(
+        future: _results,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                const Icon(Icons.person_off_outlined, size: 54),
+                const SizedBox(height: 12),
+                const Text(
+                  'Recommendations need a signed-in tourist and Module 2 preferences.',
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  '${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 11),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    DiscoveryPreferencesPage.routeName,
+                  ),
+                  child: const Text('Set preferences'),
+                ),
+              ],
+            );
+          }
+          final results = snapshot.data ?? const [];
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const Card(
+                color: Color(0xFFF2F3FF),
+                child: ListTile(
+                  leading: Icon(Icons.auto_awesome, color: Color(0xFF79571E)),
+                  title: Text(
+                    'Explainable matches',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: Text(
+                    'Scores use preferences, distance, slot availability, estimated crowd and completed visits.',
+                  ),
+                ),
+              ),
+              if (results.isEmpty)
+                const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text(
+                      'No suitable approved attractions are currently available.',
+                    ),
+                  ),
+                ),
+              ...results
+                  .take(8)
+                  .map(
+                    (result) => _RecommendationCard(
+                      result: result,
+                      onDetails: () => Navigator.pushNamed(
+                        context,
+                        AttractionDetailsPage.routeName,
+                        arguments: result.attraction.id,
+                      ),
+                      onBook: result.recommendedSlot == null
+                          ? null
+                          : () => Navigator.pushNamed(
+                              context,
+                              TimeSlotSelectionPage.routeName,
+                              arguments: {
+                                'attractionId': result.attraction.id,
+                                'attractionName': result.attraction.name,
+                                'category': result.attraction.category,
+                                'locationName': result.attraction.locationName,
+                                'preselectedSlotId': result.recommendedSlot!.id,
+                              },
+                            ),
+                    ),
+                  ),
+            ],
+          );
+        },
+      ),
+    ),
+    bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 1),
+  );
 }
 
 class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({required this.rank, required this.name, required this.reason, required this.time, required this.icon, required this.onTap});
-  final String rank;
-  final String name;
-  final String reason;
-  final String time;
-  final IconData icon;
-  final VoidCallback onTap;
+  const _RecommendationCard({
+    required this.result,
+    required this.onDetails,
+    this.onBook,
+  });
+  final RecommendationResult result;
+  final VoidCallback onDetails;
+  final VoidCallback? onBook;
   @override
-  Widget build(BuildContext context) => Material(
+  Widget build(BuildContext context) => Card(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(16),
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(border: Border.all(color: const Color(0x33D2C4B4)), borderRadius: BorderRadius.circular(16)),
-        child: Row(children: [
-          Container(width: 66, height: 72, decoration: BoxDecoration(color: const Color(0xFFEAEDFF), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: const Color(0xFF79571E), size: 34)),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Expanded(child: Text(name, style: const TextStyle(color: Color(0xFF131B2E), fontWeight: FontWeight.w700))), Text(rank, style: const TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.w800))]),
-            const SizedBox(height: 5), Text(reason, style: const TextStyle(color: Color(0xFF64748B), fontSize: 10, height: 1.35)),
-            const SizedBox(height: 8), Text(time, style: const TextStyle(color: Color(0xFF79571E), fontSize: 10, fontWeight: FontWeight.w700)),
-          ])),
-        ]),
+    margin: const EdgeInsets.only(bottom: 12),
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: const Color(0xFFFFD08B),
+                child: Text('${result.percentage}%'),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  result.attraction.name,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...result.reasons
+              .take(4)
+              .map(
+                (reason) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        size: 16,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          reason,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          if (result.recommendedSlot != null)
+            Text(
+              'Suggested: ${_clock(result.recommendedSlot!.startsAt)} · ${result.recommendedSlot!.remainingCapacity} spaces',
+              style: const TextStyle(
+                color: Color(0xFF79571E),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              OutlinedButton(
+                onPressed: onDetails,
+                child: const Text('Details'),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(onPressed: onBook, child: const Text('View slot')),
+            ],
+          ),
+        ],
       ),
     ),
   );
 }
 
-class _AlternativeTile extends StatelessWidget {
-  const _AlternativeTile({required this.title, required this.suggestion, required this.icon});
-  final String title;
-  final String suggestion;
-  final IconData icon;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(13),
-    decoration: BoxDecoration(color: const Color(0xFFFFF7E8), borderRadius: BorderRadius.circular(13)),
-    child: Row(children: [Icon(icon, color: const Color(0xFF79571E)), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: Color(0xFF131B2E), fontSize: 12, fontWeight: FontWeight.w700)), const SizedBox(height: 4), Text(suggestion, style: const TextStyle(color: Color(0xFF4F4539), fontSize: 10))]))]),
-  );
-}
+String _clock(DateTime value) =>
+    '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';

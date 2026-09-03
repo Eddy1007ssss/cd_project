@@ -75,7 +75,8 @@ class _SupportTicketManagementPageState
       final matchesStatus =
           _selectedStatus == 'All' || ticket.status == _selectedStatus;
       final search = _query.toLowerCase();
-      final matchesQuery = ticket.id.toLowerCase().contains(search) ||
+      final matchesQuery =
+          ticket.id.toLowerCase().contains(search) ||
           ticket.subject.toLowerCase().contains(search) ||
           ticket.tourist.toLowerCase().contains(search);
       return matchesStatus && matchesQuery;
@@ -154,9 +155,8 @@ class _SupportTicketManagementPageState
                       child: ChoiceChip(
                         label: Text(status),
                         selected: _selectedStatus == status,
-                        onSelected: (_) => setState(
-                          () => _selectedStatus = status,
-                        ),
+                        onSelected: (_) =>
+                            setState(() => _selectedStatus = status),
                         selectedColor: TourFlowColors.primary,
                         side: const BorderSide(color: TourFlowColors.border),
                       ),

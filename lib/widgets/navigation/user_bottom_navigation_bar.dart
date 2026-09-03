@@ -25,11 +25,36 @@ class TourFlowNavigationItem {
 }
 
 const List<TourFlowNavigationItem> userNavigationItems = [
-  TourFlowNavigationItem(label: 'Home', icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, routeName: '/user/home'),
-  TourFlowNavigationItem(label: 'Discover', icon: Icons.explore_outlined, selectedIcon: Icons.explore_rounded, routeName: '/attraction-discovery'),
-  TourFlowNavigationItem(label: 'Trips', icon: Icons.confirmation_num_outlined, selectedIcon: Icons.confirmation_num_rounded, routeName: '/user/trips'),
-  TourFlowNavigationItem(label: 'Chat', icon: Icons.chat_bubble_outline_rounded, selectedIcon: Icons.chat_bubble_rounded, routeName: '/user/chat'),
-  TourFlowNavigationItem(label: 'Profile', icon: Icons.person_outline_rounded, selectedIcon: Icons.person_rounded, routeName: '/profile-security'),
+  TourFlowNavigationItem(
+    label: 'Home',
+    icon: Icons.home_outlined,
+    selectedIcon: Icons.home_rounded,
+    routeName: '/user/home',
+  ),
+  TourFlowNavigationItem(
+    label: 'Discover',
+    icon: Icons.explore_outlined,
+    selectedIcon: Icons.explore_rounded,
+    routeName: '/attraction-discovery',
+  ),
+  TourFlowNavigationItem(
+    label: 'Trips',
+    icon: Icons.confirmation_num_outlined,
+    selectedIcon: Icons.confirmation_num_rounded,
+    routeName: '/user/trips',
+  ),
+  TourFlowNavigationItem(
+    label: 'Chat',
+    icon: Icons.chat_bubble_outline_rounded,
+    selectedIcon: Icons.chat_bubble_rounded,
+    routeName: '/user/chat',
+  ),
+  TourFlowNavigationItem(
+    label: 'Profile',
+    icon: Icons.person_outline_rounded,
+    selectedIcon: Icons.person_rounded,
+    routeName: '/profile-security',
+  ),
 ];
 
 class TourFlowBottomNavigationBar extends StatelessWidget {
@@ -54,7 +79,11 @@ class TourFlowBottomNavigationBar extends StatelessWidget {
         color: TourFlowNavigationColors.surface,
         border: Border(top: BorderSide(color: TourFlowNavigationColors.border)),
         boxShadow: [
-          BoxShadow(color: Color(0x140F172A), offset: Offset(0, -2), blurRadius: 4),
+          BoxShadow(
+            color: Color(0x140F172A),
+            offset: Offset(0, -2),
+            blurRadius: 4,
+          ),
         ],
       ),
       child: SafeArea(
@@ -64,7 +93,7 @@ class TourFlowBottomNavigationBar extends StatelessWidget {
           child: Row(
             children: List.generate(
               items.length,
-                  (index) => Expanded(
+              (index) => Expanded(
                 child: _NavigationButton(
                   item: items[index],
                   isSelected: index == selectedIndex,
@@ -72,7 +101,11 @@ class TourFlowBottomNavigationBar extends StatelessWidget {
                     final routeName = items[index].routeName;
                     if (routeName != null) {
                       if (ModalRoute.of(context)?.settings.name != routeName) {
-                        Navigator.pushNamedAndRemoveUntil(context, routeName, (route) => false);
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          routeName,
+                          (route) => false,
+                        );
                       }
                       return;
                     }
@@ -118,20 +151,31 @@ class _NavigationButton extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 54, minHeight: 40),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: isSelected ? TourFlowNavigationColors.activeBackground : Colors.transparent,
+              color: isSelected
+                  ? TourFlowNavigationColors.activeBackground
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(isSelected ? item.selectedIcon : item.icon, size: 20, color: color),
+                Icon(
+                  isSelected ? item.selectedIcon : item.icon,
+                  size: 20,
+                  color: color,
+                ),
                 const SizedBox(height: 1),
                 Text(
                   item.label,
                   maxLines: 1,
                   overflow: TextOverflow.fade,
-                  style: TextStyle(color: color, fontSize: 10, height: 1.2, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    height: 1.2,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

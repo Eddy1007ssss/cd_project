@@ -159,11 +159,7 @@ class TourFlowPage extends StatelessWidget {
       return;
     }
 
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/sign-in',
-      (route) => false,
-    );
+    Navigator.pushNamedAndRemoveUntil(context, '/sign-in', (route) => false);
   }
 }
 
@@ -332,10 +328,7 @@ class PrimaryButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -372,11 +365,7 @@ class OutlineActionButton extends StatelessWidget {
 }
 
 class StatusChip extends StatelessWidget {
-  const StatusChip({
-    required this.label,
-    required this.color,
-    super.key,
-  });
+  const StatusChip({required this.label, required this.color, super.key});
 
   final String label;
   final Color color;
