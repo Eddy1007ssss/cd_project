@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/gemini_chat_service.dart';
 import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import '../../widgets/navigation/user_sidebar.dart';
 import '../../widgets/tourflow_widgets.dart';
@@ -21,11 +22,15 @@ class ChatSupportPage extends StatefulWidget {
 class _ChatSupportPageState extends State<ChatSupportPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GeminiChatService _chatService = GeminiChatService();
+
+  bool _isSending = false;
+  String? _previousInteractionId;
 
   final List<_ChatMessage> _messages = [
     const _ChatMessage(
       text:
-          'Hello Alex! I am your TourFlow assistant. I can help with attractions, available slots, opening hours, transportation and live crowd levels.',
+      'Hello Alex! I am your TourFlow assistant. I can help with attractions, available slots, opening hours, transportation and live crowd levels.',
       isUser: false,
       time: '10:24',
     ),
@@ -45,48 +50,77 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
     super.dispose();
   }
 
-  void _sendMessage([String? quickQuestion]) {
+  Future<void> _sendMessage([String? quickQuestion]) async {
     final value = (quickQuestion ?? _messageController.text).trim();
-    if (value.isEmpty) return;
+    if (value.isEmpty || _isSending) return;
+
+    final time = _currentTime();
 
     setState(() {
-      _messages.add(_ChatMessage(text: value, isUser: true, time: '10:25'));
-      _messages.add(
-        _ChatMessage(
-          text: _responseFor(value),
-          isUser: false,
-          time: '10:25',
-        ),
-      );
+      _messages.add(_ChatMessage(text: value, isUser: true, time: time));
+      _isSending = true;
     });
     _messageController.clear();
+    _scrollToBottom();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
+    try {
+      final response = await _chatService.sendMessage(
+        message: value,
+        language: 'English',
+        previousInteractionId: _previousInteractionId,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _previousInteractionId = response.interactionId;
+        _messages.add(
+          _ChatMessage(
+            text: response.reply,
+            isUser: false,
+            time: _currentTime(),
+          ),
         );
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      final message = error.toString().replaceFirst('Exception: ', '');
+
+      setState(() {
+        _messages.add(
+          _ChatMessage(
+            text: message,
+            isUser: false,
+            time: _currentTime(),
+          ),
+        );
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isSending = false);
+        _scrollToBottom();
       }
-    });
+    }
   }
 
-  String _responseFor(String question) {
-    final value = question.toLowerCase();
-    if (value.contains('crowd')) {
-      return 'Old Town Square is currently Moderate at 58% capacity. Lumina Botanical Gardens is Low at 27% capacity.';
-    }
-    if (value.contains('hour')) {
-      return 'National Museum is open today from 9:00 AM to 5:00 PM. Last entry is at 4:30 PM.';
-    }
-    if (value.contains('transport')) {
-      return 'You can reach National Museum by MRT Muzium Negara. The entrance is about a 5-minute walk from Gate B.';
-    }
-    if (value.contains('slot') || value.contains('attraction')) {
-      return 'I found several available attractions. National Museum has slots at 10:30 AM and 2:00 PM, while Lake Garden has a low-crowd slot at 4:00 PM.';
-    }
-    return 'I found information related to your question. If you still need help, you can create a support ticket for an administrator or attraction operator.';
+  String _currentTime() {
+    final now = DateTime.now();
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   @override
@@ -100,7 +134,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         onLogout: () => Navigator.pushNamedAndRemoveUntil(
           context,
           '/sign-in',
-          (route) => false,
+              (route) => false,
         ),
       ),
       appBar: AppBar(
@@ -174,11 +208,15 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                 const _AssistantInfoCard(),
                 const SizedBox(height: 14),
                 ..._messages.map(
-                  (message) => Padding(
+                      (message) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: _MessageBubble(message: message),
                   ),
                 ),
+                if (_isSending) ...[
+                  const _TypingIndicator(),
+                  const SizedBox(height: 10),
+                ],
                 const SizedBox(height: 4),
                 const Text(
                   'Quick questions',
@@ -195,17 +233,19 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                   children: _quickQuestions
                       .map(
                         (question) => ActionChip(
-                          onPressed: () => _sendMessage(question),
-                          avatar: const Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 16,
-                            color: TourFlowColors.primaryText,
-                          ),
-                          label: Text(question),
-                          backgroundColor: Colors.white,
-                          side: const BorderSide(color: TourFlowColors.border),
-                        ),
-                      )
+                      onPressed: _isSending
+                          ? null
+                          : () => _sendMessage(question),
+                      avatar: const Icon(
+                        Icons.auto_awesome_rounded,
+                        size: 16,
+                        color: TourFlowColors.primaryText,
+                      ),
+                      label: Text(question),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: TourFlowColors.border),
+                    ),
+                  )
                       .toList(),
                 ),
                 const SizedBox(height: 14),
@@ -235,10 +275,48 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
           _MessageComposer(
             controller: _messageController,
             onSend: _sendMessage,
+            isSending: _isSending,
           ),
         ],
       ),
       bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 3),
+    );
+  }
+}
+
+class _TypingIndicator extends StatelessWidget {
+  const _TypingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Align(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 15,
+            backgroundColor: TourFlowColors.primary,
+            foregroundColor: TourFlowColors.primaryText,
+            child: Icon(Icons.smart_toy_outlined, size: 16),
+          ),
+          SizedBox(width: 7),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(15)),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -303,7 +381,7 @@ class _MessageBubble extends StatelessWidget {
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Row(
         mainAxisAlignment:
-            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!message.isUser) ...[
@@ -423,10 +501,15 @@ class _RecommendationCard extends StatelessWidget {
 }
 
 class _MessageComposer extends StatelessWidget {
-  const _MessageComposer({required this.controller, required this.onSend});
+  const _MessageComposer({
+    required this.controller,
+    required this.onSend,
+    required this.isSending,
+  });
 
   final TextEditingController controller;
   final VoidCallback onSend;
+  final bool isSending;
 
   @override
   Widget build(BuildContext context) {
@@ -443,6 +526,7 @@ class _MessageComposer extends StatelessWidget {
             Expanded(
               child: TextField(
                 controller: controller,
+                enabled: !isSending,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => onSend(),
                 decoration: InputDecoration(
@@ -462,12 +546,18 @@ class _MessageComposer extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             IconButton.filled(
-              onPressed: onSend,
+              onPressed: isSending ? null : onSend,
               style: IconButton.styleFrom(
                 backgroundColor: TourFlowColors.primary,
                 foregroundColor: TourFlowColors.primaryText,
               ),
-              icon: const Icon(Icons.send_rounded),
+              icon: isSending
+                  ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+                  : const Icon(Icons.send_rounded),
             ),
           ],
         ),
