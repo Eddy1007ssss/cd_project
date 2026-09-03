@@ -2,10 +2,56 @@ import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
 
-class AdminAttractionReviewPage extends StatelessWidget {
+class AdminAttractionReviewPage extends StatefulWidget {
   const AdminAttractionReviewPage({super.key});
 
   static const routeName = '/admin-attraction-review';
+
+  @override
+  State<AdminAttractionReviewPage> createState() =>
+      _AdminAttractionReviewPageState();
+}
+
+class _AdminAttractionReviewPageState extends State<AdminAttractionReviewPage> {
+  String _status = 'PENDING';
+
+  Future<void> _decide(String decision) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('$decision attraction?'),
+        content: Text(switch (decision) {
+          'Approve' =>
+            'The listing will become approved and visible to tourists.',
+          'Suspend' =>
+            'The approved listing will be hidden from tourists until an administrator restores it.',
+          _ =>
+            'The operator will receive the review note and may revise the listing.',
+        }),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Go Back'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(decision),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(
+      () => _status = switch (decision) {
+        'Approve' => 'APPROVED',
+        'Suspend' => 'SUSPENDED',
+        _ => 'REJECTED',
+      },
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Attraction ${_status.toLowerCase()}.')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +62,7 @@ class AdminAttractionReviewPage extends StatelessWidget {
       selectedNavigationIndex: 0,
       child: Column(
         children: [
-          const ModuleCard(
+          ModuleCard(
             color: TourFlowColors.lavender,
             child: Row(
               children: [
@@ -51,8 +97,13 @@ class AdminAttractionReviewPage extends StatelessWidget {
                   ),
                 ),
                 StatusChip(
-                  label: 'PENDING',
-                  color: TourFlowColors.warning,
+                  label: _status,
+                  color: switch (_status) {
+                    'APPROVED' => TourFlowColors.success,
+                    'REJECTED' => TourFlowColors.danger,
+                    'SUSPENDED' => TourFlowColors.danger,
+                    _ => TourFlowColors.warning,
+                  },
                 ),
               ],
             ),
@@ -141,19 +192,25 @@ class AdminAttractionReviewPage extends StatelessWidget {
               children: [
                 SectionTitle('Operating & Capacity'),
                 SizedBox(height: 14),
-                _ReviewRow(
-                  label: 'Opening Days',
-                  value: 'Monday – Sunday',
-                ),
+                _ReviewRow(label: 'Opening Days', value: 'Monday – Sunday'),
                 Divider(height: 24),
-                _ReviewRow(
-                  label: 'Opening Hours',
-                  value: '08:00 – 20:00',
-                ),
+                _ReviewRow(label: 'Opening Hours', value: '08:00 – 20:00'),
                 Divider(height: 24),
                 _ReviewRow(label: 'Maximum Capacity', value: '120 visitors'),
                 Divider(height: 24),
-                _ReviewRow(label: 'Check-In', value: 'QR + Mobile Staff'),
+                _ReviewRow(label: 'Attraction Type', value: 'Outdoor'),
+                Divider(height: 24),
+                _ReviewRow(
+                  label: 'Check-In',
+                  value: 'GPS Geofence + Roaming Staff QR',
+                ),
+                Divider(height: 24),
+                _ReviewRow(label: 'Entrance Price', value: 'RM 18.00'),
+                Divider(height: 24),
+                _ReviewRow(
+                  label: 'Facilities',
+                  value: 'Toilets · Café · Accessible paths',
+                ),
               ],
             ),
           ),
@@ -247,10 +304,18 @@ class AdminAttractionReviewPage extends StatelessWidget {
                 child: SizedBox(
                   height: 50,
                   child: OutlineActionButton(
-                    label: 'Reject',
-                    icon: Icons.close_rounded,
+                    label: _status == 'APPROVED' ? 'Suspend' : 'Reject',
+                    icon: _status == 'APPROVED'
+                        ? Icons.pause_circle_outline_rounded
+                        : Icons.close_rounded,
                     color: TourFlowColors.danger,
-                    onPressed: () {},
+                    onPressed: () {
+                      if (_status == 'PENDING') {
+                        _decide('Reject');
+                      } else if (_status == 'APPROVED') {
+                        _decide('Suspend');
+                      }
+                    },
                   ),
                 ),
               ),
@@ -259,7 +324,9 @@ class AdminAttractionReviewPage extends StatelessWidget {
                 child: PrimaryButton(
                   label: 'Approve',
                   icon: Icons.check_rounded,
-                  onPressed: () {},
+                  onPressed: () {
+                    if (_status == 'PENDING') _decide('Approve');
+                  },
                 ),
               ),
             ],
@@ -302,10 +369,7 @@ class _ReviewRow extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-              color: TourFlowColors.muted,
-              fontSize: 11,
-            ),
+            style: const TextStyle(color: TourFlowColors.muted, fontSize: 11),
           ),
         ),
         const SizedBox(width: 12),

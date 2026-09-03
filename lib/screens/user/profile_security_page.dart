@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import 'language_settings_page.dart';
 
 class ProfileSecurityPage extends StatefulWidget {
   const ProfileSecurityPage({super.key});
@@ -15,6 +15,51 @@ class ProfileSecurityPage extends StatefulWidget {
 class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
   bool _twoFactor = true;
   bool _loginAlerts = true;
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _showPasswordDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Change Password'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(labelText: 'Current password'),
+            ),
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(labelText: 'New password'),
+            ),
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(labelText: 'Confirm new password'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _showMessage('Password updated for this UI demonstration.');
+            },
+            child: const Text('Update Password'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +116,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
             ),
           ),
           const SizedBox(height: 16),
-          const ModuleCard(
+          ModuleCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -79,7 +124,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 SizedBox(height: 18),
                 StaticField(label: 'Full Name', value: 'Alex Thompson'),
                 SizedBox(height: 14),
-                StaticField(
+                const StaticField(
                   label: 'Phone Number',
                   value: '+60 12-345 6789',
                   icon: Icons.phone_outlined,
@@ -89,9 +134,17 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                   label: 'Preferred Language',
                   value: 'English (Malaysia)',
                   icon: Icons.language_outlined,
+                  trailing: IconButton(
+                    tooltip: 'Change language',
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      LanguageSettingsPage.routeName,
+                    ),
+                    icon: const Icon(Icons.chevron_right_rounded),
+                  ),
                 ),
                 SizedBox(height: 14),
-                StaticField(
+                const StaticField(
                   label: 'Home Address',
                   value: 'Kuala Lumpur, Malaysia',
                   icon: Icons.home_outlined,
@@ -109,10 +162,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
               subtitle: const Text('Ratings, feedback and issue reports'),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  '/feedback-centre',
-                );
+                Navigator.pushNamed(context, '/feedback-centre');
               },
             ),
           ),
@@ -129,7 +179,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                   title: const Text('Change Password'),
                   subtitle: const Text('Update your account security key'),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {},
+                  onTap: _showPasswordDialog,
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -137,7 +187,9 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                   title: const Text('Reset Password Link'),
                   subtitle: const Text('Send a recovery link to your email'),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {},
+                  onTap: () => _showMessage(
+                    'Password reset link sent to alex.thompson@tourflow.com.',
+                  ),
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
@@ -157,10 +209,10 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
             ),
           ),
           const SizedBox(height: 16),
-          PrimaryButton(label: 'Save Profile Changes',
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, ProfileSecurityPage.routeName);
-              }),
+          PrimaryButton(
+            label: 'Save Profile Changes',
+            onPressed: () => _showMessage('Profile changes saved.'),
+          ),
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
@@ -168,7 +220,30 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
               label: 'Deactivate Account',
               color: TourFlowColors.danger,
               icon: Icons.block_rounded,
-              onPressed: () {},
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Deactivate account?'),
+                  content: const Text(
+                    'You will be signed out and an administrator must reactivate this account.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('Keep Account'),
+                    ),
+                    FilledButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        _showMessage(
+                          'Account deactivation confirmed for demo.',
+                        );
+                      },
+                      child: const Text('Deactivate'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
