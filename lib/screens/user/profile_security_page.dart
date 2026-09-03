@@ -158,7 +158,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.rate_review_outlined),
-              title: const Text('View Feedback'),
+              title: const Text('Feedback Centre'),
               subtitle: const Text('Ratings, feedback and issue reports'),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {

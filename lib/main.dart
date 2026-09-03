@@ -23,6 +23,7 @@ import 'screens/user/chat_history_page.dart';
 import 'screens/user/chat_support_page.dart';
 import 'screens/user/itinerary_planner_page.dart';
 import 'screens/user/language_settings_page.dart';
+import 'screens/user/my_feedback_page.dart';
 import 'screens/user/nearby_attractions_page.dart';
 import 'screens/user/discovery_preferences_page.dart';
 import 'screens/user/profile_security_page.dart';
@@ -97,6 +98,7 @@ class MyApp extends StatelessWidget {
         ProfileSecurityPage.routeName: (_) => const ProfileSecurityPage(),
         FeedbackCentrePage.routeName: (_) => const FeedbackCentrePage(),
         SubmitFeedbackPage.routeName: (_) => const SubmitFeedbackPage(),
+        MyFeedbackPage.routeName: (_) => const MyFeedbackPage(),
         ReportIssuePage.routeName: (_) => const ReportIssuePage(),
         ReportStatusPage.routeName: (_) => const ReportStatusPage(),
         GeofencePage.routeName: (_) => const GeofencePage(),
