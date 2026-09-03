@@ -25,12 +25,11 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
   final GeminiChatService _chatService = GeminiChatService();
 
   bool _isSending = false;
-  String? _previousInteractionId;
 
   final List<_ChatMessage> _messages = [
     const _ChatMessage(
       text:
-      'Hello Alex! I am your TourFlow assistant. I can help with attractions, available slots, opening hours, transportation and live crowd levels.',
+          'Hello Alex! I am your TourFlow assistant. I can help with attractions, available slots, opening hours, transportation and live crowd levels.',
       isUser: false,
       time: '10:24',
     ),
@@ -67,13 +66,11 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
       final response = await _chatService.sendMessage(
         message: value,
         language: 'English',
-        previousInteractionId: _previousInteractionId,
       );
 
       if (!mounted) return;
 
       setState(() {
-        _previousInteractionId = response.interactionId;
         _messages.add(
           _ChatMessage(
             text: response.reply,
@@ -89,11 +86,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
 
       setState(() {
         _messages.add(
-          _ChatMessage(
-            text: message,
-            isUser: false,
-            time: _currentTime(),
-          ),
+          _ChatMessage(text: message, isUser: false, time: _currentTime()),
         );
       });
     } finally {
@@ -134,7 +127,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         onLogout: () => Navigator.pushNamedAndRemoveUntil(
           context,
           '/sign-in',
-              (route) => false,
+          (route) => false,
         ),
       ),
       appBar: AppBar(
@@ -162,10 +155,8 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         actions: [
           IconButton(
             tooltip: 'Language',
-            onPressed: () => Navigator.pushNamed(
-              context,
-              LanguageSettingsPage.routeName,
-            ),
+            onPressed: () =>
+                Navigator.pushNamed(context, LanguageSettingsPage.routeName),
             icon: const Icon(Icons.translate_rounded),
           ),
           PopupMenuButton<String>(
@@ -208,7 +199,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                 const _AssistantInfoCard(),
                 const SizedBox(height: 14),
                 ..._messages.map(
-                      (message) => Padding(
+                  (message) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: _MessageBubble(message: message),
                   ),
@@ -233,19 +224,19 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                   children: _quickQuestions
                       .map(
                         (question) => ActionChip(
-                      onPressed: _isSending
-                          ? null
-                          : () => _sendMessage(question),
-                      avatar: const Icon(
-                        Icons.auto_awesome_rounded,
-                        size: 16,
-                        color: TourFlowColors.primaryText,
-                      ),
-                      label: Text(question),
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: TourFlowColors.border),
-                    ),
-                  )
+                          onPressed: _isSending
+                              ? null
+                              : () => _sendMessage(question),
+                          avatar: const Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 16,
+                            color: TourFlowColors.primaryText,
+                          ),
+                          label: Text(question),
+                          backgroundColor: Colors.white,
+                          side: const BorderSide(color: TourFlowColors.border),
+                        ),
+                      )
                       .toList(),
                 ),
                 const SizedBox(height: 14),
@@ -354,7 +345,8 @@ class _AssistantInfoCard extends StatelessWidget {
                 ),
                 SizedBox(height: 3),
                 Text(
-                  'Answers use attraction information, booking availability, visitor guidelines and live crowd data.',
+                  'Ask for general TourFlow guidance. Check the relevant page '
+                  'for verified bookings, availability, prices, and live crowd data.',
                   style: TextStyle(
                     color: TourFlowColors.muted,
                     fontSize: 11,
@@ -380,8 +372,9 @@ class _MessageBubble extends StatelessWidget {
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Row(
-        mainAxisAlignment:
-        message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: message.isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!message.isUser) ...[
@@ -398,9 +391,7 @@ class _MessageBubble extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 520),
               padding: const EdgeInsets.fromLTRB(13, 10, 13, 8),
               decoration: BoxDecoration(
-                color: message.isUser
-                    ? TourFlowColors.primary
-                    : Colors.white,
+                color: message.isUser ? TourFlowColors.primary : Colors.white,
                 border: Border.all(
                   color: message.isUser
                       ? TourFlowColors.primary
@@ -485,10 +476,7 @@ class _RecommendationCard extends StatelessWidget {
                 SizedBox(height: 3),
                 Text(
                   'Browse available attractions and time slots.',
-                  style: TextStyle(
-                    color: TourFlowColors.muted,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: TourFlowColors.muted, fontSize: 11),
                 ),
               ],
             ),
@@ -553,10 +541,10 @@ class _MessageComposer extends StatelessWidget {
               ),
               icon: isSending
                   ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.send_rounded),
             ),
           ],

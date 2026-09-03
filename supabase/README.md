@@ -11,6 +11,8 @@ run these files once and in order:
 
 1. `migrations/202609020001_module1_foundation.sql`
 2. `migrations/202609020002_module3_bookings_itineraries.sql`
+3. `migrations/202609030001_module2_discovery.sql`
+4. `migrations/202609030002_engagement_and_hardening.sql`
 
 In Authentication settings, enable Email/Password and keep email confirmation
 disabled for the current tutor-demo environment.
@@ -61,3 +63,16 @@ flutter run
 The public project URL and publishable client key are configured in
 `lib/config/supabase.dart`. Never place the database password or service-role
 key in the Flutter application.
+
+## Deploy chatbot support
+
+Install and link the Supabase CLI, store `GEMINI_API_KEY` as a Supabase
+project secret, and deploy the authenticated function:
+
+```powershell
+supabase secrets set GEMINI_API_KEY=your-key
+supabase functions deploy gemini-chat
+```
+
+The Gemini key belongs only in Supabase Secrets. The function requires a valid
+user JWT and deliberately does not return upstream provider response details.

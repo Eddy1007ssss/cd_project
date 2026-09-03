@@ -10,8 +10,7 @@ class OperatorQrScannerPage extends StatefulWidget {
   static const String routeName = '/operator-qr-scanner';
 
   @override
-  State<OperatorQrScannerPage> createState() =>
-      _OperatorQrScannerPageState();
+  State<OperatorQrScannerPage> createState() => _OperatorQrScannerPageState();
 }
 
 class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
@@ -20,16 +19,11 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
   // ============================================================
 
   final TextEditingController _bookingReferenceController =
-  TextEditingController(
-    text: 'NM-170926-1600-A1',
-  );
+      TextEditingController(text: 'NM-170926-1600-A1');
 
-  final MobileScannerController _scannerController =
-  MobileScannerController(
+  final MobileScannerController _scannerController = MobileScannerController(
     autoStart: false,
-    formats: [
-      BarcodeFormat.qrCode,
-    ],
+    formats: [BarcodeFormat.qrCode],
   );
 
   // ============================================================
@@ -75,10 +69,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
           return;
         }
 
-        Navigator.pushReplacementNamed(
-          context,
-          routeName,
-        );
+        Navigator.pushReplacementNamed(context, routeName);
 
         return;
       }
@@ -94,8 +85,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
       return;
     }
 
-    final String? routeName =
-        staffNavigationItems[index].routeName;
+    final String? routeName = staffNavigationItems[index].routeName;
 
     if (routeName == null || routeName.isEmpty) {
       return;
@@ -105,10 +95,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
       return;
     }
 
-    Navigator.pushReplacementNamed(
-      context,
-      routeName,
-    );
+    Navigator.pushReplacementNamed(context, routeName);
   }
 
   // ============================================================
@@ -121,9 +108,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
       _isScanning = true;
     });
 
-    await Future.delayed(
-      const Duration(milliseconds: 500),
-    );
+    await Future.delayed(const Duration(milliseconds: 500));
 
     if (!mounted) return;
 
@@ -142,13 +127,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              'Camera error: ${e.errorCode}',
-            ),
-          ),
-        );
+        ..showSnackBar(SnackBar(content: Text('Camera error: ${e.errorCode}')));
     } catch (e) {
       debugPrint('Camera error: $e');
 
@@ -161,13 +140,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              'Camera error: $e',
-            ),
-          ),
-        );
+        ..showSnackBar(SnackBar(content: Text('Camera error: $e')));
     }
   }
   // ============================================================
@@ -196,11 +169,9 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
       return;
     }
 
-    final String? scannedValue =
-        capture.barcodes.first.rawValue;
+    final String? scannedValue = capture.barcodes.first.rawValue;
 
-    if (scannedValue == null ||
-        scannedValue.trim().isEmpty) {
+    if (scannedValue == null || scannedValue.trim().isEmpty) {
       return;
     }
 
@@ -214,8 +185,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
     setState(() {
       _cameraOpen = false;
 
-      _bookingReferenceController.text =
-          scannedValue.trim();
+      _bookingReferenceController.text = scannedValue.trim();
 
       _bookingVerified = true;
       _visitorCheckedIn = false;
@@ -230,11 +200,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(
-            'Booking QR scanned: ${scannedValue.trim()}',
-          ),
-        ),
+        SnackBar(content: Text('Booking QR scanned: ${scannedValue.trim()}')),
       );
   }
 
@@ -245,8 +211,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
   void _searchBooking() {
     FocusScope.of(context).unfocus();
 
-    final bookingReference =
-    _bookingReferenceController.text.trim();
+    final bookingReference = _bookingReferenceController.text.trim();
 
     if (bookingReference.isEmpty) {
       setState(() {
@@ -257,11 +222,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Please enter a booking reference.',
-            ),
-          ),
+          const SnackBar(content: Text('Please enter a booking reference.')),
         );
 
       return;
@@ -281,11 +242,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(
-            'Booking $bookingReference verified.',
-          ),
-        ),
+        SnackBar(content: Text('Booking $bookingReference verified.')),
       );
   }
 
@@ -309,9 +266,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
           ),
           title: const Text(
             'Confirm Check-In',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w800),
           ),
           content: Text(
             'Confirm check-in for $_visitorName at $_attractionName?',
@@ -322,9 +277,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
-              child: const Text(
-                'Cancel',
-              ),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () {
@@ -338,23 +291,17 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
                   ..hideCurrentSnackBar()
                   ..showSnackBar(
                     const SnackBar(
-                      content: Text(
-                        'Visitor checked in successfully.',
-                      ),
+                      content: Text('Visitor checked in successfully.'),
                     ),
                   );
               },
               style: FilledButton.styleFrom(
-                backgroundColor:
-                const Color(0xFFFFCD84),
-                foregroundColor:
-                const Color(0xFF79571E),
+                backgroundColor: const Color(0xFFFFCD84),
+                foregroundColor: const Color(0xFF79571E),
               ),
               child: const Text(
                 'Confirm',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -370,24 +317,21 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-      const Color(0xFFFAF8FF),
+      backgroundColor: const Color(0xFFFAF8FF),
 
       // ========================================================
       // SIDEBAR
       // ========================================================
-
       drawer: StaffSidebar(
         displayName: 'Operator',
         email: 'operator@tourflow.com',
         selectedIndex: 3,
-        onItemSelected:
-        _handleSidebarNavigation,
+        onItemSelected: _handleSidebarNavigation,
         onLogout: () {
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/sign-in',
-                (route) => false,
+            (route) => false,
           );
         },
       ),
@@ -395,24 +339,20 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
       // ========================================================
       // HEADER
       // ========================================================
-
       appBar: AppBar(
         backgroundColor: Colors.white,
-        surfaceTintColor:
-        Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         titleSpacing: 0,
         title: const Column(
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'QR Scanner',
               style: TextStyle(
                 color: Color(0xFF131B2E),
                 fontSize: 18,
-                fontWeight:
-                FontWeight.w800,
+                fontWeight: FontWeight.w800,
               ),
             ),
             SizedBox(height: 1),
@@ -421,19 +361,15 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
               style: TextStyle(
                 color: Color(0xFF79571E),
                 fontSize: 10,
-                fontWeight:
-                FontWeight.w600,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
         actions: const [
           Padding(
-            padding:
-            EdgeInsets.only(right: 14),
-            child: Center(
-              child: _OperatorBadge(),
-            ),
+            padding: EdgeInsets.only(right: 14),
+            child: Center(child: _OperatorBadge()),
           ),
         ],
       ),
@@ -441,50 +377,32 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
       // ========================================================
       // BODY
       // ========================================================
-
       body: Center(
         child: ConstrainedBox(
-          constraints:
-          const BoxConstraints(
-            maxWidth: 760,
-          ),
+          constraints: const BoxConstraints(maxWidth: 760),
           child: SingleChildScrollView(
-            padding:
-            const EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
-              30,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // =================================================
                 // INTRODUCTION CARD
                 // =================================================
-
                 Container(
-                  padding:
-                  const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color:
-                    const Color(0xFFEEF5FF),
-                    borderRadius:
-                    BorderRadius.circular(15),
+                    color: const Color(0xFFEEF5FF),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Operator QR Scanner',
                         style: TextStyle(
-                          color:
-                          Color(0xFF3B82F6),
+                          color: Color(0xFF3B82F6),
                           fontSize: 16,
-                          fontWeight:
-                          FontWeight.w800,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
 
@@ -493,8 +411,7 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
                       const Text(
                         'Scan a tourist booking QR code or search by booking reference.',
                         style: TextStyle(
-                          color:
-                          Color(0xFF475467),
+                          color: Color(0xFF475467),
                           fontSize: 11,
                           height: 1.4,
                         ),
@@ -503,28 +420,20 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
                       const SizedBox(height: 12),
 
                       Container(
-                        padding:
-                        const EdgeInsets
-                            .symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
                         ),
-                        decoration:
-                        BoxDecoration(
-                          color: const Color(
-                            0xFF4285F4,
-                          ),
-                          borderRadius:
-                          BorderRadius
-                              .circular(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4285F4),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
                           'OPERATOR MODE',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
-                            fontWeight:
-                            FontWeight.w700,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -537,260 +446,164 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
                 // =================================================
                 // CAMERA QR SCANNER
                 // =================================================
-
                 Container(
                   width: double.infinity,
                   height: 270,
-                  clipBehavior:
-                  Clip.antiAlias,
+                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    color:
-                    const Color(0xFF111827),
-                    borderRadius:
-                    BorderRadius.circular(16),
+                    color: const Color(0xFF111827),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: _cameraOpen
                       ? Stack(
-                    fit:
-                    StackFit.expand,
-                    children: [
-                      // ===========================
-                      // REAL CAMERA
-                      // ===========================
-
-                      MobileScanner(
-                        controller:
-                        _scannerController,
-                        onDetect:
-                        _handleQrDetected,
-                      ),
-
-                      // ===========================
-                      // SCAN AREA
-                      // ===========================
-
-                      Center(
-                        child: Container(
-                          width: 180,
-                          height: 180,
-                          decoration:
-                          BoxDecoration(
-                            borderRadius:
-                            BorderRadius
-                                .circular(
-                              14,
+                          fit: StackFit.expand,
+                          children: [
+                            // ===========================
+                            // REAL CAMERA
+                            // ===========================
+                            MobileScanner(
+                              controller: _scannerController,
+                              onDetect: _handleQrDetected,
                             ),
-                            border:
-                            Border.all(
-                              color:
-                              const Color(
-                                0xFF00E94F,
+
+                            // ===========================
+                            // SCAN AREA
+                            // ===========================
+                            Center(
+                              child: Container(
+                                width: 180,
+                                height: 180,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: const Color(0xFF00E94F),
+                                    width: 4,
+                                  ),
+                                ),
                               ),
-                              width: 4,
                             ),
-                          ),
-                        ),
-                      ),
 
-                      // ===========================
-                      // CLOSE BUTTON
-                      // ===========================
-
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Material(
-                          color:
-                          Colors.black54,
-                          shape:
-                          const CircleBorder(),
-                          child:
-                          IconButton(
-                            onPressed:
-                            _closeCamera,
-                            icon:
-                            const Icon(
-                              Icons
-                                  .close_rounded,
-                              color:
-                              Colors.white,
+                            // ===========================
+                            // CLOSE BUTTON
+                            // ===========================
+                            Positioned(
+                              top: 12,
+                              right: 12,
+                              child: Material(
+                                color: Colors.black54,
+                                shape: const CircleBorder(),
+                                child: IconButton(
+                                  onPressed: _closeCamera,
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
 
-                      // ===========================
-                      // CAMERA TEXT
-                      // ===========================
-
-                      Positioned(
-                        bottom: 14,
-                        left: 20,
-                        right: 20,
-                        child: Container(
-                          padding:
-                          const EdgeInsets
-                              .symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          decoration:
-                          BoxDecoration(
-                            color:
-                            Colors.black54,
-                            borderRadius:
-                            BorderRadius
-                                .circular(
-                              20,
+                            // ===========================
+                            // CAMERA TEXT
+                            // ===========================
+                            Positioned(
+                              bottom: 14,
+                              left: 20,
+                              right: 20,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 7,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'Point the camera at the tourist booking QR',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                          child:
-                          const Text(
-                            'Point the camera at the tourist booking QR',
-                            textAlign:
-                            TextAlign
-                                .center,
-                            style:
-                            TextStyle(
-                              color:
-                              Colors.white,
-                              fontSize: 10,
-                              fontWeight:
-                              FontWeight
-                                  .w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-
-                  // =================================================
-                  // CAMERA CLOSED
-                  // =================================================
-
+                          ],
+                        )
+                      // =================================================
+                      // CAMERA CLOSED
+                      // =================================================
                       : Column(
-                    mainAxisAlignment:
-                    MainAxisAlignment
-                        .center,
-                    children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration:
-                        const BoxDecoration(
-                          color:
-                          Color(
-                            0xFF1F2937,
-                          ),
-                          shape:
-                          BoxShape.circle,
-                        ),
-                        child:
-                        const Icon(
-                          Icons
-                              .qr_code_scanner_rounded,
-                          color:
-                          Colors.white,
-                          size: 38,
-                        ),
-                      ),
-
-                      const SizedBox(
-                        height: 14,
-                      ),
-
-                      const Text(
-                        'Scan Tourist QR Code',
-                        style:
-                        TextStyle(
-                          color:
-                          Colors.white,
-                          fontSize: 16,
-                          fontWeight:
-                          FontWeight
-                              .w800,
-                        ),
-                      ),
-
-                      const SizedBox(
-                        height: 6,
-                      ),
-
-                      const Padding(
-                        padding:
-                        EdgeInsets
-                            .symmetric(
-                          horizontal: 20,
-                        ),
-                        child: Text(
-                          'Use the camera to scan the tourist booking QR code.',
-                          textAlign:
-                          TextAlign
-                              .center,
-                          style:
-                          TextStyle(
-                            color:
-                            Color(
-                              0xFFCBD5E1,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF1F2937),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.qr_code_scanner_rounded,
+                                color: Colors.white,
+                                size: 38,
+                              ),
                             ),
-                            fontSize: 10,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
 
-                      const SizedBox(
-                        height: 18,
-                      ),
+                            const SizedBox(height: 14),
 
-                      FilledButton.icon(
-                        onPressed:
-                        _openCamera,
-                        style:
-                        FilledButton
-                            .styleFrom(
-                          backgroundColor:
-                          const Color(
-                            0xFF4285F4,
-                          ),
-                          foregroundColor:
-                          Colors.white,
-                          elevation: 0,
-                          padding:
-                          const EdgeInsets
-                              .symmetric(
-                            horizontal: 20,
-                            vertical: 11,
-                          ),
-                          shape:
-                          RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius
-                                .circular(
-                              22,
+                            const Text(
+                              'Scan Tourist QR Code',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
+
+                            const SizedBox(height: 6),
+
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'Use the camera to scan the tourist booking QR code.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFFCBD5E1),
+                                  fontSize: 10,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            FilledButton.icon(
+                              onPressed: _openCamera,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF4285F4),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 11,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.camera_alt_outlined,
+                                size: 18,
+                              ),
+                              label: const Text(
+                                'Open Camera',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
                         ),
-                        icon:
-                        const Icon(
-                          Icons
-                              .camera_alt_outlined,
-                          size: 18,
-                        ),
-                        label:
-                        const Text(
-                          'Open Camera',
-                          style:
-                          TextStyle(
-                            fontWeight:
-                            FontWeight
-                                .w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
 
                 const SizedBox(height: 12),
@@ -798,81 +611,48 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
                 // =================================================
                 // MANUAL BOOKING REFERENCE
                 // =================================================
-
                 TextField(
-                  controller:
-                  _bookingReferenceController,
+                  controller: _bookingReferenceController,
                   onChanged: (_) {
                     if (_bookingVerified) {
                       setState(() {
-                        _bookingVerified =
-                        false;
-                        _visitorCheckedIn =
-                        false;
+                        _bookingVerified = false;
+                        _visitorCheckedIn = false;
                       });
                     }
                   },
-                  decoration:
-                  InputDecoration(
-                    labelText:
-                    'Manual booking reference',
-                    labelStyle:
-                    const TextStyle(
-                      color:
-                      Color(0xFF667085),
+                  decoration: InputDecoration(
+                    labelText: 'Manual booking reference',
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF667085),
                       fontSize: 11,
                     ),
-                    hintText:
-                    'Enter booking reference',
+                    hintText: 'Enter booking reference',
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding:
-                    const EdgeInsets
-                        .symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 15,
                     ),
 
-                    suffixIcon:
-                    IconButton(
-                      tooltip:
-                      'Search booking',
-                      onPressed:
-                      _searchBooking,
+                    suffixIcon: IconButton(
+                      tooltip: 'Search booking',
+                      onPressed: _searchBooking,
                       icon: const Icon(
                         Icons.search_rounded,
-                        color:
-                        Color(
-                          0xFF79571E,
-                        ),
+                        color: Color(0xFF79571E),
                       ),
                     ),
 
-                    enabledBorder:
-                    OutlineInputBorder(
-                      borderRadius:
-                      BorderRadius
-                          .circular(12),
-                      borderSide:
-                      const BorderSide(
-                        color:
-                        Color(
-                          0xFFB8C1CF,
-                        ),
-                      ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFB8C1CF)),
                     ),
 
-                    focusedBorder:
-                    OutlineInputBorder(
-                      borderRadius:
-                      BorderRadius
-                          .circular(12),
-                      borderSide:
-                      const BorderSide(
-                        color:
-                        Color(
-                          0xFF79571E,
-                        ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF79571E),
                         width: 1.5,
                       ),
                     ),
@@ -884,186 +664,116 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
                 // =================================================
                 // VISITOR VERIFICATION
                 // =================================================
-
                 Container(
-                  padding:
-                  const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius:
-                    BorderRadius.circular(
-                      14,
-                    ),
-                    border: Border.all(
-                      color:
-                      const Color(
-                        0xFFE0E2E8,
-                      ),
-                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE0E2E8)),
                   ),
                   child: _bookingVerified
                       ? Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
-                    children: [
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Visitor Verification',
-                              style:
-                              TextStyle(
-                                color:
-                                Color(
-                                  0xFF131B2E,
-                                ),
-                                fontSize:
-                                13,
-                                fontWeight:
-                                FontWeight
-                                    .w800,
-                              ),
-                            ),
-                          ),
-
-                          Container(
-                            padding:
-                            const EdgeInsets
-                                .symmetric(
-                              horizontal:
-                              13,
-                              vertical:
-                              6,
-                            ),
-                            decoration:
-                            BoxDecoration(
-                              color: _visitorCheckedIn
-                                  ? const Color(
-                                0xFFEFF6FF,
-                              )
-                                  : const Color(
-                                0xFFECFDF3,
-                              ),
-                              borderRadius:
-                              BorderRadius
-                                  .circular(
-                                20,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize:
-                              MainAxisSize
-                                  .min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                Icon(
-                                  _visitorCheckedIn
-                                      ? Icons
-                                      .check_circle_rounded
-                                      : Icons
-                                      .circle,
-                                  size: 8,
-                                  color: _visitorCheckedIn
-                                      ? const Color(
-                                    0xFF2563EB,
-                                  )
-                                      : const Color(
-                                    0xFF22C55E,
+                                const Expanded(
+                                  child: Text(
+                                    'Visitor Verification',
+                                    style: TextStyle(
+                                      color: Color(0xFF131B2E),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                 ),
 
-                                const SizedBox(
-                                  width: 6,
-                                ),
-
-                                Text(
-                                  _visitorCheckedIn
-                                      ? 'Checked In'
-                                      : 'Valid',
-                                  style:
-                                  TextStyle(
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 13,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
                                     color: _visitorCheckedIn
-                                        ? const Color(
-                                      0xFF2563EB,
-                                    )
-                                        : const Color(
-                                      0xFF16A34A,
-                                    ),
-                                    fontSize:
-                                    10,
-                                    fontWeight:
-                                    FontWeight
-                                        .w600,
+                                        ? const Color(0xFFEFF6FF)
+                                        : const Color(0xFFECFDF3),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _visitorCheckedIn
+                                            ? Icons.check_circle_rounded
+                                            : Icons.circle,
+                                        size: 8,
+                                        color: _visitorCheckedIn
+                                            ? const Color(0xFF2563EB)
+                                            : const Color(0xFF22C55E),
+                                      ),
+
+                                      const SizedBox(width: 6),
+
+                                      Text(
+                                        _visitorCheckedIn
+                                            ? 'Checked In'
+                                            : 'Valid',
+                                        style: TextStyle(
+                                          color: _visitorCheckedIn
+                                              ? const Color(0xFF2563EB)
+                                              : const Color(0xFF16A34A),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
 
-                      const SizedBox(
-                        height: 11,
-                      ),
+                            const SizedBox(height: 11),
 
-                      Text(
-                        '$_visitorName · $_visitorCount · $_slotTime slot',
-                        style:
-                        const TextStyle(
-                          color:
-                          Color(
-                            0xFF475467,
-                          ),
-                          fontSize: 11,
-                          height: 1.4,
-                        ),
-                      ),
-
-                      const SizedBox(
-                        height: 6,
-                      ),
-
-                      Text(
-                        _attractionName,
-                        style:
-                        const TextStyle(
-                          color:
-                          Color(
-                            0xFF667085,
-                          ),
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  )
-                      : const Row(
-                    children: [
-                      Icon(
-                        Icons
-                            .info_outline_rounded,
-                        color:
-                        Color(
-                          0xFF667085,
-                        ),
-                        size: 20,
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Scan a QR code or search a booking reference to verify the visitor.',
-                          style:
-                          TextStyle(
-                            color:
-                            Color(
-                              0xFF667085,
+                            Text(
+                              '$_visitorName · $_visitorCount · $_slotTime slot',
+                              style: const TextStyle(
+                                color: Color(0xFF475467),
+                                fontSize: 11,
+                                height: 1.4,
+                              ),
                             ),
-                            fontSize: 11,
-                            height: 1.4,
-                          ),
+
+                            const SizedBox(height: 6),
+
+                            Text(
+                              _attractionName,
+                              style: const TextStyle(
+                                color: Color(0xFF667085),
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        )
+                      : const Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline_rounded,
+                              color: Color(0xFF667085),
+                              size: 20,
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Scan a QR code or search a booking reference to verify the visitor.',
+                                style: TextStyle(
+                                  color: Color(0xFF667085),
+                                  fontSize: 11,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
                 ),
 
                 const SizedBox(height: 12),
@@ -1071,52 +781,29 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
                 // =================================================
                 // CHECK-IN BUTTON
                 // =================================================
-
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child:
-                  FilledButton.icon(
-                    onPressed:
-                    !_bookingVerified ||
-                        _visitorCheckedIn
+                  child: FilledButton.icon(
+                    onPressed: !_bookingVerified || _visitorCheckedIn
                         ? null
                         : _checkInVisitor,
 
-                    style:
-                    FilledButton
-                        .styleFrom(
-                      backgroundColor:
-                      const Color(
-                        0xFFFFCD84,
-                      ),
-                      foregroundColor:
-                      const Color(
-                        0xFF79571E,
-                      ),
-                      disabledBackgroundColor:
-                      const Color(
-                        0xFFE9E5DE,
-                      ),
-                      disabledForegroundColor:
-                      const Color(
-                        0xFF98A2B3,
-                      ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFCD84),
+                      foregroundColor: const Color(0xFF79571E),
+                      disabledBackgroundColor: const Color(0xFFE9E5DE),
+                      disabledForegroundColor: const Color(0xFF98A2B3),
                       elevation: 0,
-                      shape:
-                      RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius
-                            .circular(9),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(9),
                       ),
                     ),
 
                     icon: Icon(
                       _visitorCheckedIn
-                          ? Icons
-                          .check_circle_outline
-                          : Icons
-                          .login_rounded,
+                          ? Icons.check_circle_outline
+                          : Icons.login_rounded,
                       size: 20,
                     ),
 
@@ -1124,11 +811,9 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
                       _visitorCheckedIn
                           ? 'Visitor Checked In'
                           : 'Check-In Visitor',
-                      style:
-                      const TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
-                        fontWeight:
-                        FontWeight.w800,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -1142,12 +827,9 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
       // ========================================================
       // FOOTER
       // ========================================================
-
-      bottomNavigationBar:
-      StaffBottomNavigationBar(
+      bottomNavigationBar: StaffBottomNavigationBar(
         selectedIndex: 3,
-        onItemSelected:
-        _handleBottomNavigation,
+        onItemSelected: _handleBottomNavigation,
       ),
     );
   }
@@ -1157,36 +839,24 @@ class _OperatorQrScannerPageState extends State<OperatorQrScannerPage> {
 // OPERATOR BADGE
 // ============================================================
 
-class _OperatorBadge
-    extends StatelessWidget {
+class _OperatorBadge extends StatelessWidget {
   const _OperatorBadge();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding:
-      const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color:
-        const Color(0xFFFFF6E8),
-        border: Border.all(
-          color:
-          const Color(0xFFE8D3B7),
-        ),
-        borderRadius:
-        BorderRadius.circular(20),
+        color: const Color(0xFFFFF6E8),
+        border: Border.all(color: const Color(0xFFE8D3B7)),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: const Text(
         'OPERATOR',
         style: TextStyle(
-          color:
-          Color(0xFF79571E),
+          color: Color(0xFF79571E),
           fontSize: 10,
-          fontWeight:
-          FontWeight.w700,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

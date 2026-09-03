@@ -124,12 +124,17 @@ declare
   selected_attraction public.attractions;
   conflicting_booking public.bookings;
   adjacent_record record;
+  next_record record;
   created_booking public.bookings;
   generated_code text;
 begin
   if (select auth.uid()) is null then raise exception 'Authentication required'; end if;
   if public.current_user_role() <> 'tourist' then raise exception 'Tourist access required'; end if;
   if requested_visitors not between 1 and 6 then raise exception 'Visitor count must be between 1 and 6'; end if;
+
+  -- Serialize booking decisions for one tourist even when two requests target
+  -- different slot rows. The slot lock below separately protects capacity.
+  perform pg_advisory_xact_lock(hashtextextended((select auth.uid())::text, 0));
 
   select * into selected_slot
   from public.attraction_slots where id = target_slot_id for update;
@@ -170,6 +175,20 @@ begin
   if adjacent_record.ends_at is not null
     and extract(epoch from (selected_slot.starts_at - adjacent_record.ends_at)) / 60
       < public.estimated_travel_minutes(adjacent_record.attraction_id, selected_attraction.id)
+  then raise exception 'INSUFFICIENT_TRAVEL_TIME'; end if;
+
+  select booked_slot.starts_at, attraction.id as attraction_id
+  into next_record
+  from public.bookings booking
+  join public.attraction_slots booked_slot on booked_slot.id = booking.slot_id
+  join public.attractions attraction on attraction.id = booked_slot.attraction_id
+  where booking.tourist_id = (select auth.uid())
+    and booking.status = 'confirmed'
+    and booked_slot.starts_at >= selected_slot.ends_at
+  order by booked_slot.starts_at limit 1;
+  if next_record.starts_at is not null
+    and extract(epoch from (next_record.starts_at - selected_slot.ends_at)) / 60
+      < public.estimated_travel_minutes(selected_attraction.id, next_record.attraction_id)
   then raise exception 'INSUFFICIENT_TRAVEL_TIME'; end if;
 
   loop

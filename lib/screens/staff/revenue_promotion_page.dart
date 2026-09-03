@@ -8,12 +8,10 @@ class RevenuePromotionPage extends StatefulWidget {
   static const routeName = '/revenue-promotion';
 
   @override
-  State<RevenuePromotionPage> createState() =>
-      _RevenuePromotionPageState();
+  State<RevenuePromotionPage> createState() => _RevenuePromotionPageState();
 }
 
-class _RevenuePromotionPageState
-    extends State<RevenuePromotionPage> {
+class _RevenuePromotionPageState extends State<RevenuePromotionPage> {
   DateTime? _selectedDate;
 
   @override
@@ -42,17 +40,11 @@ class _RevenuePromotionPageState
               ),
               SizedBox(width: 8),
               Expanded(
-                child: _RevenueSummaryCard(
-                  value: '+12%',
-                  label: 'Growth',
-                ),
+                child: _RevenueSummaryCard(value: '+12%', label: 'Growth'),
               ),
               SizedBox(width: 8),
               Expanded(
-                child: _RevenueSummaryCard(
-                  value: '1,684',
-                  label: 'Visitors',
-                ),
+                child: _RevenueSummaryCard(value: '1,684', label: 'Visitors'),
               ),
             ],
           ),
@@ -67,13 +59,8 @@ class _RevenuePromotionPageState
             style: OutlinedButton.styleFrom(
               foregroundColor: TourFlowColors.heading,
               backgroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              side: const BorderSide(
-                color: Color(0xFFE2E6EC),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              side: const BorderSide(color: Color(0xFFE2E6EC)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -82,10 +69,7 @@ class _RevenuePromotionPageState
               _selectedDate == null
                   ? 'Select a Date'
                   : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
             ),
           ),
 
@@ -113,18 +97,14 @@ class _RevenuePromotionPageState
                   height: 120,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: const [
                       _Bar(height: 44),
                       _Bar(height: 52),
                       _Bar(height: 66),
                       _Bar(height: 64),
                       _Bar(height: 78),
-                      _Bar(
-                        height: 98,
-                        highlighted: true,
-                      ),
+                      _Bar(height: 98, highlighted: true),
                       _Bar(height: 83),
                     ],
                   ),
@@ -166,11 +146,7 @@ class _RevenuePromotionPageState
                       ),
                       child: const Row(
                         children: [
-                          Icon(
-                            Icons.circle,
-                            size: 7,
-                            color: Color(0xFF22C875),
-                          ),
+                          Icon(Icons.circle, size: 7, color: Color(0xFF22C875)),
                           SizedBox(width: 5),
                           Text(
                             'Off-peak',
@@ -201,10 +177,7 @@ class _RevenuePromotionPageState
 
                 const Text(
                   'Suggested offer: 15% off off-peak slots',
-                  style: TextStyle(
-                    color: TourFlowColors.muted,
-                    fontSize: 9,
-                  ),
+                  style: TextStyle(color: TourFlowColors.muted, fontSize: 9),
                 ),
               ],
             ),
@@ -219,28 +192,20 @@ class _RevenuePromotionPageState
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  '/promotion-suggestion',
-                );
+                Navigator.pushNamed(context, '/promotion-suggestion');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFCC80),
                 foregroundColor: const Color(0xFF7A5200),
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 15,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(9),
                 ),
               ),
               child: const Text(
                 'View Suggested Promotion',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -266,10 +231,7 @@ class _RevenuePromotionPageState
 }
 
 class _RevenueSummaryCard extends StatelessWidget {
-  const _RevenueSummaryCard({
-    required this.value,
-    required this.label,
-  });
+  const _RevenueSummaryCard({required this.value, required this.label});
 
   final String value;
   final String label;
@@ -281,9 +243,7 @@ class _RevenueSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFE3E7ED),
-        ),
+        border: Border.all(color: const Color(0xFFE3E7ED)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -299,10 +259,7 @@ class _RevenueSummaryCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             label,
-            style: const TextStyle(
-              color: TourFlowColors.muted,
-              fontSize: 9,
-            ),
+            style: const TextStyle(color: TourFlowColors.muted, fontSize: 9),
           ),
         ],
       ),
@@ -311,10 +268,7 @@ class _RevenueSummaryCard extends StatelessWidget {
 }
 
 class _Bar extends StatelessWidget {
-  const _Bar({
-    required this.height,
-    this.highlighted = false,
-  });
+  const _Bar({required this.height, this.highlighted = false});
 
   final double height;
   final bool highlighted;
@@ -325,9 +279,7 @@ class _Bar extends StatelessWidget {
       width: 24,
       height: height,
       decoration: BoxDecoration(
-        color: highlighted
-            ? const Color(0xFFFFC46B)
-            : const Color(0xFFFFF2DF),
+        color: highlighted ? const Color(0xFFFFC46B) : const Color(0xFFFFF2DF),
         borderRadius: BorderRadius.circular(6),
       ),
     );

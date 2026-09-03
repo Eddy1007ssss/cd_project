@@ -64,10 +64,8 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
       actions: [
         IconButton(
           tooltip: 'Create ticket',
-          onPressed: () => Navigator.pushNamed(
-            context,
-            SupportTicketFormPage.routeName,
-          ),
+          onPressed: () =>
+              Navigator.pushNamed(context, SupportTicketFormPage.routeName),
           icon: const Icon(Icons.add_circle_outline_rounded),
         ),
       ],
@@ -90,9 +88,8 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
                       child: ChoiceChip(
                         label: Text(status),
                         selected: _selectedStatus == status,
-                        onSelected: (_) => setState(
-                          () => _selectedStatus = status,
-                        ),
+                        onSelected: (_) =>
+                            setState(() => _selectedStatus = status),
                         selectedColor: TourFlowColors.primary,
                         side: const BorderSide(color: TourFlowColors.border),
                       ),
@@ -203,10 +200,8 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () => Navigator.pushNamed(
-                context,
-                SupportTicketFormPage.routeName,
-              ),
+              onPressed: () =>
+                  Navigator.pushNamed(context, SupportTicketFormPage.routeName),
               style: FilledButton.styleFrom(
                 backgroundColor: TourFlowColors.primary,
                 foregroundColor: TourFlowColors.primaryText,

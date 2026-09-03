@@ -62,10 +62,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'Submit Rating & Feedback',
             subtitle: 'Share your experience',
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/submit-feedback',
-              );
+              Navigator.pushNamed(context, '/submit-feedback');
             },
           ),
 
@@ -80,10 +77,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'My Feedback',
             subtitle: 'View your submitted ratings and feedback',
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/my-feedback',
-              );
+              Navigator.pushNamed(context, '/my-feedback');
             },
           ),
 
@@ -98,10 +92,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'Report Issue',
             subtitle: 'Let us know the problem',
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/report-issue',
-              );
+              Navigator.pushNamed(context, '/report-issue');
             },
           ),
 
@@ -116,10 +107,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'View Report Status',
             subtitle: 'Track your reports',
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/report-status',
-              );
+              Navigator.pushNamed(context, '/report-status');
             },
           ),
         ],
@@ -156,24 +144,15 @@ class _FeedbackMenuCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: const Color(0xFFE0E0E0),
-            ),
+            border: Border.all(color: const Color(0xFFE0E0E0)),
           ),
           child: Row(
             children: [
               // ICON
-              Icon(
-                icon,
-                color: iconColor,
-                size: 22,
-              ),
+              Icon(icon, color: iconColor, size: 22),
 
               const SizedBox(width: 14),
 

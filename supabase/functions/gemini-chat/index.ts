@@ -85,6 +85,10 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
+  if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
+    return jsonResponse({ error: "Authentication required" }, 401);
+  }
+
   try {
     const geminiApiKey = Deno.env.get("GEMINI_API_KEY")?.trim();
 
@@ -183,8 +187,6 @@ page or support ticket.`;
       return jsonResponse(
         {
           error: getGeminiError(responseData, "Gemini request failed"),
-          geminiStatus: geminiResponse.status,
-          details: responseData,
         },
         geminiResponse.status,
       );
@@ -196,8 +198,6 @@ page or support ticket.`;
       return jsonResponse(
         {
           error: "Gemini returned an empty response",
-          geminiStatus: geminiResponse.status,
-          details: responseData,
         },
         502,
       );
@@ -205,7 +205,6 @@ page or support ticket.`;
 
     return jsonResponse({
       reply,
-      interactionId: null,
     });
   } catch (error: unknown) {
     console.error("Edge Function error", error);

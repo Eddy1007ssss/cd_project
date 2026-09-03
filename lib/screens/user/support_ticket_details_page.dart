@@ -100,7 +100,10 @@ class _SupportTicketDetailsPageState extends State<SupportTicketDetailsPage> {
                   spacing: 12,
                   runSpacing: 6,
                   children: [
-                    _Metadata(icon: Icons.category_outlined, text: ticket.category),
+                    _Metadata(
+                      icon: Icons.category_outlined,
+                      text: ticket.category,
+                    ),
                     _Metadata(icon: Icons.schedule_rounded, text: ticket.date),
                   ],
                 ),

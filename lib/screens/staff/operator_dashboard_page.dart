@@ -76,10 +76,7 @@ class OperatorDashboardPage extends StatelessWidget {
             label: 'Register New Attraction',
             icon: Icons.add_location_alt_outlined,
             onPressed: () {
-              Navigator.pushNamed(
-                context,
-                AttractionDetailsPage.routeName,
-              );
+              Navigator.pushNamed(context, AttractionDetailsPage.routeName);
             },
           ),
 
@@ -94,10 +91,7 @@ class OperatorDashboardPage extends StatelessWidget {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/revenue-promotion',
-                    );
+                    Navigator.pushNamed(context, '/revenue-promotion');
                   },
                   child: const MetricCard(
                     label: 'Total Revenue',
@@ -113,10 +107,7 @@ class OperatorDashboardPage extends StatelessWidget {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/visitor-statistics',
-                    );
+                    Navigator.pushNamed(context, '/visitor-statistics');
                   },
                   child: const MetricCard(
                     label: 'Total Visitors',
@@ -140,10 +131,7 @@ class OperatorDashboardPage extends StatelessWidget {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/operator-feedback',
-                    );
+                    Navigator.pushNamed(context, '/operator-feedback');
                   },
                   child: const MetricCard(
                     label: 'Average Rating',
@@ -159,10 +147,7 @@ class OperatorDashboardPage extends StatelessWidget {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/live-crowd',
-                    );
+                    Navigator.pushNamed(context, '/live-crowd');
                   },
                   child: const MetricCard(
                     label: 'Live Crowd',
@@ -184,10 +169,7 @@ class OperatorDashboardPage extends StatelessWidget {
             label: 'View Report',
             icon: Icons.assignment_outlined,
             onPressed: () {
-              Navigator.pushNamed(
-                context,
-                '/operator-report-queue',
-              );
+              Navigator.pushNamed(context, '/operator-report-queue');
             },
           ),
 
@@ -200,10 +182,7 @@ class OperatorDashboardPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const SectionTitle('Your Attractions'),
-              TextButton(
-                onPressed: () {},
-                child: const Text('View all'),
-              ),
+              TextButton(onPressed: () {}, child: const Text('View all')),
             ],
           ),
 
@@ -212,18 +191,9 @@ class OperatorDashboardPage extends StatelessWidget {
           const Wrap(
             spacing: 8,
             children: [
-              StatusChip(
-                label: 'All (12)',
-                color: TourFlowColors.primaryText,
-              ),
-              StatusChip(
-                label: 'Draft (2)',
-                color: TourFlowColors.muted,
-              ),
-              StatusChip(
-                label: 'Pending (3)',
-                color: TourFlowColors.warning,
-              ),
+              StatusChip(label: 'All (12)', color: TourFlowColors.primaryText),
+              StatusChip(label: 'Draft (2)', color: TourFlowColors.muted),
+              StatusChip(label: 'Pending (3)', color: TourFlowColors.warning),
             ],
           ),
 
@@ -238,10 +208,7 @@ class OperatorDashboardPage extends StatelessWidget {
             statusColor: TourFlowColors.success,
             icon: Icons.account_balance_rounded,
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                AttractionDetailsPage.routeName,
-              );
+              Navigator.pushNamed(context, AttractionDetailsPage.routeName);
             },
           ),
 
@@ -279,10 +246,7 @@ class OperatorDashboardPage extends StatelessWidget {
               label: 'Open Slot Manager',
               icon: Icons.schedule_rounded,
               onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  SlotManagerPage.routeName,
-                );
+                Navigator.pushNamed(context, SlotManagerPage.routeName);
               },
             ),
           ),
@@ -331,11 +295,7 @@ class _AttractionSummaryCard extends StatelessWidget {
                   color: TourFlowColors.lavenderStrong,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: TourFlowColors.primaryText,
-                  size: 32,
-                ),
+                child: Icon(icon, color: TourFlowColors.primaryText, size: 32),
               ),
 
               const SizedBox(width: 12),
@@ -355,10 +315,7 @@ class _AttractionSummaryCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        StatusChip(
-                          label: status,
-                          color: statusColor,
-                        ),
+                        StatusChip(label: status, color: statusColor),
                       ],
                     ),
 

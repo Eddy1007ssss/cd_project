@@ -169,19 +169,20 @@ class _StaffSupportTicketDetailsPageState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  items: const [
-                    'Unassigned',
-                    'TourFlow Administrator',
-                    'National Museum Operator',
-                    'Old Town Square Operator',
-                  ]
-                      .map(
-                        (value) => DropdownMenuItem(
-                          value: value,
-                          child: Text(value),
-                        ),
-                      )
-                      .toList(),
+                  items:
+                      const [
+                            'Unassigned',
+                            'TourFlow Administrator',
+                            'National Museum Operator',
+                            'Old Town Square Operator',
+                          ]
+                          .map(
+                            (value) => DropdownMenuItem(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(),
                   onChanged: (value) {
                     if (value != null) setState(() => _assignee = value);
                   },
@@ -198,10 +199,8 @@ class _StaffSupportTicketDetailsPageState
                   ),
                   items: const ['Pending', 'In Progress', 'Resolved']
                       .map(
-                        (value) => DropdownMenuItem(
-                          value: value,
-                          child: Text(value),
-                        ),
+                        (value) =>
+                            DropdownMenuItem(value: value, child: Text(value)),
                       )
                       .toList(),
                   onChanged: (value) {
@@ -223,7 +222,8 @@ class _StaffSupportTicketDetailsPageState
                   minLines: 4,
                   maxLines: 7,
                   decoration: InputDecoration(
-                    hintText: 'Write a clear response or request more information...',
+                    hintText:
+                        'Write a clear response or request more information...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -284,9 +284,7 @@ class _StaffSupportTicketDetailsPageState
             child: FilledButton.icon(
               onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    'Ticket updated: $_status · $_assignee',
-                  ),
+                  content: Text('Ticket updated: $_status · $_assignee'),
                 ),
               ),
               style: FilledButton.styleFrom(

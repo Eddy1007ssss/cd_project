@@ -1,35 +1,24 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GeminiChatResponse {
-  const GeminiChatResponse({
-    required this.reply,
-    this.interactionId,
-  });
+  const GeminiChatResponse({required this.reply});
 
   final String reply;
-  final String? interactionId;
 }
 
 class GeminiChatService {
   GeminiChatService({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
 
   Future<GeminiChatResponse> sendMessage({
     required String message,
     String language = 'English',
-    String? previousInteractionId,
   }) async {
     final response = await _client.functions.invoke(
       'gemini-chat',
-      body: {
-        'message': message,
-        'language': language,
-        if (previousInteractionId != null &&
-            previousInteractionId.trim().isNotEmpty)
-          'previousInteractionId': previousInteractionId,
-      },
+      body: {'message': message, 'language': language},
     );
 
     final data = response.data;
@@ -48,15 +37,7 @@ class GeminiChatService {
       throw Exception('The chatbot returned an empty reply.');
     }
 
-    final interactionIdValue = data['interactionId'];
-
-    return GeminiChatResponse(
-      reply: reply,
-      interactionId: interactionIdValue is String &&
-          interactionIdValue.trim().isNotEmpty
-          ? interactionIdValue
-          : null,
-    );
+    return GeminiChatResponse(reply: reply);
   }
 
   String _errorMessage(Object? data) {

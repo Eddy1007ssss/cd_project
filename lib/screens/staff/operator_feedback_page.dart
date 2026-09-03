@@ -20,24 +20,15 @@ class OperatorFeedbackPage extends StatelessWidget {
           const Row(
             children: [
               Expanded(
-                child: _FeedbackSummaryCard(
-                  label: 'Today',
-                  value: '10',
-                ),
+                child: _FeedbackSummaryCard(label: 'Today', value: '10'),
               ),
               SizedBox(width: 8),
               Expanded(
-                child: _FeedbackSummaryCard(
-                  label: 'This Week',
-                  value: '75',
-                ),
+                child: _FeedbackSummaryCard(label: 'This Week', value: '75'),
               ),
               SizedBox(width: 8),
               Expanded(
-                child: _FeedbackSummaryCard(
-                  label: 'This Month',
-                  value: '270',
-                ),
+                child: _FeedbackSummaryCard(label: 'This Month', value: '270'),
               ),
             ],
           ),
@@ -69,10 +60,7 @@ class OperatorFeedbackPage extends StatelessWidget {
 }
 
 class _FeedbackSummaryCard extends StatelessWidget {
-  const _FeedbackSummaryCard({
-    required this.label,
-    required this.value,
-  });
+  const _FeedbackSummaryCard({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -84,19 +72,14 @@ class _FeedbackSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFE3E7ED),
-        ),
+        border: Border.all(color: const Color(0xFFE3E7ED)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: TourFlowColors.muted,
-              fontSize: 9,
-            ),
+            style: const TextStyle(color: TourFlowColors.muted, fontSize: 9),
           ),
           const SizedBox(height: 6),
           Text(
@@ -152,7 +135,7 @@ class _FeedbackCard extends StatelessWidget {
               Row(
                 children: List.generate(
                   5,
-                      (index) => Icon(
+                  (index) => Icon(
                     Icons.star_rounded,
                     size: 17,
                     color: index < rating
@@ -168,20 +151,14 @@ class _FeedbackCard extends StatelessWidget {
 
           Text(
             '$attraction · $time',
-            style: const TextStyle(
-              color: TourFlowColors.muted,
-              fontSize: 9,
-            ),
+            style: const TextStyle(color: TourFlowColors.muted, fontSize: 9),
           ),
 
           const SizedBox(height: 10),
 
           Text(
             comment,
-            style: const TextStyle(
-              color: TourFlowColors.body,
-              fontSize: 11,
-            ),
+            style: const TextStyle(color: TourFlowColors.body, fontSize: 11),
           ),
 
           if (showImage) ...[
@@ -193,9 +170,7 @@ class _FeedbackCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: TourFlowColors.lavender,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: const Color(0xFFE1E5EB),
-                ),
+                border: Border.all(color: const Color(0xFFE1E5EB)),
               ),
               child: const Icon(
                 Icons.image_outlined,
