@@ -87,7 +87,6 @@ class MyApp extends StatelessWidget {
         ReportIssuePage.routeName: (_) => const ReportIssuePage(),
         ReportStatusPage.routeName: (_) => const ReportStatusPage(),
         GeofencePage.routeName: (_) => const GeofencePage(),
-
         OperatorRegistrationPage.routeName: (_) => const OperatorRegistrationPage(),
         AdminUserManagementPage.routeName: (_) => const AdminUserManagementPage(),
         OperatorDashboardPage.routeName: (_) => const OperatorDashboardPage(),
