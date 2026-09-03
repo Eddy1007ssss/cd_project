@@ -15,6 +15,7 @@ import 'screens/staff/operator_feedback_page.dart';
 
 import 'screens/user/attraction_details_page.dart' as user;
 import 'screens/user/attraction_discovery_page.dart';
+import 'screens/user/attraction_comparison_page.dart';
 import 'screens/user/booking_confirmation_page.dart';
 import 'screens/user/booking_history_page.dart';
 import 'screens/user/booking_review_page.dart';
@@ -23,6 +24,7 @@ import 'screens/user/chat_support_page.dart';
 import 'screens/user/itinerary_planner_page.dart';
 import 'screens/user/language_settings_page.dart';
 import 'screens/user/nearby_attractions_page.dart';
+import 'screens/user/discovery_preferences_page.dart';
 import 'screens/user/profile_security_page.dart';
 import 'screens/user/reschedule_booking_page.dart';
 import 'screens/user/sign_in_page.dart';
@@ -70,15 +72,24 @@ class MyApp extends StatelessWidget {
       initialRoute: SignInPage.routeName,
       routes: {
         SignInPage.routeName: (_) => const SignInPage(),
-        TouristRegistrationPage.routeName: (_) => const TouristRegistrationPage(),
+        TouristRegistrationPage.routeName: (_) =>
+            const TouristRegistrationPage(),
         UserHomePage.routeName: (_) => const UserHomePage(),
-        AttractionDiscoveryPage.routeName: (_) => const AttractionDiscoveryPage(),
-        user.AttractionDetailsPage.routeName: (_) => const user.AttractionDetailsPage(),
-        SmartRecommendationsPage.routeName: (_) => const SmartRecommendationsPage(),
+        AttractionDiscoveryPage.routeName: (_) =>
+            const AttractionDiscoveryPage(),
+        AttractionComparisonPage.routeName: (_) =>
+            const AttractionComparisonPage(),
+        user.AttractionDetailsPage.routeName: (_) =>
+            const user.AttractionDetailsPage(),
+        SmartRecommendationsPage.routeName: (_) =>
+            const SmartRecommendationsPage(),
         NearbyAttractionsPage.routeName: (_) => const NearbyAttractionsPage(),
+        DiscoveryPreferencesPage.routeName: (_) =>
+            const DiscoveryPreferencesPage(),
         TimeSlotSelectionPage.routeName: (_) => const TimeSlotSelectionPage(),
         BookingReviewPage.routeName: (_) => const BookingReviewPage(),
-        BookingConfirmationPage.routeName: (_) => const BookingConfirmationPage(),
+        BookingConfirmationPage.routeName: (_) =>
+            const BookingConfirmationPage(),
         BookingHistoryPage.routeName: (_) => const BookingHistoryPage(),
         CapacityAlertPage.routeName: (_) => const CapacityAlertPage(),
         RescheduleBookingPage.routeName: (_) => const RescheduleBookingPage(),
@@ -90,12 +101,16 @@ class MyApp extends StatelessWidget {
         ReportStatusPage.routeName: (_) => const ReportStatusPage(),
         GeofencePage.routeName: (_) => const GeofencePage(),
 
-        OperatorRegistrationPage.routeName: (_) => const OperatorRegistrationPage(),
-        AdminUserManagementPage.routeName: (_) => const AdminUserManagementPage(),
+        OperatorRegistrationPage.routeName: (_) =>
+            const OperatorRegistrationPage(),
+        AdminUserManagementPage.routeName: (_) =>
+            const AdminUserManagementPage(),
         OperatorDashboardPage.routeName: (_) => const OperatorDashboardPage(),
         AttractionDetailsPage.routeName: (_) => const AttractionDetailsPage(),
-        AttractionConfigurationPage.routeName: (_) => const AttractionConfigurationPage(),
-        AdminAttractionReviewPage.routeName: (_) => const AdminAttractionReviewPage(),
+        AttractionConfigurationPage.routeName: (_) =>
+            const AttractionConfigurationPage(),
+        AdminAttractionReviewPage.routeName: (_) =>
+            const AdminAttractionReviewPage(),
         SlotManagerPage.routeName: (_) => const SlotManagerPage(),
         BookingDetailsPage.routeName: (_) => const BookingDetailsPage(),
         BookingQrPage.routeName: (_) => const BookingQrPage(),
@@ -104,16 +119,21 @@ class MyApp extends StatelessWidget {
         LanguageSettingsPage.routeName: (_) => const LanguageSettingsPage(),
         SupportTicketFormPage.routeName: (_) => const SupportTicketFormPage(),
         SupportTicketListPage.routeName: (_) => const SupportTicketListPage(),
-        SupportTicketDetailsPage.routeName: (_) => const SupportTicketDetailsPage(),
-        SupportTicketManagementPage.routeName: (_) => const SupportTicketManagementPage(),
-        StaffSupportTicketDetailsPage.routeName: (_) => const StaffSupportTicketDetailsPage(),
+        SupportTicketDetailsPage.routeName: (_) =>
+            const SupportTicketDetailsPage(),
+        SupportTicketManagementPage.routeName: (_) =>
+            const SupportTicketManagementPage(),
+        StaffSupportTicketDetailsPage.routeName: (_) =>
+            const StaffSupportTicketDetailsPage(),
         OperatorFeedbackPage.routeName: (_) => const OperatorFeedbackPage(),
         OperatorQrScannerPage.routeName: (_) => const OperatorQrScannerPage(),
         LiveCrowdPage.routeName: (_) => const LiveCrowdPage(),
-        OperatorReportQueuePage.routeName: (_) => const OperatorReportQueuePage(),
+        OperatorReportQueuePage.routeName: (_) =>
+            const OperatorReportQueuePage(),
         ResolveReportPage.routeName: (_) => const ResolveReportPage(),
         RevenuePromotionPage.routeName: (_) => const RevenuePromotionPage(),
-        PromotionSuggestionPage.routeName: (_) => const PromotionSuggestionPage(),
+        PromotionSuggestionPage.routeName: (_) =>
+            const PromotionSuggestionPage(),
         VisitorStatisticsPage.routeName: (_) => const VisitorStatisticsPage(),
       },
     );

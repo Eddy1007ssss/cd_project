@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>TourFlow uses your location to sort nearby attractions and estimate travel distance.</string>
 </dict>
 </plist>
