@@ -52,40 +52,42 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
           const SizedBox(height: 16),
           ModuleCard(
             padding: EdgeInsets.zero,
-            child: Column(
-              children: _languages.map((language) {
-                final selected = _selectedLanguage == language.$1;
-                return RadioListTile<String>(
-                  value: language.$1,
-                  groupValue: _selectedLanguage,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _selectedLanguage = value);
-                    }
-                  },
-                  secondary: CircleAvatar(
-                    backgroundColor: selected
-                        ? TourFlowColors.primary
-                        : TourFlowColors.lavender,
-                    foregroundColor: selected
-                        ? TourFlowColors.primaryText
-                        : TourFlowColors.muted,
-                    child: Text(
-                      language.$3,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
+            child: RadioGroup<String>(
+              groupValue: _selectedLanguage,
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedLanguage = value);
+                }
+              },
+              child: Column(
+                children: _languages.map((language) {
+                  final selected = _selectedLanguage == language.$1;
+                  return RadioListTile<String>(
+                    value: language.$1,
+                    secondary: CircleAvatar(
+                      backgroundColor: selected
+                          ? TourFlowColors.primary
+                          : TourFlowColors.lavender,
+                      foregroundColor: selected
+                          ? TourFlowColors.primaryText
+                          : TourFlowColors.muted,
+                      child: Text(
+                        language.$3,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
-                  ),
-                  title: Text(
-                    language.$1,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  subtitle: Text(language.$2),
-                  activeColor: TourFlowColors.primaryText,
-                );
-              }).toList(),
+                    title: Text(
+                      language.$1,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: Text(language.$2),
+                    activeColor: TourFlowColors.primaryText,
+                  );
+                }).toList(),
+              ),
             ),
           ),
           const SizedBox(height: 16),

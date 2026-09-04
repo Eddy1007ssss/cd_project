@@ -10,7 +10,6 @@ import 'screens/staff/operator_registration_page.dart';
 import 'screens/staff/resolve_report_page.dart';
 import 'screens/staff/slot_manager_page.dart';
 import 'screens/staff/staff_support_ticket_details_page.dart';
-import 'screens/staff/support_ticket_management_page.dart';
 import 'screens/staff/operator_feedback_page.dart';
 
 import 'screens/user/attraction_details_page.dart' as user;
@@ -44,12 +43,17 @@ import 'screens/user/report_issue_page.dart';
 import 'screens/user/report_status_page.dart';
 import 'screens/user/capacity_alert_page.dart';
 import 'screens/user/geofence_page.dart';
-import 'screens/staff/operator_qr_scanner_page.dart';
+import 'screens/staff/staff_qr_scanner_page.dart';
 import 'screens/staff/live_crowd_page.dart';
 import 'screens/staff/operator_report_queue_page.dart';
 import 'screens/staff/revenue_promotion_page.dart';
 import 'screens/staff/promotion_suggestion_page.dart';
 import 'screens/staff/visitor_statistics_page.dart';
+import 'widgets/navigation/admin_navigation_shell.dart';
+import 'widgets/navigation/navigation_routes.dart';
+import 'widgets/navigation/operator_navigation_shell.dart';
+import 'widgets/navigation/user_navigation_shell.dart';
+import 'widgets/tourflow_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,9 +79,9 @@ class MyApp extends StatelessWidget {
         SignInPage.routeName: (_) => const SignInPage(),
         TouristRegistrationPage.routeName: (_) =>
             const TouristRegistrationPage(),
-        UserHomePage.routeName: (_) => const UserHomePage(),
+        UserHomePage.routeName: (_) => const UserNavigationShell(),
         AttractionDiscoveryPage.routeName: (_) =>
-            const AttractionDiscoveryPage(),
+            const UserNavigationShell(initialIndex: 1),
         AttractionComparisonPage.routeName: (_) =>
             const AttractionComparisonPage(),
         user.AttractionDetailsPage.routeName: (_) =>
@@ -91,11 +95,18 @@ class MyApp extends StatelessWidget {
         BookingReviewPage.routeName: (_) => const BookingReviewPage(),
         BookingConfirmationPage.routeName: (_) =>
             const BookingConfirmationPage(),
-        BookingHistoryPage.routeName: (_) => const BookingHistoryPage(),
+        BookingHistoryPage.routeName: (_) =>
+            const UserNavigationShell(initialIndex: 2),
         CapacityAlertPage.routeName: (_) => const CapacityAlertPage(),
         RescheduleBookingPage.routeName: (_) => const RescheduleBookingPage(),
         ItineraryPlannerPage.routeName: (_) => const ItineraryPlannerPage(),
-        ProfileSecurityPage.routeName: (_) => const ProfileSecurityPage(),
+        ProfileSecurityPage.routeName: (_) =>
+            const UserNavigationShell(initialIndex: 4),
+        TourFlowRoutes.staffProfile: (_) => const ProfileSecurityPage(
+          navigationRole: TourFlowNavigationRole.staff,
+          pageLevel: TourFlowPageLevel.secondary,
+          selectedNavigationIndex: 1,
+        ),
         FeedbackCentrePage.routeName: (_) => const FeedbackCentrePage(),
         SubmitFeedbackPage.routeName: (_) => const SubmitFeedbackPage(),
         MyFeedbackPage.routeName: (_) => const MyFeedbackPage(),
@@ -104,38 +115,41 @@ class MyApp extends StatelessWidget {
         GeofencePage.routeName: (_) => const GeofencePage(),
         OperatorRegistrationPage.routeName: (_) =>
             const OperatorRegistrationPage(),
-        AdminUserManagementPage.routeName: (_) =>
-            const AdminUserManagementPage(),
-        OperatorDashboardPage.routeName: (_) => const OperatorDashboardPage(),
-        AttractionDetailsPage.routeName: (_) => const AttractionDetailsPage(),
+        AdminUserManagementPage.routeName: (_) => const AdminNavigationShell(),
+        TourFlowRoutes.adminSupportTickets: (_) =>
+            const AdminNavigationShell(initialIndex: 2),
+        OperatorDashboardPage.routeName: (_) => const OperatorNavigationShell(),
+        AttractionDetailsPage.routeName: (_) =>
+            const OperatorNavigationShell(initialIndex: 1),
         AttractionConfigurationPage.routeName: (_) =>
             const AttractionConfigurationPage(),
         AdminAttractionReviewPage.routeName: (_) =>
-            const AdminAttractionReviewPage(),
-        SlotManagerPage.routeName: (_) => const SlotManagerPage(),
+            const AdminNavigationShell(initialIndex: 1),
+        SlotManagerPage.routeName: (_) =>
+            const OperatorNavigationShell(initialIndex: 2),
         BookingDetailsPage.routeName: (_) => const BookingDetailsPage(),
         BookingQrPage.routeName: (_) => const BookingQrPage(),
-        ChatSupportPage.routeName: (_) => const ChatSupportPage(),
+        ChatSupportPage.routeName: (_) =>
+            const UserNavigationShell(initialIndex: 3),
         ChatHistoryPage.routeName: (_) => const ChatHistoryPage(),
         LanguageSettingsPage.routeName: (_) => const LanguageSettingsPage(),
         SupportTicketFormPage.routeName: (_) => const SupportTicketFormPage(),
         SupportTicketListPage.routeName: (_) => const SupportTicketListPage(),
         SupportTicketDetailsPage.routeName: (_) =>
             const SupportTicketDetailsPage(),
-        SupportTicketManagementPage.routeName: (_) =>
-            const SupportTicketManagementPage(),
         StaffSupportTicketDetailsPage.routeName: (_) =>
             const StaffSupportTicketDetailsPage(),
         OperatorFeedbackPage.routeName: (_) => const OperatorFeedbackPage(),
-        OperatorQrScannerPage.routeName: (_) => const OperatorQrScannerPage(),
+        StaffQrScannerPage.routeName: (_) => const StaffQrScannerPage(),
         LiveCrowdPage.routeName: (_) => const LiveCrowdPage(),
         OperatorReportQueuePage.routeName: (_) =>
-            const OperatorReportQueuePage(),
+            const OperatorNavigationShell(initialIndex: 3),
         ResolveReportPage.routeName: (_) => const ResolveReportPage(),
         RevenuePromotionPage.routeName: (_) => const RevenuePromotionPage(),
         PromotionSuggestionPage.routeName: (_) =>
             const PromotionSuggestionPage(),
-        VisitorStatisticsPage.routeName: (_) => const VisitorStatisticsPage(),
+        VisitorStatisticsPage.routeName: (_) =>
+            const OperatorNavigationShell(initialIndex: 4),
       },
     );
   }

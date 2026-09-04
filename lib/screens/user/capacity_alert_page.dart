@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import '../../widgets/navigation/user_sidebar.dart';
+import '../../widgets/navigation/navigation_logout.dart';
 
 class CapacityAlertPage extends StatelessWidget {
   const CapacityAlertPage({super.key});
@@ -20,13 +20,7 @@ class CapacityAlertPage extends StatelessWidget {
         displayName: 'Alex Tan',
         email: 'alex@example.com',
         selectedIndex: 2,
-        onLogout: () {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/sign-in',
-            (route) => false,
-          );
-        },
+        onLogout: () async => signOutAndReturnToSignIn(context),
       ),
 
       // =========================
@@ -211,7 +205,6 @@ class CapacityAlertPage extends StatelessWidget {
       // =========================
       // BOTTOM NAVIGATION
       // =========================
-      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 2),
     );
   }
 }

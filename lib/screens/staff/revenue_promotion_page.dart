@@ -19,7 +19,7 @@ class _RevenuePromotionPageState extends State<RevenuePromotionPage> {
     return TourFlowPage(
       title: 'Revenue & Promotion',
       role: 'TOURFLOW · OPERATOR',
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.operator,
 
       // Keep Dashboard/Home selected
       selectedNavigationIndex: 0,

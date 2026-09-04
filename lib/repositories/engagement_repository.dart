@@ -6,7 +6,15 @@ const _visitSelection =
     'id, booking_code, slot:attraction_slots(starts_at, '
     'attraction:attractions(id, name))';
 
-class EngagementRepository {
+abstract interface class StaffCheckInGateway {
+  Future<StaffBookingVerification> verifyStaffBooking(
+    String bookingCodeOrToken,
+  );
+
+  Future<StaffBookingVerification> confirmStaffCheckIn(String bookingId);
+}
+
+class EngagementRepository implements StaffCheckInGateway {
   EngagementRepository({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
@@ -181,4 +189,31 @@ class EngagementRepository {
       recentArrivals: recent,
     );
   }
+
+  @override
+  Future<StaffBookingVerification> verifyStaffBooking(
+    String bookingCodeOrToken,
+  ) async {
+    final result = await _client.rpc(
+      'verify_staff_booking',
+      params: {'lookup_value': bookingCodeOrToken.trim()},
+    );
+    return StaffBookingVerification.fromMap(_rpcMap(result));
+  }
+
+  @override
+  Future<StaffBookingVerification> confirmStaffCheckIn(String bookingId) async {
+    final result = await _client.rpc(
+      'confirm_staff_check_in',
+      params: {'target_booking_id': bookingId},
+    );
+    return StaffBookingVerification.fromMap(_rpcMap(result));
+  }
+}
+
+Map<String, dynamic> _rpcMap(Object? result) {
+  final value = result is List && result.isNotEmpty ? result.first : result;
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) return value.cast<String, dynamic>();
+  throw const FormatException('The check-in service returned invalid data.');
 }

@@ -45,4 +45,44 @@ void main() {
     expect(snapshot.availableCapacity, 8);
     expect(snapshot.occupancy, 0.6);
   });
+
+  test('StaffBookingVerification parses every service status', () {
+    const wireStatuses = {
+      'valid': StaffBookingStatus.valid,
+      'invalid': StaffBookingStatus.invalid,
+      'already_used': StaffBookingStatus.alreadyUsed,
+      'wrong_attraction': StaffBookingStatus.wrongAttraction,
+      'wrong_slot': StaffBookingStatus.wrongSlot,
+      'checked_in': StaffBookingStatus.checkedIn,
+    };
+
+    for (final entry in wireStatuses.entries) {
+      final result = StaffBookingVerification.fromMap({
+        'status': entry.key,
+        'booking_id': 'booking-1',
+        'booking_code': 'TF-ABC',
+        'visitor_name': 'Alyssa Loh',
+        'visitor_count': 2,
+        'attraction_name': 'National Museum',
+        'starts_at': '2026-09-04T08:00:00Z',
+        'ends_at': '2026-09-04T09:00:00Z',
+        'current_visitor_count': 12,
+      });
+
+      expect(result.status, entry.value);
+      expect(result.bookingCode, 'TF-ABC');
+      expect(result.visitorCount, 2);
+      expect(result.currentVisitorCount, 12);
+    }
+  });
+
+  test('only a valid staff verification can be confirmed', () {
+    final valid = StaffBookingVerification.fromMap(const {'status': 'valid'});
+    final used = StaffBookingVerification.fromMap(const {
+      'status': 'already_used',
+    });
+
+    expect(valid.canCheckIn, isTrue);
+    expect(used.canCheckIn, isFalse);
+  });
 }

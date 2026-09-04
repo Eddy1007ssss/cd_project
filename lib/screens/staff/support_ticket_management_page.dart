@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import 'staff_support_ticket_details_page.dart';
 
 class SupportTicketManagementPage extends StatefulWidget {
-  const SupportTicketManagementPage({super.key});
+  const SupportTicketManagementPage({
+    this.navigationRole = TourFlowNavigationRole.staff,
+    super.key,
+  });
 
-  static const routeName = '/staff/support-tickets';
+  static const routeName = TourFlowRoutes.staffSupportTickets;
+  final TourFlowNavigationRole navigationRole;
 
   @override
   State<SupportTicketManagementPage> createState() =>
@@ -84,10 +89,13 @@ class _SupportTicketManagementPageState
 
     return TourFlowPage(
       title: 'Support Tickets',
-      role: 'TOURFLOW · ADMIN / OPERATOR',
-      showBackButton: false,
-      isStaff: true,
-      selectedNavigationIndex: 4,
+      role: widget.navigationRole == TourFlowNavigationRole.administrator
+          ? 'TOURFLOW · ADMINISTRATOR'
+          : 'TOURFLOW · STAFF',
+      navigationRole: widget.navigationRole,
+      pageLevel: TourFlowPageLevel.topLevel,
+      selectedNavigationIndex:
+          widget.navigationRole == TourFlowNavigationRole.administrator ? 2 : 0,
       displayName: 'Alex Thompson',
       email: 'alex.thompson@tourflow.com',
       child: Column(
@@ -196,6 +204,7 @@ class _SupportTicketManagementPageState
                     context,
                     StaffSupportTicketDetailsPage.routeName,
                     arguments: StaffSupportTicketArguments(
+                      navigationRole: widget.navigationRole,
                       id: ticket.id,
                       subject: ticket.subject,
                       tourist: ticket.tourist,

@@ -24,8 +24,9 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
   Widget build(BuildContext context) => TourFlowPage(
     title: 'Visitor Statistics',
     role: 'TOURFLOW · OPERATOR',
-    isStaff: true,
-    selectedNavigationIndex: 0,
+    navigationRole: TourFlowNavigationRole.operator,
+    pageLevel: TourFlowPageLevel.topLevel,
+    selectedNavigationIndex: 4,
     child: FutureBuilder<CrowdSnapshot?>(
       future: _snapshot,
       builder: (context, snapshot) {

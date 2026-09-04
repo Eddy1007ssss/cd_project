@@ -5,18 +5,26 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/user_profile.dart';
 import '../../repositories/auth_repository.dart';
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import '../staff/admin_user_management_page.dart';
 import '../staff/operator_dashboard_page.dart';
 import '../staff/operator_registration_page.dart';
-import '../staff/operator_qr_scanner_page.dart';
+import '../staff/staff_qr_scanner_page.dart';
 import 'tourist_registration_page.dart';
 
 enum _DemoRole { tourist, operator, staff, administrator }
 
+String landingRouteForRole(UserRole role) => switch (role) {
+  UserRole.tourist => UserHomePage.routeName,
+  UserRole.operator => OperatorDashboardPage.routeName,
+  UserRole.staff => StaffQrScannerPage.routeName,
+  UserRole.administrator => AdminUserManagementPage.routeName,
+};
+
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 
-  static const routeName = '/sign-in';
+  static const routeName = TourFlowRoutes.signIn;
 
   @override
   State<SignInPage> createState() => _SignInPageState();
@@ -61,12 +69,7 @@ class _SignInPageState extends State<SignInPage> {
         );
       }
       if (!mounted) return;
-      final routeName = switch (profile.role) {
-        UserRole.tourist => UserHomePage.routeName,
-        UserRole.operator => OperatorDashboardPage.routeName,
-        UserRole.staff => OperatorQrScannerPage.routeName,
-        UserRole.administrator => AdminUserManagementPage.routeName,
-      };
+      final routeName = landingRouteForRole(profile.role);
       Navigator.pushNamedAndRemoveUntil(context, routeName, (route) => false);
     } on AuthException catch (error) {
       if (mounted) _showMessage(error.message);
@@ -180,7 +183,7 @@ class _SignInPageState extends State<SignInPage> {
                           Text(
                             'Available menus and navigation depend on your selected role and clearance level.',
                             style: TextStyle(
-                              color: TourFlowColors.body.withOpacity(0.8),
+                              color: TourFlowColors.body.withValues(alpha: 0.8),
                               fontSize: 11,
                               height: 1.4,
                             ),

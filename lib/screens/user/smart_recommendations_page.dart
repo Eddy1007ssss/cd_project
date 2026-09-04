@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../models/recommendation_result.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import 'attraction_details_page.dart';
 import 'discovery_preferences_page.dart';
 import 'time_slot_selection_page.dart';
@@ -137,7 +136,6 @@ class _SmartRecommendationsPageState extends State<SmartRecommendationsPage> {
         },
       ),
     ),
-    bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 1),
   );
 }
 

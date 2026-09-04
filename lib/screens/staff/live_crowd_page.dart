@@ -26,7 +26,7 @@ class _LiveCrowdPageState extends State<LiveCrowdPage> {
   Widget build(BuildContext context) => TourFlowPage(
     title: 'Live Crowd',
     role: 'TOURFLOW · OPERATOR',
-    isStaff: true,
+    navigationRole: TourFlowNavigationRole.operator,
     selectedNavigationIndex: 0,
     child: FutureBuilder<CrowdSnapshot?>(
       future: _snapshot,

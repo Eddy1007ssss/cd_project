@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
+import '../../widgets/navigation/navigation_scope.dart';
 import 'attraction_details_page.dart';
 import 'slot_manager_page.dart';
 
 class OperatorDashboardPage extends StatelessWidget {
   const OperatorDashboardPage({super.key});
 
-  static const routeName = '/operator-dashboard';
+  static const routeName = TourFlowRoutes.operatorDashboard;
 
   @override
   Widget build(BuildContext context) {
     return TourFlowPage(
       title: 'Operator Dashboard',
       role: 'TOURFLOW · OPERATOR',
-      showBackButton: false,
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.operator,
+      pageLevel: TourFlowPageLevel.topLevel,
       selectedNavigationIndex: 0,
       actions: [
         IconButton(
@@ -76,7 +78,11 @@ class OperatorDashboardPage extends StatelessWidget {
             label: 'Register New Attraction',
             icon: Icons.add_location_alt_outlined,
             onPressed: () {
-              Navigator.pushNamed(context, AttractionDetailsPage.routeName);
+              selectNavigationTabOrPush(
+                context,
+                index: 1,
+                routeName: AttractionDetailsPage.routeName,
+              );
             },
           ),
 
@@ -169,7 +175,11 @@ class OperatorDashboardPage extends StatelessWidget {
             label: 'View Report',
             icon: Icons.assignment_outlined,
             onPressed: () {
-              Navigator.pushNamed(context, '/operator-report-queue');
+              selectNavigationTabOrPush(
+                context,
+                index: 4,
+                routeName: TourFlowRoutes.operatorReports,
+              );
             },
           ),
 
@@ -208,7 +218,11 @@ class OperatorDashboardPage extends StatelessWidget {
             statusColor: TourFlowColors.success,
             icon: Icons.account_balance_rounded,
             onTap: () {
-              Navigator.pushNamed(context, AttractionDetailsPage.routeName);
+              selectNavigationTabOrPush(
+                context,
+                index: 1,
+                routeName: AttractionDetailsPage.routeName,
+              );
             },
           ),
 
@@ -246,7 +260,11 @@ class OperatorDashboardPage extends StatelessWidget {
               label: 'Open Slot Manager',
               icon: Icons.schedule_rounded,
               onPressed: () {
-                Navigator.pushNamed(context, SlotManagerPage.routeName);
+                selectNavigationTabOrPush(
+                  context,
+                  index: 2,
+                  routeName: SlotManagerPage.routeName,
+                );
               },
             ),
           ),

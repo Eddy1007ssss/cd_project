@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../models/attraction.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import 'attraction_details_page.dart';
 
 class AttractionComparisonPage extends StatelessWidget {
@@ -104,7 +103,6 @@ class AttractionComparisonPage extends StatelessWidget {
                     .toList(),
               ),
             ),
-      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 1),
     );
   }
 }

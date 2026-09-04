@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import 'booking_review_page.dart';
 
 class TimeSlotSelectionArguments {
@@ -238,7 +237,6 @@ class _TimeSlotSelectionPageState extends State<TimeSlotSelectionPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 1),
     );
   }
 }

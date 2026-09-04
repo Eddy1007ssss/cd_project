@@ -272,7 +272,9 @@ class _DocumentRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: TourFlowColors.background,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: TourFlowColors.border.withOpacity(0.6)),
+          border: Border.all(
+            color: TourFlowColors.border.withValues(alpha: 0.6),
+          ),
         ),
         child: Row(
           children: [

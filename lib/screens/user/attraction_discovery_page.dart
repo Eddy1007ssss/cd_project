@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../models/attraction.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import 'attraction_comparison_page.dart';
 import 'attraction_details_page.dart';
 import 'discovery_preferences_page.dart';
@@ -14,7 +14,7 @@ import 'smart_recommendations_page.dart';
 
 class AttractionDiscoveryPage extends StatefulWidget {
   const AttractionDiscoveryPage({super.key});
-  static const routeName = '/attraction-discovery';
+  static const routeName = TourFlowRoutes.attractionDiscovery;
 
   @override
   State<AttractionDiscoveryPage> createState() =>
@@ -362,7 +362,6 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
             icon: const Icon(Icons.compare_arrows),
             label: Text('Compare ${_selectedForComparison.length}'),
           ),
-    bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 1),
   );
 }
 

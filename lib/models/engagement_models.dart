@@ -115,3 +115,83 @@ class CrowdSnapshot {
   double get occupancy =>
       maximumCapacity == 0 ? 0 : currentVisitors / maximumCapacity;
 }
+
+enum StaffBookingStatus {
+  valid,
+  invalid,
+  alreadyUsed,
+  wrongAttraction,
+  wrongSlot,
+  checkedIn;
+
+  factory StaffBookingStatus.fromWireValue(String value) => switch (value) {
+    'valid' => StaffBookingStatus.valid,
+    'already_used' => StaffBookingStatus.alreadyUsed,
+    'wrong_attraction' => StaffBookingStatus.wrongAttraction,
+    'wrong_slot' => StaffBookingStatus.wrongSlot,
+    'checked_in' => StaffBookingStatus.checkedIn,
+    _ => StaffBookingStatus.invalid,
+  };
+
+  String get label => switch (this) {
+    StaffBookingStatus.valid => 'Valid',
+    StaffBookingStatus.invalid => 'Invalid',
+    StaffBookingStatus.alreadyUsed => 'Already Used',
+    StaffBookingStatus.wrongAttraction => 'Wrong Attraction',
+    StaffBookingStatus.wrongSlot => 'Wrong Slot',
+    StaffBookingStatus.checkedIn => 'Checked In',
+  };
+}
+
+class StaffBookingVerification {
+  const StaffBookingVerification({
+    required this.status,
+    this.bookingId,
+    this.bookingCode,
+    this.visitorName,
+    this.visitorCount,
+    this.attractionName,
+    this.startsAt,
+    this.endsAt,
+    this.currentVisitorCount,
+  });
+
+  final StaffBookingStatus status;
+  final String? bookingId;
+  final String? bookingCode;
+  final String? visitorName;
+  final int? visitorCount;
+  final String? attractionName;
+  final DateTime? startsAt;
+  final DateTime? endsAt;
+  final int? currentVisitorCount;
+
+  bool get canCheckIn => status == StaffBookingStatus.valid;
+  bool get hasBookingDetails => bookingId != null;
+
+  factory StaffBookingVerification.invalid([String? bookingCode]) =>
+      StaffBookingVerification(
+        status: StaffBookingStatus.invalid,
+        bookingCode: bookingCode,
+      );
+
+  factory StaffBookingVerification.fromMap(Map<String, dynamic> map) =>
+      StaffBookingVerification(
+        status: StaffBookingStatus.fromWireValue(
+          map['status'] as String? ?? 'invalid',
+        ),
+        bookingId: map['booking_id'] as String?,
+        bookingCode: map['booking_code'] as String?,
+        visitorName: map['visitor_name'] as String?,
+        visitorCount: (map['visitor_count'] as num?)?.toInt(),
+        attractionName: map['attraction_name'] as String?,
+        startsAt: _optionalDateTime(map['starts_at']),
+        endsAt: _optionalDateTime(map['ends_at']),
+        currentVisitorCount: (map['current_visitor_count'] as num?)?.toInt(),
+      );
+}
+
+DateTime? _optionalDateTime(Object? value) {
+  if (value is! String || value.isEmpty) return null;
+  return DateTime.parse(value).toLocal();
+}

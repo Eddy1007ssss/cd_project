@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../models/module3_models.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import 'booking_history_page.dart';
 import 'itinerary_planner_page.dart';
 
@@ -84,7 +83,6 @@ class BookingConfirmationPage extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 2),
     );
   }
 }

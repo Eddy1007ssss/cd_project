@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'user_bottom_navigation_bar.dart';
+import 'navigation_scope.dart';
+import 'navigation_routes.dart';
 
 class TourFlowSidebarItem {
   const TourFlowSidebarItem({
@@ -21,19 +23,19 @@ const List<TourFlowSidebarItem> userSidebarItems = [
     label: 'Home',
     icon: Icons.home_outlined,
     navigationIndex: 0,
-    routeName: '/user/home',
+    routeName: TourFlowRoutes.userHome,
   ),
   TourFlowSidebarItem(
     label: 'Discover Attractions',
     icon: Icons.explore_outlined,
     navigationIndex: 1,
-    routeName: '/attraction-discovery',
+    routeName: TourFlowRoutes.attractionDiscovery,
   ),
   TourFlowSidebarItem(
     label: 'My Trips & Bookings',
     icon: Icons.confirmation_num_outlined,
     navigationIndex: 2,
-    routeName: '/user/trips',
+    routeName: TourFlowRoutes.userTrips,
   ),
   TourFlowSidebarItem(
     label: 'Itinerary Planner',
@@ -45,7 +47,7 @@ const List<TourFlowSidebarItem> userSidebarItems = [
     label: 'Chatbot & Support',
     icon: Icons.chat_bubble_outline_rounded,
     navigationIndex: 3,
-    routeName: '/user/chat',
+    routeName: TourFlowRoutes.userChat,
   ),
   TourFlowSidebarItem(
     label: 'Feedback',
@@ -57,7 +59,7 @@ const List<TourFlowSidebarItem> userSidebarItems = [
     label: 'My Profile',
     icon: Icons.person_outline_rounded,
     navigationIndex: 4,
-    routeName: '/profile-security',
+    routeName: TourFlowRoutes.profileSecurity,
   ),
 ];
 
@@ -108,7 +110,7 @@ class TourFlowSidebar extends StatelessWidget {
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 4),
+                separatorBuilder: (_, _) => const SizedBox(height: 4),
                 itemBuilder: (context, index) {
                   final item = items[index];
                   final selected = item.navigationIndex == selectedIndex;
@@ -138,7 +140,16 @@ class TourFlowSidebar extends StatelessWidget {
                       ),
                     ),
                     onTap: () {
+                      final navigationScope = TourFlowNavigationScope.maybeOf(
+                        context,
+                      );
                       Navigator.of(context).pop();
+                      if (item.navigationIndex >= 0 &&
+                          navigationScope != null &&
+                          item.navigationIndex < navigationScope.itemCount) {
+                        navigationScope.onItemSelected(item.navigationIndex);
+                        return;
+                      }
                       final routeName = item.routeName;
                       if (routeName != null) {
                         Navigator.pushNamedAndRemoveUntil(
