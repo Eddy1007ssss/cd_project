@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import 'language_settings_page.dart';
 
 class ProfileSecurityPage extends StatefulWidget {
-  const ProfileSecurityPage({super.key});
+  const ProfileSecurityPage({
+    this.navigationRole = TourFlowNavigationRole.tourist,
+    this.pageLevel = TourFlowPageLevel.topLevel,
+    this.selectedNavigationIndex = 4,
+    super.key,
+  });
 
-  static const routeName = '/profile-security';
+  static const routeName = TourFlowRoutes.profileSecurity;
+
+  final TourFlowNavigationRole navigationRole;
+  final TourFlowPageLevel pageLevel;
+  final int selectedNavigationIndex;
 
   @override
   State<ProfileSecurityPage> createState() => _ProfileSecurityPageState();
@@ -65,8 +75,12 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
   Widget build(BuildContext context) {
     return TourFlowPage(
       title: 'Profile and Security',
-      role: 'TOURFLOW',
-      selectedNavigationIndex: 4,
+      role: widget.navigationRole == TourFlowNavigationRole.staff
+          ? 'TOURFLOW · STAFF'
+          : 'TOURFLOW',
+      navigationRole: widget.navigationRole,
+      pageLevel: widget.pageLevel,
+      selectedNavigationIndex: widget.selectedNavigationIndex,
       child: Column(
         children: [
           ModuleCard(
@@ -134,14 +148,17 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                   label: 'Preferred Language',
                   value: 'English (Malaysia)',
                   icon: Icons.language_outlined,
-                  trailing: IconButton(
-                    tooltip: 'Change language',
-                    onPressed: () => Navigator.pushNamed(
-                      context,
-                      LanguageSettingsPage.routeName,
-                    ),
-                    icon: const Icon(Icons.chevron_right_rounded),
-                  ),
+                  trailing:
+                      widget.navigationRole == TourFlowNavigationRole.tourist
+                      ? IconButton(
+                          tooltip: 'Change language',
+                          onPressed: () => Navigator.pushNamed(
+                            context,
+                            LanguageSettingsPage.routeName,
+                          ),
+                          icon: const Icon(Icons.chevron_right_rounded),
+                        )
+                      : null,
                 ),
                 SizedBox(height: 14),
                 const StaticField(
@@ -154,19 +171,21 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
           ),
           const SizedBox(height: 16),
 
-          ModuleCard(
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.rate_review_outlined),
-              title: const Text('Feedback Centre'),
-              subtitle: const Text('Ratings, feedback and issue reports'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.pushNamed(context, '/feedback-centre');
-              },
+          if (widget.navigationRole == TourFlowNavigationRole.tourist) ...[
+            ModuleCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.rate_review_outlined),
+                title: const Text('Feedback Centre'),
+                subtitle: const Text('Ratings, feedback and issue reports'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.pushNamed(context, '/feedback-centre');
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
           ModuleCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -12,7 +12,7 @@ class PromotionSuggestionPage extends StatelessWidget {
     return TourFlowPage(
       title: 'Suggested Promotion',
       role: 'TOURFLOW · OPERATOR',
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.operator,
       selectedNavigationIndex: 0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,30 +219,6 @@ class PromotionSuggestionPage extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.arrow_back_rounded),
-              label: const Text(
-                'Back to Revenue & Promotion',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: TourFlowColors.primaryText,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: TourFlowColors.primary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
             ),
           ),
         ],

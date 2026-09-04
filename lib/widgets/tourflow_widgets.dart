@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
-import 'navigation/user_bottom_navigation_bar.dart';
-import 'navigation/user_sidebar.dart';
-import 'navigation/staff_bottom_navigation_bar.dart';
+import 'navigation/navigation_logout.dart';
+import 'navigation/navigation_routes.dart';
+import 'navigation/navigation_scope.dart';
 import 'navigation/staff_sidebar.dart';
+import 'navigation/user_sidebar.dart';
+
+enum TourFlowNavigationRole { tourist, operator, staff, administrator }
+
+enum TourFlowPageLevel { topLevel, secondary }
 
 abstract final class TourFlowColors {
   static const background = Color(0xFFFAF8FF);
@@ -27,48 +32,63 @@ class TourFlowPage extends StatelessWidget {
     required this.title,
     required this.role,
     required this.child,
-    this.showBackButton = true,
     this.actions = const [],
-    this.isStaff = false,
+    this.navigationRole = TourFlowNavigationRole.tourist,
+    this.pageLevel = TourFlowPageLevel.secondary,
     this.selectedNavigationIndex = 0,
     this.displayName = 'Alex Thompson',
     this.email = 'alex.thompson@tourflow.com',
-    this.onNavigationSelected,
-    this.onLogout,
     super.key,
   });
 
   final String title;
   final String role;
   final Widget child;
-  final bool showBackButton;
   final List<Widget> actions;
-  final bool isStaff;
+  final TourFlowNavigationRole navigationRole;
+  final TourFlowPageLevel pageLevel;
   final int selectedNavigationIndex;
   final String displayName;
   final String email;
-  final ValueChanged<int>? onNavigationSelected;
-  final VoidCallback? onLogout;
 
   @override
   Widget build(BuildContext context) {
+    final navigationScope = TourFlowNavigationScope.maybeOf(context);
+    final effectiveIndex =
+        navigationScope?.selectedIndex ?? selectedNavigationIndex;
+    final showBackButton = pageLevel == TourFlowPageLevel.secondary;
+
     return Scaffold(
       backgroundColor: TourFlowColors.background,
-      drawer: isStaff
-          ? StaffSidebar(
-              displayName: displayName,
-              email: email,
-              selectedIndex: selectedNavigationIndex,
-              onItemSelected: (index) => _handleNavigation(context, index),
-              onLogout: () => _handleLogout(context),
-            )
-          : UserSidebar(
-              displayName: displayName,
-              email: email,
-              selectedIndex: selectedNavigationIndex,
-              onItemSelected: (index) => _handleNavigation(context, index),
-              onLogout: () => _handleLogout(context),
-            ),
+      drawer: switch (navigationRole) {
+        TourFlowNavigationRole.tourist => UserSidebar(
+          displayName: displayName,
+          email: email,
+          selectedIndex: effectiveIndex,
+          onLogout: () async => signOutAndReturnToSignIn(context),
+        ),
+        TourFlowNavigationRole.operator => OperatorSidebar(
+          displayName: displayName,
+          email: email,
+          selectedIndex: effectiveIndex,
+          onItemSelected: navigationScope?.onItemSelected ?? (_) {},
+          onLogout: () async => signOutAndReturnToSignIn(context),
+        ),
+        TourFlowNavigationRole.staff => StaffSidebar(
+          displayName: displayName,
+          email: email,
+          selectedIndex: effectiveIndex,
+          onItemSelected: navigationScope?.onItemSelected ?? (_) {},
+          onLogout: () async => signOutAndReturnToSignIn(context),
+        ),
+        TourFlowNavigationRole.administrator => AdminSidebar(
+          displayName: displayName,
+          email: email,
+          selectedIndex: effectiveIndex,
+          onItemSelected: navigationScope?.onItemSelected ?? (_) {},
+          onLogout: () async => signOutAndReturnToSignIn(context),
+        ),
+      },
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leadingWidth: showBackButton ? 96 : 56,
@@ -78,7 +98,7 @@ class TourFlowPage extends StatelessWidget {
               if (showBackButton)
                 IconButton(
                   tooltip: 'Back',
-                  onPressed: () => Navigator.maybePop(context),
+                  onPressed: () => _handleBack(context),
                   icon: const Icon(Icons.arrow_back_rounded),
                 ),
               IconButton(
@@ -124,42 +144,18 @@ class TourFlowPage extends StatelessWidget {
           child: child,
         ),
       ),
-      bottomNavigationBar: isStaff
-          ? StaffBottomNavigationBar(
-              selectedIndex: selectedNavigationIndex,
-              onItemSelected: (index) => _handleNavigation(context, index),
-            )
-          : UserBottomNavigationBar(
-              selectedIndex: selectedNavigationIndex,
-              onItemSelected: (index) => _handleNavigation(context, index),
-            ),
     );
   }
 
-  void _handleNavigation(BuildContext context, int index) {
-    if (onNavigationSelected != null) {
-      onNavigationSelected!(index);
-      return;
-    }
-
-    if (isStaff && index == 0) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/operator-dashboard',
-        (route) => route.isFirst,
-      );
-    } else if (!isStaff && index == 4) {
-      Navigator.pushNamed(context, '/profile-security');
-    }
-  }
-
-  void _handleLogout(BuildContext context) {
-    if (onLogout != null) {
-      onLogout!();
-      return;
-    }
-
-    Navigator.pushNamedAndRemoveUntil(context, '/sign-in', (route) => false);
+  Future<void> _handleBack(BuildContext context) async {
+    if (await Navigator.maybePop(context) || !context.mounted) return;
+    final fallbackRoute = switch (navigationRole) {
+      TourFlowNavigationRole.tourist => TourFlowRoutes.userHome,
+      TourFlowNavigationRole.operator => TourFlowRoutes.operatorDashboard,
+      TourFlowNavigationRole.staff => TourFlowRoutes.staffScan,
+      TourFlowNavigationRole.administrator => TourFlowRoutes.adminDashboard,
+    };
+    Navigator.pushNamedAndRemoveUntil(context, fallbackRoute, (route) => false);
   }
 }
 
@@ -182,7 +178,9 @@ class ModuleCard extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: color,
-        border: Border.all(color: TourFlowColors.border.withOpacity(0.45)),
+        border: Border.all(
+          color: TourFlowColors.border.withValues(alpha: 0.45),
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -291,7 +289,7 @@ class StaticField extends StatelessWidget {
                   ),
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
         ),
@@ -357,7 +355,7 @@ class OutlineActionButton extends StatelessWidget {
       label: Text(label),
       style: OutlinedButton.styleFrom(
         foregroundColor: color,
-        side: BorderSide(color: color.withOpacity(0.55)),
+        side: BorderSide(color: color.withValues(alpha: 0.55)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
       ),
     );
@@ -375,7 +373,7 @@ class StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(

@@ -22,7 +22,7 @@ class _AttractionConfigurationPageState
     return TourFlowPage(
       title: 'Attraction Configuration',
       role: 'TOURFLOW · OPERATOR',
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.operator,
       selectedNavigationIndex: 1,
       child: Column(
         children: [
@@ -206,11 +206,11 @@ class _AttractionConfigurationPageState
           PrimaryButton(
             label: 'Save & Submit for Approval',
             icon: Icons.send_outlined,
-            onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(
+            onPressed: () async {
+              if (await Navigator.maybePop(context) || !context.mounted) return;
+              Navigator.pushReplacementNamed(
                 context,
                 OperatorDashboardPage.routeName,
-                (route) => route.isFirst,
               );
             },
           ),
@@ -351,7 +351,7 @@ class _ThresholdRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(9),
       ),
       child: Row(

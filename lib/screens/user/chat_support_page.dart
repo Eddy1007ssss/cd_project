@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../services/gemini_chat_service.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import '../../widgets/navigation/user_sidebar.dart';
+import '../../widgets/navigation/navigation_logout.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import '../../widgets/tourflow_widgets.dart';
 import 'attraction_discovery_page.dart';
 import 'chat_history_page.dart';
@@ -13,7 +14,7 @@ import 'support_ticket_list_page.dart';
 class ChatSupportPage extends StatefulWidget {
   const ChatSupportPage({super.key});
 
-  static const routeName = '/user/chat';
+  static const routeName = TourFlowRoutes.userChat;
 
   @override
   State<ChatSupportPage> createState() => _ChatSupportPageState();
@@ -124,11 +125,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         displayName: 'Alex Tan',
         email: 'alex@example.com',
         selectedIndex: 3,
-        onLogout: () => Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/sign-in',
-          (route) => false,
-        ),
+        onLogout: () async => signOutAndReturnToSignIn(context),
       ),
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -270,7 +267,6 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
           ),
         ],
       ),
-      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 3),
     );
   }
 }
@@ -395,7 +391,7 @@ class _MessageBubble extends StatelessWidget {
                 border: Border.all(
                   color: message.isUser
                       ? TourFlowColors.primary
-                      : TourFlowColors.border.withOpacity(.65),
+                      : TourFlowColors.border.withValues(alpha: .65),
                 ),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(15),
@@ -445,7 +441,7 @@ class _RecommendationCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: TourFlowColors.border.withOpacity(.65)),
+        border: Border.all(color: TourFlowColors.border.withValues(alpha: .65)),
       ),
       child: Row(
         children: [

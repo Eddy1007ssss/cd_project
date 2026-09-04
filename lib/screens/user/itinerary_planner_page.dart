@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 
 class ItineraryPlannerPage extends StatefulWidget {
   const ItineraryPlannerPage({super.key});
@@ -174,7 +173,6 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
         );
       },
     ),
-    bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 2),
   );
 }
 

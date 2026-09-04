@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import 'attraction_configuration_page.dart';
 
 class AttractionDetailsPage extends StatelessWidget {
   const AttractionDetailsPage({super.key});
 
-  static const routeName = '/attraction-details';
+  static const routeName = TourFlowRoutes.attractionDetails;
 
   @override
   Widget build(BuildContext context) {
     return TourFlowPage(
       title: 'Attraction Details',
       role: 'TOURFLOW · OPERATOR',
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.operator,
+      pageLevel: TourFlowPageLevel.topLevel,
       selectedNavigationIndex: 1,
       child: Column(
         children: [
@@ -211,7 +213,7 @@ class _GalleryTile extends StatelessWidget {
         border: Border.all(
           color: add
               ? TourFlowColors.primaryText
-              : TourFlowColors.border.withOpacity(0.4),
+              : TourFlowColors.border.withValues(alpha: 0.4),
         ),
       ),
       child: Icon(

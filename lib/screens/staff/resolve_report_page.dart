@@ -28,7 +28,7 @@ class _ResolveReportPageState extends State<ResolveReportPage> {
     return TourFlowPage(
       title: 'Resolve Report',
       role: 'TOURFLOW · OPERATOR',
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.operator,
       selectedNavigationIndex: 0,
       child: report == null
           ? const ModuleCard(child: Text('No report was selected.'))

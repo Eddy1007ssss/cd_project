@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import 'booking_qr_page.dart';
 import 'reschedule_booking_page.dart';
 
@@ -150,7 +149,6 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           ],
         ],
       ),
-      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 2),
     );
   }
 }

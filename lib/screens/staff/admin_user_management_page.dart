@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_scope.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import 'admin_attraction_review_page.dart';
 
 class AdminUserManagementPage extends StatefulWidget {
   const AdminUserManagementPage({super.key});
 
-  static const routeName = '/admin-user-management';
+  static const routeName = TourFlowRoutes.adminDashboard;
 
   @override
   State<AdminUserManagementPage> createState() =>
@@ -21,8 +23,8 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
     return TourFlowPage(
       title: 'Admin',
       role: 'TOURFLOW · ADMINISTRATOR',
-      showBackButton: false,
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.administrator,
+      pageLevel: TourFlowPageLevel.topLevel,
       selectedNavigationIndex: 0,
       actions: [
         IconButton(onPressed: () {}, icon: const Icon(Icons.search_rounded)),
@@ -169,8 +171,11 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
         PrimaryButton(
           label: 'Review Pending Attraction',
           icon: Icons.fact_check_outlined,
-          onPressed: () =>
-              Navigator.pushNamed(context, AdminAttractionReviewPage.routeName),
+          onPressed: () => selectNavigationTabOrPush(
+            context,
+            index: 1,
+            routeName: AdminAttractionReviewPage.routeName,
+          ),
         ),
       ],
     );

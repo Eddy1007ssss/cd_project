@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 
 class AdminAttractionReviewPage extends StatefulWidget {
   const AdminAttractionReviewPage({super.key});
 
-  static const routeName = '/admin-attraction-review';
+  static const routeName = TourFlowRoutes.adminAttractionReview;
 
   @override
   State<AdminAttractionReviewPage> createState() =>
@@ -58,8 +59,9 @@ class _AdminAttractionReviewPageState extends State<AdminAttractionReviewPage> {
     return TourFlowPage(
       title: 'Attraction Review',
       role: 'TOURFLOW · ADMINISTRATOR',
-      isStaff: true,
-      selectedNavigationIndex: 0,
+      navigationRole: TourFlowNavigationRole.administrator,
+      pageLevel: TourFlowPageLevel.topLevel,
+      selectedNavigationIndex: 1,
       child: Column(
         children: [
           ModuleCard(

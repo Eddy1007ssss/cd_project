@@ -12,7 +12,7 @@ class OperatorFeedbackPage extends StatelessWidget {
     return TourFlowPage(
       title: 'All Feedback',
       role: 'TOURFLOW · OPERATOR',
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.operator,
       selectedNavigationIndex: 0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

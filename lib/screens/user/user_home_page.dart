@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import '../../widgets/navigation/user_sidebar.dart';
+import '../../widgets/navigation/navigation_logout.dart';
+import '../../widgets/navigation/navigation_scope.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 
 /// Static tourist home page.
 ///
@@ -10,26 +12,10 @@ import '../../widgets/navigation/user_sidebar.dart';
 class UserHomePage extends StatelessWidget {
   const UserHomePage({super.key});
 
-  static const String routeName = '/user/home';
-
-  static const List<String> _navigationRoutes = [
-    '/user/home',
-    '/attraction-discovery',
-    '/user/trips',
-    '/user/chat',
-    '/profile-security',
-  ];
+  static const String routeName = TourFlowRoutes.userHome;
 
   void _changePage(BuildContext context, int index) {
-    if (index == 0) {
-      return;
-    }
-
-    Navigator.pushReplacementNamed(context, _navigationRoutes[index]);
-  }
-
-  void _logout(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(context, '/sign-in', (route) => false);
+    TourFlowNavigationScope.maybeOf(context)?.onItemSelected(index);
   }
 
   @override
@@ -40,8 +26,7 @@ class UserHomePage extends StatelessWidget {
         displayName: 'Alex Tan',
         email: 'alex@example.com',
         selectedIndex: 0,
-        onItemSelected: (index) => _changePage(context, index),
-        onLogout: () => _logout(context),
+        onLogout: () async => signOutAndReturnToSignIn(context),
       ),
       appBar: AppBar(
         centerTitle: true,
@@ -131,10 +116,6 @@ class UserHomePage extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: UserBottomNavigationBar(
-        selectedIndex: 0,
-        onItemSelected: (index) => _changePage(context, index),
-      ),
     );
   }
 }
@@ -205,7 +186,7 @@ class _SearchAndCategories extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
               itemCount: categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final selected = index == 0;
                 return Container(
@@ -387,7 +368,7 @@ class _RecommendedCard extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: 92,
-                    color: Colors.white.withOpacity(0.88),
+                    color: Colors.white.withValues(alpha: 0.88),
                   ),
                 ),
                 Positioned(
@@ -463,7 +444,7 @@ class _FeaturedAttractionCard extends StatelessWidget {
             child: Icon(
               Icons.park_rounded,
               size: 130,
-              color: Colors.white.withOpacity(0.28),
+              color: Colors.white.withValues(alpha: 0.28),
             ),
           ),
           const Positioned(
@@ -625,7 +606,7 @@ class _RatingBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.88),
+        color: Colors.white.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

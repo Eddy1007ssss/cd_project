@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../models/attraction.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import 'attraction_details_page.dart';
 
 class NearbyAttractionsPage extends StatefulWidget {
@@ -165,7 +164,6 @@ class _NearbyAttractionsPageState extends State<NearbyAttractionsPage> {
         },
       ),
     ),
-    bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 1),
   );
 
   String _clock(DateTime value) {

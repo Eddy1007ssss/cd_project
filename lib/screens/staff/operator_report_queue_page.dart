@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import '../../models/engagement_models.dart';
 import '../../repositories/engagement_repository.dart';
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import 'resolve_report_page.dart';
 
 class OperatorReportQueuePage extends StatefulWidget {
   const OperatorReportQueuePage({super.key});
-  static const routeName = '/operator-report-queue';
+  static const routeName = TourFlowRoutes.operatorReports;
   @override
   State<OperatorReportQueuePage> createState() =>
       _OperatorReportQueuePageState();
@@ -31,8 +32,9 @@ class _OperatorReportQueuePageState extends State<OperatorReportQueuePage> {
   Widget build(BuildContext context) => TourFlowPage(
     title: 'Operator Report Queue',
     role: 'TOURFLOW · OPERATOR',
-    isStaff: true,
-    selectedNavigationIndex: 0,
+    navigationRole: TourFlowNavigationRole.operator,
+    pageLevel: TourFlowPageLevel.topLevel,
+    selectedNavigationIndex: 3,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

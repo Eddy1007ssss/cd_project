@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../models/attraction.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
 import 'smart_recommendations_page.dart';
 import 'time_slot_selection_page.dart';
 
@@ -265,7 +264,6 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
           );
         },
       ),
-      bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 1),
     );
   }
 }

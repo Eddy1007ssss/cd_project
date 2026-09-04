@@ -4,6 +4,7 @@ import '../../widgets/tourflow_widgets.dart';
 
 class StaffSupportTicketArguments {
   const StaffSupportTicketArguments({
+    this.navigationRole = TourFlowNavigationRole.staff,
     required this.id,
     required this.subject,
     required this.tourist,
@@ -15,6 +16,7 @@ class StaffSupportTicketArguments {
     required this.description,
   });
 
+  final TourFlowNavigationRole navigationRole;
   final String id;
   final String subject;
   final String tourist;
@@ -76,9 +78,12 @@ class _StaffSupportTicketDetailsPageState
 
     return TourFlowPage(
       title: 'Support Ticket Details',
-      role: 'TOURFLOW · ADMIN / OPERATOR',
-      isStaff: true,
-      selectedNavigationIndex: 4,
+      role: ticket.navigationRole == TourFlowNavigationRole.administrator
+          ? 'TOURFLOW · ADMINISTRATOR'
+          : 'TOURFLOW · STAFF',
+      navigationRole: ticket.navigationRole,
+      selectedNavigationIndex:
+          ticket.navigationRole == TourFlowNavigationRole.administrator ? 2 : 0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -161,7 +166,7 @@ class _StaffSupportTicketDetailsPageState
             child: Column(
               children: [
                 DropdownButtonFormField<String>(
-                  value: _assignee,
+                  initialValue: _assignee,
                   decoration: InputDecoration(
                     labelText: 'Assign ticket to',
                     prefixIcon: const Icon(Icons.support_agent_rounded),
@@ -189,7 +194,7 @@ class _StaffSupportTicketDetailsPageState
                 ),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
-                  value: _status,
+                  initialValue: _status,
                   decoration: InputDecoration(
                     labelText: 'Ticket status',
                     prefixIcon: const Icon(Icons.flag_outlined),

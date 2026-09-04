@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
-import '../../widgets/navigation/user_bottom_navigation_bar.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import 'booking_details_page.dart';
 import 'itinerary_planner_page.dart';
 
 class BookingHistoryPage extends StatefulWidget {
   const BookingHistoryPage({super.key});
-  static const routeName = '/user/trips';
+  static const routeName = TourFlowRoutes.userTrips;
   @override
   State<BookingHistoryPage> createState() => _BookingHistoryPageState();
 }
@@ -104,7 +104,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
       icon: const Icon(Icons.route_outlined),
       label: const Text('Plan itinerary'),
     ),
-    bottomNavigationBar: const UserBottomNavigationBar(selectedIndex: 2),
   );
 }
 

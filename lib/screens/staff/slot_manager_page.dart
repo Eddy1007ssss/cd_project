@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 
 class SlotManagerPage extends StatefulWidget {
   const SlotManagerPage({super.key});
 
-  static const routeName = '/slot-manager';
+  static const routeName = TourFlowRoutes.slotManager;
 
   @override
   State<SlotManagerPage> createState() => _SlotManagerPageState();
@@ -19,7 +20,8 @@ class _SlotManagerPageState extends State<SlotManagerPage> {
     return TourFlowPage(
       title: 'Slot Manager',
       role: 'TOURFLOW · OPERATOR',
-      isStaff: true,
+      navigationRole: TourFlowNavigationRole.operator,
+      pageLevel: TourFlowPageLevel.topLevel,
       selectedNavigationIndex: 2,
       actions: [
         IconButton(

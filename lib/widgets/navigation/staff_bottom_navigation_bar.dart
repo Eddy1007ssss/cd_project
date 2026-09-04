@@ -2,45 +2,40 @@ import 'package:flutter/material.dart';
 
 import 'user_bottom_navigation_bar.dart';
 
-const List<TourFlowNavigationItem> staffNavigationItems = [
+const List<TourFlowNavigationItem> operatorNavigationItems = [
   TourFlowNavigationItem(
     label: 'Dashboard',
     icon: Icons.dashboard_outlined,
     selectedIcon: Icons.dashboard_rounded,
-    routeName: '/operator-dashboard',
   ),
 
   TourFlowNavigationItem(
     label: 'Attractions',
     icon: Icons.attractions_outlined,
     selectedIcon: Icons.attractions_rounded,
-    routeName: '/attraction-details',
   ),
 
   TourFlowNavigationItem(
     label: 'Slots',
     icon: Icons.event_available_outlined,
     selectedIcon: Icons.event_available_rounded,
-    routeName: '/slot-manager',
   ),
 
   TourFlowNavigationItem(
-    label: 'Check-In',
-    icon: Icons.qr_code_scanner_outlined,
-    selectedIcon: Icons.qr_code_scanner_rounded,
-    routeName: '/operator-qr-scanner',
+    label: 'Reports',
+    icon: Icons.report_outlined,
+    selectedIcon: Icons.report_rounded,
   ),
 
   TourFlowNavigationItem(
-    label: 'Support',
-    icon: Icons.support_agent_outlined,
-    selectedIcon: Icons.support_agent_rounded,
-    routeName: '/staff/support-tickets',
+    label: 'Analytics',
+    icon: Icons.analytics_outlined,
+    selectedIcon: Icons.analytics_rounded,
   ),
 ];
 
-class StaffBottomNavigationBar extends StatelessWidget {
-  const StaffBottomNavigationBar({
+class OperatorBottomNavigationBar extends StatelessWidget {
+  const OperatorBottomNavigationBar({
     required this.selectedIndex,
     required this.onItemSelected,
     super.key,
@@ -52,7 +47,7 @@ class StaffBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TourFlowBottomNavigationBar(
-      items: staffNavigationItems,
+      items: operatorNavigationItems,
       selectedIndex: selectedIndex,
       onItemSelected: onItemSelected,
     );

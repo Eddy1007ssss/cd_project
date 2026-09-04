@@ -12,7 +12,6 @@ class FeedbackCentrePage extends StatelessWidget {
     return TourFlowPage(
       title: 'Feedback Centre',
       role: 'TOURIST',
-      showBackButton: false,
       selectedNavigationIndex: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
