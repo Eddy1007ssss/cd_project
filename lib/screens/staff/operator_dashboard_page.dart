@@ -6,6 +6,7 @@ import '../../widgets/tourflow_widgets.dart';
 import '../../widgets/navigation/navigation_routes.dart';
 import '../../widgets/navigation/navigation_scope.dart';
 import 'attraction_details_page.dart';
+import 'operator_live_crowd_page.dart';
 import 'slot_manager_page.dart';
 
 class OperatorDashboardPage extends StatefulWidget {
@@ -556,7 +557,7 @@ class _OperatorDashboardPageState
                     onTap: () {
                       Navigator.pushNamed(
                         context,
-                        '/live-crowd',
+                        OperatorLiveCrowdPage.routeName,
                       );
                     },
                     child:

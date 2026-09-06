@@ -44,7 +44,8 @@ import 'screens/user/report_status_page.dart';
 import 'screens/user/capacity_alert_page.dart';
 import 'screens/user/geofence_page.dart';
 import 'screens/staff/staff_qr_scanner_page.dart';
-import 'screens/staff/live_crowd_page.dart';
+import 'screens/staff/operator_live_crowd_page.dart';
+import 'screens/staff/operator_live_crowd_details_page.dart';
 import 'screens/staff/operator_report_queue_page.dart';
 import 'screens/staff/revenue_promotion_page.dart';
 import 'screens/staff/promotion_suggestion_page.dart';
@@ -143,7 +144,10 @@ class MyApp extends StatelessWidget {
             const StaffSupportTicketDetailsPage(),
         OperatorFeedbackPage.routeName: (_) => const OperatorFeedbackPage(),
         StaffQrScannerPage.routeName: (_) => const StaffQrScannerPage(),
-        LiveCrowdPage.routeName: (_) => const LiveCrowdPage(),
+        OperatorLiveCrowdPage.routeName: (_) =>
+            const OperatorLiveCrowdPage(),
+        OperatorLiveCrowdDetailsPage.routeName: (_) =>
+            const OperatorLiveCrowdDetailsPage(),
         OperatorReportQueuePage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 3),
         ResolveReportPage.routeName: (_) => const ResolveReportPage(),

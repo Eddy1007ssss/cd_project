@@ -13,7 +13,8 @@ class CapacityAlertPage extends StatefulWidget {
   static const String routeName = '/capacity-alert';
 
   @override
-  State<CapacityAlertPage> createState() => _CapacityAlertPageState();
+  State<CapacityAlertPage> createState() =>
+      _CapacityAlertPageState();
 }
 
 class _CapacityAlertPageState extends State<CapacityAlertPage>
@@ -41,7 +42,8 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
     if (_initialized) return;
     _initialized = true;
 
-    final arguments = ModalRoute.of(context)?.settings.arguments;
+    final arguments =
+        ModalRoute.of(context)?.settings.arguments;
 
     if (arguments is! TourBooking) return;
 
@@ -56,8 +58,11 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    _foreground = state == AppLifecycleState.resumed;
+  void didChangeAppLifecycleState(
+      AppLifecycleState state,
+      ) {
+    _foreground =
+        state == AppLifecycleState.resumed;
 
     if (_foreground) {
       if (ModalRoute.of(context)?.isCurrent == true) {
@@ -73,37 +78,60 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
   @override
   void dispose() {
     _timer?.cancel();
+
     WidgetsBinding.instance.removeObserver(this);
+
     super.dispose();
   }
+
+  // ============================================================
+  // AUTO REFRESH
+  // ============================================================
 
   void _startTimer() {
     _timer?.cancel();
 
-    if (!_foreground || _booking == null) return;
+    if (!_foreground || _booking == null) {
+      return;
+    }
 
     _timer = Timer.periodic(
       const Duration(seconds: 3),
           (_) {
-        if (!mounted || !_foreground) return;
-        if (ModalRoute.of(context)?.isCurrent != true) return;
+        if (!mounted || !_foreground) {
+          return;
+        }
+
+        if (ModalRoute.of(context)?.isCurrent != true) {
+          return;
+        }
 
         _refresh();
       },
     );
   }
 
+  // ============================================================
+  // REFRESH CAPACITY
+  // ============================================================
+
   Future<void> _refresh() async {
     final booking = _booking;
 
-    if (!mounted || !_foreground || _loading || booking == null) {
+    if (!mounted ||
+        !_foreground ||
+        _loading ||
+        booking == null) {
       return;
     }
 
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+    });
 
     try {
-      final result = await Supabase.instance.client.rpc(
+      final result =
+      await Supabase.instance.client.rpc(
         'get_booking_capacity',
         params: {
           'target_booking_id': booking.id,
@@ -111,7 +139,9 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
       );
 
       if (result is! Map) {
-        throw const FormatException('Invalid capacity response.');
+        throw const FormatException(
+          'Invalid capacity response.',
+        );
       }
 
       final data = _CapacityData.fromMap(
@@ -134,15 +164,32 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
       });
     } finally {
       if (mounted) {
-        setState(() => _loading = false);
+        setState(() {
+          _loading = false;
+        });
       }
     }
   }
 
-  Future<void> _openPage(String routeName) async {
+  // ============================================================
+  // OPEN PAGE
+  // ============================================================
+
+  Future<void> _openPage(
+      String routeName,
+      ) async {
     final booking = _booking;
 
-    if (booking == null) return;
+    if (booking == null) {
+      return;
+    }
+
+    // Extra protection:
+    // geofence bookings should never open QR page.
+    if (routeName == BookingQrPage.routeName &&
+        !booking.slot.usesStaffScan) {
+      return;
+    }
 
     await Navigator.pushNamed(
       context,
@@ -155,10 +202,16 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
     await _refresh();
   }
 
+  // ============================================================
+  // IMAGE PLACEHOLDER
+  // ============================================================
+
   Widget _photoPlaceholder() {
     return Container(
       height: 210,
-      color: const Color(0xFFFFEAD0),
+      color: const Color(
+        0xFFFFEAD0,
+      ),
       alignment: Alignment.center,
       child: const Column(
         mainAxisSize: MainAxisSize.min,
@@ -166,13 +219,19 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
           Icon(
             Icons.image_outlined,
             size: 46,
-            color: Color(0xFF79571E),
+            color: Color(
+              0xFF79571E,
+            ),
           ),
-          SizedBox(height: 8),
+          SizedBox(
+            height: 8,
+          ),
           Text(
             'Attraction photo unavailable',
             style: TextStyle(
-              color: Color(0xFF79571E),
+              color: Color(
+                0xFF79571E,
+              ),
             ),
           ),
         ],
@@ -180,25 +239,45 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
     );
   }
 
-  Widget _buildContent(_CapacityData data) {
+  // ============================================================
+  // CONTENT
+  // ============================================================
+
+  Widget _buildContent(
+      _CapacityData data,
+      ) {
     final booking = _booking!;
-    final imageUrl = data.coverImageUrl;
-    final color = data.levelColor;
+
+    final imageUrl =
+        data.coverImageUrl;
+
+    final color =
+        data.levelColor;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment:
+      CrossAxisAlignment.stretch,
       children: [
+        // ======================================================
+        // ATTRACTION CARD
+        // ======================================================
+
         Card(
           color: Colors.white,
           margin: EdgeInsets.zero,
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius:
+            BorderRadius.circular(
+              16,
+            ),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment:
+            CrossAxisAlignment.stretch,
             children: [
-              if (imageUrl == null || imageUrl.trim().isEmpty)
+              if (imageUrl == null ||
+                  imageUrl.trim().isEmpty)
                 _photoPlaceholder()
               else
                 Image.network(
@@ -206,42 +285,75 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
                   height: 210,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
+                  errorBuilder:
+                      (
+                      context,
+                      error,
+                      stackTrace,
+                      ) =>
                       _photoPlaceholder(),
                 ),
+
               Padding(
-                padding: const EdgeInsets.all(18),
+                padding:
+                const EdgeInsets.all(
+                  18,
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
                   children: [
                     Text(
                       data.attractionName,
-                      style: const TextStyle(
+                      style:
+                      const TextStyle(
                         fontSize: 21,
-                        fontWeight: FontWeight.w800,
+                        fontWeight:
+                        FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 8),
+
+                    const SizedBox(
+                      height: 8,
+                    ),
+
                     Text(
                       data.locationName,
-                      style: const TextStyle(
-                        color: Colors.black54,
+                      style:
+                      const TextStyle(
+                        color:
+                        Colors.black54,
                       ),
                     ),
-                    const SizedBox(height: 8),
+
+                    const SizedBox(
+                      height: 8,
+                    ),
+
                     Text(
                       booking.bookingCode,
-                      style: const TextStyle(
-                        color: Color(0xFF79571E),
-                        fontWeight: FontWeight.w800,
+                      style:
+                      const TextStyle(
+                        color:
+                        Color(
+                          0xFF79571E,
+                        ),
+                        fontWeight:
+                        FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 4),
+
+                    const SizedBox(
+                      height: 4,
+                    ),
+
                     Text(
                       '${shortDate(booking.slot.startsAt)} '
                           '· ${slotTime(booking.slot)}',
-                      style: const TextStyle(
-                        color: Colors.black54,
+                      style:
+                      const TextStyle(
+                        color:
+                        Colors.black54,
                         fontSize: 12,
                       ),
                     ),
@@ -251,145 +363,328 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
             ],
           ),
         ),
-        const SizedBox(height: 16),
+
+        const SizedBox(
+          height: 16,
+        ),
+
+        // ======================================================
+        // CURRENT CROWD LEVEL
+        // ======================================================
+
         Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: color.withAlpha(20),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: color.withAlpha(60),
+          padding:
+          const EdgeInsets.all(
+            18,
+          ),
+          decoration:
+          BoxDecoration(
+            color:
+            color.withAlpha(
+              20,
+            ),
+            borderRadius:
+            BorderRadius.circular(
+              14,
+            ),
+            border:
+            Border.all(
+              color:
+              color.withAlpha(
+                60,
+              ),
             ),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
             children: [
               const Text(
                 'Current Crowd Level',
-                style: TextStyle(
-                  color: Colors.black54,
+                style:
+                TextStyle(
+                  color:
+                  Colors.black54,
                   fontSize: 13,
                 ),
               ),
-              const SizedBox(height: 10),
+
+              const SizedBox(
+                height: 10,
+              ),
+
               Text(
                 data.levelLabel,
-                style: TextStyle(
+                style:
+                TextStyle(
                   color: color,
                   fontSize: 22,
-                  fontWeight: FontWeight.w800,
+                  fontWeight:
+                  FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 6),
+
+              const SizedBox(
+                height: 6,
+              ),
+
               const Text(
                 'Based on current attraction occupancy.',
-                style: TextStyle(
+                style:
+                TextStyle(
                   fontSize: 12,
-                  color: Colors.black54,
+                  color:
+                  Colors.black54,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+
+        const SizedBox(
+          height: 12,
+        ),
+
+        // ======================================================
+        // CURRENT VISITORS
+        // ======================================================
+
         _InformationCard(
-          title: 'Current Visitors',
-          icon: Icons.groups_outlined,
+          title:
+          'Current Visitors',
+          icon:
+          Icons.groups_outlined,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
             children: [
               Text(
-                '${data.currentVisitors} / ${data.maximumCapacity}',
-                style: const TextStyle(
+                '${data.currentVisitors} / '
+                    '${data.maximumCapacity}',
+                style:
+                const TextStyle(
                   fontSize: 25,
-                  fontWeight: FontWeight.w800,
+                  fontWeight:
+                  FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 12),
+
+              const SizedBox(
+                height: 12,
+              ),
+
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: data.occupancy.clamp(0.0, 1.0).toDouble(),
+                borderRadius:
+                BorderRadius.circular(
+                  8,
+                ),
+                child:
+                LinearProgressIndicator(
+                  value:
+                  data.occupancy
+                      .clamp(
+                    0.0,
+                    1.0,
+                  )
+                      .toDouble(),
                   minHeight: 9,
-                  backgroundColor: const Color(0xFFF0ECE5),
+                  backgroundColor:
+                  const Color(
+                    0xFFF0ECE5,
+                  ),
                   color: color,
                 ),
               ),
-              const SizedBox(height: 8),
+
+              const SizedBox(
+                height: 8,
+              ),
+
               Text(
                 '${(data.occupancy * 100).toStringAsFixed(0)}% occupied',
-                style: const TextStyle(
-                  color: Colors.black54,
+                style:
+                const TextStyle(
+                  color:
+                  Colors.black54,
                   fontSize: 12,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+
+        const SizedBox(
+          height: 12,
+        ),
+
+        // ======================================================
+        // AVAILABLE CAPACITY
+        // ======================================================
+
         _InformationCard(
-          title: 'Available Capacity',
-          icon: Icons.people_alt_outlined,
+          title:
+          'Available Capacity',
+          icon:
+          Icons.people_alt_outlined,
           child: Text(
             '${data.availableCapacity} space(s)',
-            style: const TextStyle(
+            style:
+            const TextStyle(
               fontSize: 19,
-              fontWeight: FontWeight.w800,
+              fontWeight:
+              FontWeight.w800,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+
+        const SizedBox(
+          height: 12,
+        ),
+
+        // ======================================================
+        // WAITING TIME
+        // ======================================================
+
         const _InformationCard(
-          title: 'Estimated Waiting Time',
-          icon: Icons.schedule_outlined,
+          title:
+          'Estimated Waiting Time',
+          icon:
+          Icons.schedule_outlined,
           child: Text(
             'Not available. Please check with attraction staff.',
-            style: TextStyle(
+            style:
+            TextStyle(
               height: 1.4,
-              fontWeight: FontWeight.w600,
+              fontWeight:
+              FontWeight.w600,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+
+        const SizedBox(
+          height: 12,
+        ),
+
+        // ======================================================
+        // RECOMMENDATION
+        // ======================================================
+
         _InformationCard(
-          title: 'Recommendation',
-          icon: Icons.info_outline,
+          title:
+          'Recommendation',
+          icon:
+          Icons.info_outline,
           child: Text(
-            data.recommendation(booking.visitorCount),
-            style: const TextStyle(
+            data.recommendation(
+              booking.visitorCount,
+              usesGeofence:
+              booking.slot.usesGeofence,
+            ),
+            style:
+            const TextStyle(
               height: 1.5,
-              fontWeight: FontWeight.w600,
+              fontWeight:
+              FontWeight.w600,
             ),
           ),
         ),
-        const SizedBox(height: 20),
-        FilledButton.icon(
-          onPressed: () => _openPage(BookingQrPage.routeName),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF79571E),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-          ),
-          icon: const Icon(Icons.qr_code_2_rounded),
-          label: const Text('Open QR Code'),
+
+        const SizedBox(
+          height: 20,
         ),
-        const SizedBox(height: 10),
+
+        // ======================================================
+        // OPEN QR CODE
+        //
+        // ONLY STAFF-SCAN ATTRACTIONS
+        // ======================================================
+
+        if (booking.slot
+            .usesStaffScan) ...[
+          FilledButton.icon(
+            onPressed: () {
+              _openPage(
+                BookingQrPage.routeName,
+              );
+            },
+            style:
+            FilledButton.styleFrom(
+              backgroundColor:
+              const Color(
+                0xFF79571E,
+              ),
+              foregroundColor:
+              Colors.white,
+              padding:
+              const EdgeInsets.symmetric(
+                vertical: 15,
+              ),
+            ),
+            icon:
+            const Icon(
+              Icons.qr_code_2_rounded,
+            ),
+            label:
+            const Text(
+              'Open QR Code',
+            ),
+          ),
+
+          const SizedBox(
+            height: 10,
+          ),
+        ],
+
+        // ======================================================
+        // VIEW GEOFENCE / ATTRACTION MAP
+        //
+        // BOTH GEOFENCE AND STAFF SCAN CAN VIEW MAP
+        // ======================================================
+
         OutlinedButton.icon(
-          onPressed: () => _openPage(GeofencePage.routeName),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF79571E),
-            padding: const EdgeInsets.symmetric(vertical: 15),
+          onPressed: () {
+            _openPage(
+              GeofencePage.routeName,
+            );
+          },
+          style:
+          OutlinedButton.styleFrom(
+            foregroundColor:
+            const Color(
+              0xFF79571E,
+            ),
+            padding:
+            const EdgeInsets.symmetric(
+              vertical: 15,
+            ),
           ),
-          icon: const Icon(Icons.location_on_outlined),
-          label: const Text('View Geofence'),
+          icon:
+          const Icon(
+            Icons.location_on_outlined,
+          ),
+          label:
+          const Text(
+            'View Geofence',
+          ),
         ),
-        const SizedBox(height: 16),
+
+        const SizedBox(
+          height: 16,
+        ),
+
+        // ======================================================
+        // LAST UPDATED
+        // ======================================================
+
         Text(
           'Last updated: ${clockTime(data.updatedAt)}\n'
               'Updates every 3 seconds while this page is open.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.black54,
+          textAlign:
+          TextAlign.center,
+          style:
+          const TextStyle(
+            color:
+            Colors.black54,
             fontSize: 12,
             height: 1.5,
           ),
@@ -398,87 +693,154 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
     );
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     final data = _data;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FF),
+      backgroundColor:
+      const Color(
+        0xFFFAF8FF,
+      ),
+
       appBar: AppBar(
-        title: const Text('Capacity Alert'),
+        title:
+        const Text(
+          'Capacity Alert',
+        ),
         actions: [
           IconButton(
-            tooltip: 'Refresh capacity',
-            onPressed: _loading || _booking == null
+            tooltip:
+            'Refresh capacity',
+            onPressed:
+            _loading ||
+                _booking == null
                 ? null
-                : () => _refresh(),
+                : () {
+              _refresh();
+            },
             icon: _loading
                 ? const SizedBox.square(
               dimension: 20,
-              child: CircularProgressIndicator(
+              child:
+              CircularProgressIndicator(
                 strokeWidth: 2,
               ),
             )
-                : const Icon(Icons.refresh_rounded),
+                : const Icon(
+              Icons.refresh_rounded,
+            ),
           ),
         ],
       ),
+
       body: _booking == null
           ? const Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding:
+          EdgeInsets.all(
+            24,
+          ),
           child: Text(
             'Open Capacity Alert from your booking details.',
-            textAlign: TextAlign.center,
+            textAlign:
+            TextAlign.center,
           ),
         ),
       )
-          : data == null && _error == null
+          : data == null &&
+          _error == null
           ? const Center(
-        child: CircularProgressIndicator(),
+        child:
+        CircularProgressIndicator(),
       )
           : RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(18),
+          physics:
+          const AlwaysScrollableScrollPhysics(),
+          padding:
+          const EdgeInsets.all(
+            18,
+          ),
           children: [
             Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
+              child:
+              ConstrainedBox(
+                constraints:
+                const BoxConstraints(
                   maxWidth: 760,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment:
+                  CrossAxisAlignment.stretch,
                   children: [
-                    if (_error != null) ...[
+                    if (_error !=
+                        null) ...[
                       Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3CD),
-                          borderRadius: BorderRadius.circular(12),
+                        padding:
+                        const EdgeInsets.all(
+                          14,
                         ),
-                        child: Column(
+                        decoration:
+                        BoxDecoration(
+                          color:
+                          const Color(
+                            0xFFFFF3CD,
+                          ),
+                          borderRadius:
+                          BorderRadius.circular(
+                            12,
+                          ),
+                        ),
+                        child:
+                        Column(
                           children: [
                             Text(
                               _error!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Color(0xFF92400E),
+                              textAlign:
+                              TextAlign.center,
+                              style:
+                              const TextStyle(
+                                color:
+                                Color(
+                                  0xFF92400E,
+                                ),
                               ),
                             ),
+
                             TextButton(
-                              onPressed: _loading
+                              onPressed:
+                              _loading
                                   ? null
-                                  : () => _refresh(),
-                              child: const Text('Try again'),
+                                  : () {
+                                _refresh();
+                              },
+                              child:
+                              const Text(
+                                'Try again',
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
+
+                      const SizedBox(
+                        height: 12,
+                      ),
                     ],
-                    if (data != null) _buildContent(data),
+
+                    if (data !=
+                        null)
+                      _buildContent(
+                        data,
+                      ),
                   ],
                 ),
               ),
@@ -489,6 +851,10 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
     );
   }
 }
+
+// ============================================================
+// INFORMATION CARD
+// ============================================================
 
 class _InformationCard extends StatelessWidget {
   const _InformationCard({
@@ -502,41 +868,68 @@ class _InformationCard extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     return Card(
       color: Colors.white,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(
-          color: Color(0xFFE5E2DC),
+      shape:
+      RoundedRectangleBorder(
+        borderRadius:
+        BorderRadius.circular(
+          14,
+        ),
+        side:
+        const BorderSide(
+          color:
+          Color(
+            0xFFE5E2DC,
+          ),
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding:
+        const EdgeInsets.all(
+          18,
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment:
+          CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
                 Icon(
                   icon,
                   size: 21,
-                  color: const Color(0xFF79571E),
+                  color:
+                  const Color(
+                    0xFF79571E,
+                  ),
                 ),
-                const SizedBox(width: 8),
+
+                const SizedBox(
+                  width: 8,
+                ),
+
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.black54,
+                    style:
+                    const TextStyle(
+                      color:
+                      Colors.black54,
                       fontSize: 13,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(
+              height: 12,
+            ),
+
             child,
           ],
         ),
@@ -544,6 +937,10 @@ class _InformationCard extends StatelessWidget {
     );
   }
 }
+
+// ============================================================
+// CAPACITY DATA
+// ============================================================
 
 class _CapacityData {
   const _CapacityData({
@@ -558,75 +955,161 @@ class _CapacityData {
   final String attractionName;
   final String locationName;
   final String? coverImageUrl;
+
   final int maximumCapacity;
   final int currentVisitors;
+
   final DateTime updatedAt;
 
   int get availableCapacity =>
       (maximumCapacity - currentVisitors)
-          .clamp(0, maximumCapacity)
+          .clamp(
+        0,
+        maximumCapacity,
+      )
           .toInt();
 
   double get occupancy =>
       maximumCapacity > 0
-          ? currentVisitors / maximumCapacity
+          ? currentVisitors /
+          maximumCapacity
           : 0;
 
+  // ============================================================
+  // CROWD LEVEL
+  // ============================================================
+
   String get levelLabel {
-    if (maximumCapacity <= 0) return 'UNAVAILABLE';
-    if (currentVisitors >= maximumCapacity) return 'FULL';
-    if (occupancy >= 0.8) return 'HIGH';
-    if (occupancy >= 0.5) return 'MODERATE';
+    if (maximumCapacity <= 0) {
+      return 'UNAVAILABLE';
+    }
+
+    if (currentVisitors >=
+        maximumCapacity) {
+      return 'FULL';
+    }
+
+    if (occupancy >= 0.8) {
+      return 'HIGH';
+    }
+
+    if (occupancy >= 0.5) {
+      return 'MODERATE';
+    }
 
     return 'LOW';
   }
 
-  Color get levelColor {
-    if (maximumCapacity <= 0) return Colors.grey;
-    if (occupancy >= 1) return const Color(0xFFB91C1C);
-    if (occupancy >= 0.8) return const Color(0xFFC2410C);
-    if (occupancy >= 0.5) return const Color(0xFFB77900);
+  // ============================================================
+  // CROWD COLOR
+  // ============================================================
 
-    return const Color(0xFF15803D);
+  Color get levelColor {
+    if (maximumCapacity <= 0) {
+      return Colors.grey;
+    }
+
+    if (occupancy >= 1) {
+      return const Color(
+        0xFFB91C1C,
+      );
+    }
+
+    if (occupancy >= 0.8) {
+      return const Color(
+        0xFFC2410C,
+      );
+    }
+
+    if (occupancy >= 0.5) {
+      return const Color(
+        0xFFB77900,
+      );
+    }
+
+    return const Color(
+      0xFF15803D,
+    );
   }
 
-  String recommendation(int partySize) {
+  // ============================================================
+  // RECOMMENDATION
+  // ============================================================
+
+  String recommendation(
+      int partySize, {
+        required bool usesGeofence,
+      }) {
     if (maximumCapacity <= 0) {
-      return 'Capacity information is unavailable. Please contact staff.';
+      return 'Capacity information is unavailable. '
+          'Please contact attraction staff.';
     }
 
     if (availableCapacity < partySize) {
       return 'There is currently insufficient capacity for your party. '
-          'Please check with staff before entering.';
+          'Please wait and check the capacity again before entering.';
     }
 
     if (occupancy >= 0.8) {
-      return 'The attraction is busy. Check with staff before entering.';
+      return 'The attraction is currently busy. '
+          'Consider waiting until the crowd level decreases.';
+    }
+
+    if (usesGeofence) {
+      return 'There is currently enough capacity for your party. '
+          'Entry depends on your booking time and automatic geofence validation.';
     }
 
     return 'There is currently enough capacity for your party. '
-        'Entry still depends on your booking time and staff verification.';
+        'Entry depends on your booking time and staff QR verification.';
   }
 
-  factory _CapacityData.fromMap(Map<String, dynamic> map) {
+  // ============================================================
+  // FROM MAP
+  // ============================================================
+
+  factory _CapacityData.fromMap(
+      Map<String, dynamic> map,
+      ) {
     final maximumCapacity =
-    (map['maximum_capacity'] as num).toInt();
+    (map['maximum_capacity'] as num)
+        .toInt();
 
     final currentVisitors =
-    (map['current_visitors'] as num).toInt();
+    (map['current_visitors'] as num)
+        .toInt();
 
-    if (maximumCapacity < 0 || currentVisitors < 0) {
-      throw const FormatException('Invalid capacity values.');
+    if (maximumCapacity < 0 ||
+        currentVisitors < 0) {
+      throw const FormatException(
+        'Invalid capacity values.',
+      );
     }
 
     return _CapacityData(
-      attractionName: map['attraction_name'] as String,
-      locationName: map['location_name'] as String? ?? '',
-      coverImageUrl: map['cover_image_url'] as String?,
-      maximumCapacity: maximumCapacity,
-      currentVisitors: currentVisitors,
-      updatedAt: DateTime.parse(
-        map['updated_at'] as String,
+      attractionName:
+      map['attraction_name']
+      as String,
+
+      locationName:
+      map['location_name']
+      as String? ??
+          '',
+
+      coverImageUrl:
+      map['cover_image_url']
+      as String?,
+
+      maximumCapacity:
+      maximumCapacity,
+
+      currentVisitors:
+      currentVisitors,
+
+      updatedAt:
+      DateTime.parse(
+        map['updated_at']
+        as String,
       ).toLocal(),
     );
   }

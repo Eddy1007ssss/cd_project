@@ -16,7 +16,8 @@ class BookingDetailsPage extends StatefulWidget {
   static const routeName = '/booking-details';
 
   @override
-  State<BookingDetailsPage> createState() => _BookingDetailsPageState();
+  State<BookingDetailsPage> createState() =>
+      _BookingDetailsPageState();
 }
 
 class _BookingDetailsPageState extends State<BookingDetailsPage>
@@ -56,7 +57,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
     if (_initialized) return;
     _initialized = true;
 
-    final arguments = ModalRoute.of(context)?.settings.arguments;
+    final arguments =
+        ModalRoute.of(context)?.settings.arguments;
 
     if (arguments is! TourBooking) return;
 
@@ -75,8 +77,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    _foreground = state == AppLifecycleState.resumed;
+  void didChangeAppLifecycleState(
+      AppLifecycleState state,
+      ) {
+    _foreground =
+        state == AppLifecycleState.resumed;
 
     if (_foreground) {
       if (ModalRoute.of(context)?.isCurrent == true) {
@@ -119,7 +124,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
       const Duration(seconds: 3),
           (_) {
         if (!mounted || !_foreground) return;
-        if (ModalRoute.of(context)?.isCurrent != true) return;
+        if (ModalRoute.of(context)?.isCurrent != true) {
+          return;
+        }
 
         _refresh();
       },
@@ -127,7 +134,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
   }
 
   bool _finished(TourBooking booking) =>
-      booking.isCompleted || booking.isCheckedOut;
+      booking.isCompleted ||
+          booking.isCheckedOut;
 
   bool _editable(TourBooking booking) =>
       booking.isUpcoming &&
@@ -138,22 +146,29 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
       booking.status == BookingStatus.confirmed &&
           !booking.hasCheckedIn &&
           !booking.isCheckedOut &&
-          !booking.slot.endsAt.isBefore(DateTime.now());
+          !booking.slot.endsAt.isBefore(
+            DateTime.now(),
+          );
 
-  bool _shouldMonitorGeofence(TourBooking booking) {
+  bool _shouldMonitorGeofence(
+      TourBooking booking,
+      ) {
     if (!booking.slot.usesGeofence) {
       return false;
     }
 
-    if (booking.isCancelled || _finished(booking)) {
+    if (booking.isCancelled ||
+        _finished(booking)) {
       return false;
     }
 
-    if (booking.hasCheckedIn && !booking.isCheckedOut) {
+    if (booking.hasCheckedIn &&
+        !booking.isCheckedOut) {
       return true;
     }
 
-    if (booking.status != BookingStatus.confirmed) {
+    if (booking.status !=
+        BookingStatus.confirmed) {
       return false;
     }
 
@@ -165,18 +180,32 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
     );
 
     return !now.isBefore(earliest) &&
-        !now.isAfter(booking.slot.endsAt);
+        !now.isAfter(
+          booking.slot.endsAt,
+        );
   }
 
-  String _statusLabel(TourBooking booking) {
-    if (_finished(booking)) return 'Completed';
-    if (booking.isCheckedIn) return 'Checked In';
-    if (booking.isCancelled) return 'Cancelled';
+  String _statusLabel(
+      TourBooking booking,
+      ) {
+    if (_finished(booking)) {
+      return 'Completed';
+    }
+
+    if (booking.isCheckedIn) {
+      return 'Checked In';
+    }
+
+    if (booking.isCancelled) {
+      return 'Cancelled';
+    }
 
     return 'Confirmed';
   }
 
-  Color _statusColor(TourBooking booking) {
+  Color _statusColor(
+      TourBooking booking,
+      ) {
     if (_finished(booking)) {
       return const Color(0xFF2563EB);
     }
@@ -192,7 +221,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
     return const Color(0xFF79571E);
   }
 
-  void _message(String text) {
+  void _message(
+      String text,
+      ) {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context)
@@ -228,8 +259,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
 
       if (updated.slot.usesGeofence &&
           _finished(updated)) {
-        _geofenceStatus = 'Visit completed';
-        _geofenceSecondsRemaining = null;
+        _geofenceStatus =
+        'Visit completed';
+
+        _geofenceSecondsRemaining =
+        null;
       }
     });
 
@@ -245,7 +279,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
 
     if (!notify ||
         !_foreground ||
-        ModalRoute.of(context)?.isCurrent != true) {
+        ModalRoute.of(context)?.isCurrent !=
+            true) {
       return;
     }
 
@@ -254,7 +289,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
         'Check-Out Successful. Your booking is completed.',
       );
     } else if (justCheckedIn) {
-      _message('Check-In Successful');
+      _message(
+        'Check-In Successful',
+      );
     }
   }
 
@@ -292,6 +329,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
 
       setState(() {
         _hasFreshData = false;
+
         _error =
         'Unable to refresh. The displayed information may be out of date.';
       });
@@ -308,7 +346,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
   // AUTOMATIC GEOFENCE
   // ============================================================
 
-  Future<void> _ensureGeofenceMonitoring() async {
+  Future<void>
+  _ensureGeofenceMonitoring() async {
     final booking = _booking;
 
     if (!mounted ||
@@ -318,13 +357,18 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
       return;
     }
 
-    if (!_shouldMonitorGeofence(booking)) {
+    if (!_shouldMonitorGeofence(
+      booking,
+    )) {
       if (!mounted) return;
 
       if (_finished(booking)) {
         setState(() {
-          _geofenceStatus = 'Visit completed';
-          _geofenceSecondsRemaining = null;
+          _geofenceStatus =
+          'Visit completed';
+
+          _geofenceSecondsRemaining =
+          null;
         });
 
         return;
@@ -332,8 +376,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
 
       if (booking.isCancelled) {
         setState(() {
-          _geofenceStatus = 'Booking cancelled';
-          _geofenceSecondsRemaining = null;
+          _geofenceStatus =
+          'Booking cancelled';
+
+          _geofenceSecondsRemaining =
+          null;
         });
 
         return;
@@ -344,11 +391,15 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
         const Duration(minutes: 30),
       );
 
-      if (DateTime.now().isBefore(earliest)) {
+      if (DateTime.now().isBefore(
+        earliest,
+      )) {
         setState(() {
           _geofenceStatus =
           'Automatic Geofence will start 30 minutes before your booking.';
-          _geofenceSecondsRemaining = null;
+
+          _geofenceSecondsRemaining =
+          null;
         });
       }
 
@@ -356,7 +407,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
     }
 
     if (_geofenceMonitoring &&
-        _monitoredBookingId == booking.id) {
+        _monitoredBookingId ==
+            booking.id) {
       return;
     }
 
@@ -364,7 +416,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
     _monitoredBookingId = booking.id;
 
     setState(() {
-      _geofenceStatus = booking.hasCheckedIn
+      _geofenceStatus =
+      booking.hasCheckedIn
           ? 'Automatic Check-Out monitoring active'
           : 'Automatic Check-In monitoring active';
 
@@ -378,16 +431,22 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
         if (!mounted) return;
 
         setState(() {
-          _geofenceStatus = update.message;
-          _geofenceDistance = update.distanceM;
+          _geofenceStatus =
+              update.message;
+
+          _geofenceDistance =
+              update.distanceM;
+
           _geofenceSecondsRemaining =
               update.secondsRemaining;
+
           _geofenceError = null;
         });
       },
 
       onCheckedIn: () async {
-        final currentBooking = _booking;
+        final currentBooking =
+            _booking;
 
         if (!mounted ||
             currentBooking == null) {
@@ -420,7 +479,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
       },
 
       onCheckedOut: () async {
-        final currentBooking = _booking;
+        final currentBooking =
+            _booking;
 
         if (!mounted ||
             currentBooking == null) {
@@ -470,7 +530,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
   Future<void> _openQr() async {
     final booking = _booking;
 
-    if (booking == null || _busy) return;
+    if (booking == null ||
+        _busy ||
+        !booking.slot.usesStaffScan) {
+      return;
+    }
 
     await Navigator.pushNamed(
       context,
@@ -513,10 +577,13 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
 
       _apply(latest);
 
-      if (!_activeConfirmed(latest)) {
+      if (!_activeConfirmed(
+        latest,
+      )) {
         _message(
           'Capacity Alert is available for active, confirmed bookings.',
         );
+
         return;
       }
 
@@ -553,7 +620,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
   Future<void> _openGeofence() async {
     final booking = _booking;
 
-    if (booking == null || _busy) return;
+    if (booking == null ||
+        _busy) {
+      return;
+    }
 
     await Navigator.pushNamed(
       context,
@@ -601,6 +671,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
         _message(
           'This booking can no longer be rescheduled.',
         );
+
         return;
       }
 
@@ -622,7 +693,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
     } catch (error) {
       if (mounted) {
         _message(
-          bookingErrorMessage(error),
+          bookingErrorMessage(
+            error,
+          ),
         );
       }
     } finally {
@@ -663,8 +736,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
       final confirmed =
       await showDialog<bool>(
         context: context,
-        builder:
-            (dialogContext) =>
+        builder: (
+            dialogContext,
+            ) =>
             AlertDialog(
               title: const Text(
                 'Cancel booking?',
@@ -675,21 +749,23 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
               ),
               actions: [
                 TextButton(
-                  onPressed: () =>
-                      Navigator.pop(
-                        dialogContext,
-                        false,
-                      ),
+                  onPressed: () {
+                    Navigator.pop(
+                      dialogContext,
+                      false,
+                    );
+                  },
                   child: const Text(
                     'Keep booking',
                   ),
                 ),
                 FilledButton(
-                  onPressed: () =>
-                      Navigator.pop(
-                        dialogContext,
-                        true,
-                      ),
+                  onPressed: () {
+                    Navigator.pop(
+                      dialogContext,
+                      true,
+                    );
+                  },
                   child: const Text(
                     'Cancel booking',
                   ),
@@ -716,6 +792,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
         _message(
           'This booking can no longer be cancelled.',
         );
+
         return;
       }
 
@@ -737,7 +814,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
     } catch (error) {
       if (mounted) {
         _message(
-          bookingErrorMessage(error),
+          bookingErrorMessage(
+            error,
+          ),
         );
       }
     } finally {
@@ -749,10 +828,14 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
     }
   }
 
-  String _dateTime(DateTime value) {
-    final local = value.toLocal();
+  String _dateTime(
+      DateTime value,
+      ) {
+    final local =
+    value.toLocal();
 
-    return '${shortDate(local)} ${clockTime(local)}';
+    return '${shortDate(local)} '
+        '${clockTime(local)}';
   }
 
   String _distanceText() {
@@ -775,7 +858,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
   // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     final booking = _booking;
 
     if (booking == null) {
@@ -803,7 +888,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
 
     return Scaffold(
       backgroundColor:
-      const Color(0xFFFAF8FF),
+      const Color(
+        0xFFFAF8FF,
+      ),
 
       appBar: AppBar(
         title: const Text(
@@ -816,7 +903,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
             onPressed:
             _busy || _refreshing
                 ? null
-                : () => _refresh(),
+                : () {
+              _refresh();
+            },
             icon: _refreshing
                 ? const SizedBox.square(
               dimension: 18,
@@ -840,18 +929,22 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
           const AlwaysScrollableScrollPhysics(),
 
           padding:
-          const EdgeInsets.all(18),
+          const EdgeInsets.all(
+            18,
+          ),
 
           children: [
             if (_error != null) ...[
               Text(
                 _error!,
-                style:
-                const TextStyle(
+                style: const TextStyle(
                   color:
-                  Color(0xFFB45309),
+                  Color(
+                    0xFFB45309,
+                  ),
                 ),
               ),
+
               const SizedBox(
                 height: 12,
               ),
@@ -909,8 +1002,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
 
                     Container(
                       padding:
-                      const EdgeInsets
-                          .symmetric(
+                      const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 7,
                       ),
@@ -921,8 +1013,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                           0xFFFFF4E3,
                         ),
                         borderRadius:
-                        BorderRadius
-                            .circular(
+                        BorderRadius.circular(
                           20,
                         ),
                       ),
@@ -936,8 +1027,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                             0xFF79571E,
                           ),
                           fontWeight:
-                          FontWeight
-                              .w700,
+                          FontWeight.w700,
                         ),
                       ),
                     ),
@@ -1063,8 +1153,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                     0xFFEFF8F0,
                   ),
                   borderRadius:
-                  BorderRadius
-                      .circular(
+                  BorderRadius.circular(
                     14,
                   ),
                   border:
@@ -1077,8 +1166,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                 ),
                 child: Column(
                   crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
+                  CrossAxisAlignment.start,
                   children: [
                     const Row(
                       children: [
@@ -1090,18 +1178,18 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                             0xFF15803D,
                           ),
                         ),
+
                         SizedBox(
                           width: 8,
                         ),
+
                         Text(
                           'Automatic Geofence',
                           style:
                           TextStyle(
-                            fontSize:
-                            16,
+                            fontSize: 16,
                             fontWeight:
-                            FontWeight
-                                .w800,
+                            FontWeight.w800,
                           ),
                         ),
                       ],
@@ -1116,8 +1204,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                       style:
                       const TextStyle(
                         fontWeight:
-                        FontWeight
-                            .w700,
+                        FontWeight.w700,
                       ),
                     ),
 
@@ -1157,8 +1244,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                             0xFF15803D,
                           ),
                           fontWeight:
-                          FontWeight
-                              .w800,
+                          FontWeight.w800,
                         ),
                       ),
 
@@ -1170,8 +1256,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                         value: null,
                         minHeight: 5,
                         borderRadius:
-                        BorderRadius
-                            .circular(
+                        BorderRadius.circular(
                           20,
                         ),
                       ),
@@ -1191,8 +1276,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                           Color(
                             0xFFB45309,
                           ),
-                          fontSize:
-                          12,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -1206,8 +1290,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                         'Keep location permission enabled while using the app.',
                         style:
                         TextStyle(
-                          fontSize:
-                          12,
+                          fontSize: 12,
                           color:
                           Color(
                             0xFF6B7280,
@@ -1245,8 +1328,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                     0xFFFFF7EA,
                   ),
                   borderRadius:
-                  BorderRadius
-                      .circular(
+                  BorderRadius.circular(
                     12,
                   ),
                 ),
@@ -1289,24 +1371,35 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
             ),
 
             // ==================================================
-            // VIEW QR
+            // VIEW TICKET / QR CODE
+            //
+            // ONLY STAFF-SCAN ATTRACTIONS SHOW THIS BUTTON.
+            //
+            // GEOFENCE / OPEN ATTRACTIONS DO NOT NEED QR.
             // ==================================================
 
-            FilledButton.icon(
-              onPressed:
-              _busy
-                  ? null
-                  : _openQr,
-              icon:
-              const Icon(
-                Icons
-                    .qr_code_2_rounded,
+            if (booking.slot
+                .usesStaffScan) ...[
+              FilledButton.icon(
+                onPressed:
+                _busy
+                    ? null
+                    : _openQr,
+                icon:
+                const Icon(
+                  Icons
+                      .qr_code_2_rounded,
+                ),
+                label:
+                const Text(
+                  'View Ticket / QR Code',
+                ),
               ),
-              label:
-              const Text(
-                'View Ticket / QR Code',
+
+              const SizedBox(
+                height: 8,
               ),
-            ),
+            ],
 
             // ==================================================
             // CAPACITY ALERT
@@ -1315,10 +1408,6 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
             if (_activeConfirmed(
               booking,
             )) ...[
-              const SizedBox(
-                height: 8,
-              ),
-
               OutlinedButton.icon(
                 onPressed:
                 disabled
@@ -1334,16 +1423,18 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                   'View Capacity Alert',
                 ),
               ),
+
+              const SizedBox(
+                height: 8,
+              ),
             ],
 
             // ==================================================
             // VIEW GEOFENCE / MAP
-            // ALL BOOKINGS CAN USE THIS
+            //
+            // ALL BOOKINGS CAN USE THIS.
+            // Staff Scan attraction can still view attraction map.
             // ==================================================
-
-            const SizedBox(
-              height: 8,
-            ),
 
             OutlinedButton.icon(
               onPressed:
@@ -1397,7 +1488,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage>
                   Icons
                       .cancel_outlined,
                 ),
-                label: Text(
+                label:
+                Text(
                   _busy
                       ? 'Updating...'
                       : 'Cancel booking',
@@ -1444,8 +1536,7 @@ class _Detail extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style:
-              TextStyle(
+              style: TextStyle(
                 color: color,
                 fontWeight:
                 FontWeight.w700,
