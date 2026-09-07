@@ -296,4 +296,3 @@ String _dateTime(DateTime value) {
   final minute = value.minute.toString().padLeft(2, '0');
   return '$day/$month/${value.year} $hour:$minute';
 }
-

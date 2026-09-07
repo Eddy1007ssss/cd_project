@@ -6,12 +6,10 @@ import '../../models/user_profile.dart';
 import '../../repositories/auth_repository.dart';
 import '../../widgets/tourflow_widgets.dart';
 import '../../widgets/navigation/navigation_routes.dart';
-import '../staff/admin_user_management_page.dart';
 import '../staff/operator_dashboard_page.dart';
 import '../staff/operator_registration_page.dart';
 import '../staff/staff_qr_scanner_page.dart';
 import 'tourist_registration_page.dart';
-import '../staff/admin_analytics_dashboard_page.dart';
 
 enum _DemoRole { tourist, operator, staff, administrator }
 

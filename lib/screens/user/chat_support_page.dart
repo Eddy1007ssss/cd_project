@@ -213,7 +213,8 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
       );
       if (!mounted) return false;
 
-      final needsOptions = response.complaintDraft != null &&
+      final needsOptions =
+          response.complaintDraft != null &&
           _complaintAttractions.isEmpty &&
           !_isLoadingComplaintOptions;
       setState(() {
@@ -409,10 +410,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         _bookingDraft = null;
         _messages.add(
           _ChatMessage(
-            text: copy.completionFallback(
-              draft.operation,
-              booking.bookingCode,
-            ),
+            text: copy.completionFallback(draft.operation, booking.bookingCode),
             isUser: false,
             time: _currentTime(),
           ),
@@ -713,8 +711,15 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
 
   bool _isComplaintStartRequest(String message) {
     final value = message.trim().toLowerCase();
-    if (const {'complaint', 'complain', '投诉', '抱怨', 'aduan', '苦情', '불만'}
-        .contains(value)) {
+    if (const {
+      'complaint',
+      'complain',
+      '投诉',
+      '抱怨',
+      'aduan',
+      '苦情',
+      '불만',
+    }.contains(value)) {
       return true;
     }
 
@@ -921,9 +926,9 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: TourFlowText(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: TourFlowText(message)));
   }
 
   String _languageChangedMessage(String language) {
@@ -933,8 +938,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
       'Mandarin' => '语言已切换为中文。接下来的新回复都会使用中文。',
       'Japanese' => '言語を日本語に変更しました。これからの新しい返信は日本語で表示されます。',
       'Korean' => '언어가 한국어로 변경되었습니다. 이제부터 새로운 답변은 한국어로 표시됩니다.',
-      _ =>
-        'Language changed to English. All new replies will now use English.',
+      _ => 'Language changed to English. All new replies will now use English.',
     };
   }
 
@@ -996,11 +1000,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         'Hello $_displayName! I can help with attractions and available slots, and create, reschedule or cancel your bookings.',
     };
 
-    return _ChatMessage(
-      text: greeting,
-      isUser: false,
-      time: _currentTime(),
-    );
+    return _ChatMessage(text: greeting, isUser: false, time: _currentTime());
   }
 
   String _friendlyError(Object error) {
@@ -1147,22 +1147,20 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                           isBusy: _isSending,
                           optionsError: _complaintOptionsError,
                           onRetryOptions: _loadComplaintOptions,
-                          onSelectAttraction: (option) =>
-                              _applyComplaintAction(
-                                type: 'select_attraction',
-                                value: option.id,
-                                displayText: complaintCopy.selectedAttraction(
-                                  option.name,
-                                ),
-                              ),
-                          onSelectCategory: (option) =>
-                              _applyComplaintAction(
-                                type: 'select_category',
-                                value: option.value,
-                                displayText: complaintCopy.selectedCategory(
-                                  option.label,
-                                ),
-                              ),
+                          onSelectAttraction: (option) => _applyComplaintAction(
+                            type: 'select_attraction',
+                            value: option.id,
+                            displayText: complaintCopy.selectedAttraction(
+                              option.name,
+                            ),
+                          ),
+                          onSelectCategory: (option) => _applyComplaintAction(
+                            type: 'select_category',
+                            value: option.value,
+                            displayText: complaintCopy.selectedCategory(
+                              option.label,
+                            ),
+                          ),
                           onSelectBooking: (option) => _applyComplaintAction(
                             type: 'select_booking',
                             value: option.id,
@@ -1189,12 +1187,10 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                           },
                           onAddAdditionalDetails:
                               _enterAdditionalComplaintDetails,
-                          onSkipAdditionalDetails: () =>
-                              _applyComplaintAction(
-                                type: 'skip_additional_details',
-                                displayText:
-                                    complaintCopy.skipAdditionalDetails,
-                              ),
+                          onSkipAdditionalDetails: () => _applyComplaintAction(
+                            type: 'skip_additional_details',
+                            displayText: complaintCopy.skipAdditionalDetails,
+                          ),
                           onPhotoChoice: (wantsPhoto) async {
                             final updated = await _applyComplaintAction(
                               type: wantsPhoto ? 'photo_yes' : 'photo_no',
@@ -1243,23 +1239,26 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                           draft: _bookingDraft!,
                           copy: bookingCopy,
                           isBusy: _isSending || _isSubmittingBookingAction,
-                          onSelectAttraction: (option) =>
-                              _applyBookingAction(
-                                type: 'select_attraction',
-                                value: option.id,
-                                displayText:
-                                    bookingCopy.selectedAttraction(option.name),
-                              ),
+                          onSelectAttraction: (option) => _applyBookingAction(
+                            type: 'select_attraction',
+                            value: option.id,
+                            displayText: bookingCopy.selectedAttraction(
+                              option.name,
+                            ),
+                          ),
                           onSelectBooking: (option) => _applyBookingAction(
                             type: 'select_booking',
                             value: option.id,
-                            displayText: bookingCopy.selectedBooking(option.code),
+                            displayText: bookingCopy.selectedBooking(
+                              option.code,
+                            ),
                           ),
                           onSelectSlot: (option) => _applyBookingAction(
                             type: 'select_slot',
                             value: option.id,
-                            displayText:
-                                bookingCopy.selectedSlot(option.startsAt),
+                            displayText: bookingCopy.selectedSlot(
+                              option.startsAt,
+                            ),
                           ),
                           onSelectVisitors: (count) => _applyBookingAction(
                             type: 'set_visitors',
@@ -1300,8 +1299,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                         const _TypingIndicator(),
                         const SizedBox(height: 10),
                       ],
-                      if (_complaintDraft == null &&
-                          _bookingDraft == null) ...[
+                      if (_complaintDraft == null && _bookingDraft == null) ...[
                         const SizedBox(height: 4),
                         const TourFlowText(
                           'Quick actions',
@@ -1336,7 +1334,8 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                               ),
                             ),
                             ActionChip(
-                              onPressed: _isSending ||
+                              onPressed:
+                                  _isSending ||
                                       _isChoosingComplaintDraft ||
                                       _isSubmittingComplaint ||
                                       _isSubmittingBookingAction
@@ -1356,7 +1355,8 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                               ),
                             ),
                             ActionChip(
-                              onPressed: _isSending ||
+                              onPressed:
+                                  _isSending ||
                                       _isChoosingComplaintDraft ||
                                       _isSubmittingComplaint ||
                                       _isSubmittingBookingAction
@@ -1369,15 +1369,17 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                                 size: 16,
                                 color: TourFlowColors.primaryText,
                               ),
-                              label:
-                                  TourFlowText(bookingCopy.rescheduleBooking),
+                              label: TourFlowText(
+                                bookingCopy.rescheduleBooking,
+                              ),
                               backgroundColor: const Color(0xFFEFF6FF),
                               side: const BorderSide(
                                 color: TourFlowColors.border,
                               ),
                             ),
                             ActionChip(
-                              onPressed: _isSending ||
+                              onPressed:
+                                  _isSending ||
                                       _isChoosingComplaintDraft ||
                                       _isSubmittingComplaint ||
                                       _isSubmittingBookingAction
@@ -1511,7 +1513,8 @@ class _ComplaintGuideCard extends StatelessWidget {
     final nextField = draft.missingFields.isEmpty
         ? ''
         : draft.missingFields.first;
-    final step = const {
+    final step =
+        const {
           'attraction': 1,
           'category': 2,
           'booking': 3,
@@ -1600,8 +1603,7 @@ class _ComplaintGuideCard extends StatelessWidget {
         ),
       );
     }
-    if ((field == 'attraction' || field == 'booking') &&
-        optionsError != null) {
+    if ((field == 'attraction' || field == 'booking') && optionsError != null) {
       return _ComplaintOptionsError(
         message: optionsError!,
         retryLabel: copy.tryAgain,
@@ -1611,47 +1613,44 @@ class _ComplaintGuideCard extends StatelessWidget {
 
     return switch (field) {
       'attraction' => _attractionOptions(),
-      'category' => _choiceWrap(
-          copy.categoryOptions,
-          onSelectCategory,
-        ),
+      'category' => _choiceWrap(copy.categoryOptions, onSelectCategory),
       'booking' => _bookingOptions(),
       'description' => _choiceWrap(
-          copy.issueOptions(draft.category),
-          onSelectIssue,
-        ),
+        copy.issueOptions(draft.category),
+        onSelectIssue,
+      ),
       'additionalDetails' => Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            FilledButton.icon(
-              onPressed: isBusy ? null : onAddAdditionalDetails,
-              icon: const Icon(Icons.edit_note_rounded),
-              label: TourFlowText(copy.addAdditionalDetails),
-            ),
-            OutlinedButton.icon(
-              onPressed: isBusy ? null : onSkipAdditionalDetails,
-              icon: const Icon(Icons.skip_next_rounded),
-              label: TourFlowText(copy.skipAdditionalDetails),
-            ),
-          ],
-        ),
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          FilledButton.icon(
+            onPressed: isBusy ? null : onAddAdditionalDetails,
+            icon: const Icon(Icons.edit_note_rounded),
+            label: TourFlowText(copy.addAdditionalDetails),
+          ),
+          OutlinedButton.icon(
+            onPressed: isBusy ? null : onSkipAdditionalDetails,
+            icon: const Icon(Icons.skip_next_rounded),
+            label: TourFlowText(copy.skipAdditionalDetails),
+          ),
+        ],
+      ),
       'photoChoice' => Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            FilledButton.icon(
-              onPressed: isBusy ? null : () => onPhotoChoice(true),
-              icon: const Icon(Icons.add_photo_alternate_outlined),
-              label: TourFlowText(copy.attachPhoto),
-            ),
-            OutlinedButton.icon(
-              onPressed: isBusy ? null : () => onPhotoChoice(false),
-              icon: const Icon(Icons.no_photography_outlined),
-              label: TourFlowText(copy.noPhoto),
-            ),
-          ],
-        ),
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          FilledButton.icon(
+            onPressed: isBusy ? null : () => onPhotoChoice(true),
+            icon: const Icon(Icons.add_photo_alternate_outlined),
+            label: TourFlowText(copy.attachPhoto),
+          ),
+          OutlinedButton.icon(
+            onPressed: isBusy ? null : () => onPhotoChoice(false),
+            icon: const Icon(Icons.no_photography_outlined),
+            label: TourFlowText(copy.noPhoto),
+          ),
+        ],
+      ),
       _ => TourFlowText(copy.unavailable),
     };
   }
@@ -1721,7 +1720,8 @@ class _ComplaintGuideCard extends StatelessWidget {
   Widget _bookingOptions() {
     final matching = bookings
         .where(
-          (booking) => draft.attractionId == null ||
+          (booking) =>
+              draft.attractionId == null ||
               booking.attractionId == draft.attractionId,
         )
         .take(8)
@@ -1863,14 +1863,8 @@ class _ComplaintTextDialogState extends State<_ComplaintTextDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _cancel,
-          child: TourFlowText(widget.cancelLabel),
-        ),
-        FilledButton(
-          onPressed: _save,
-          child: TourFlowText(widget.saveLabel),
-        ),
+        TextButton(onPressed: _cancel, child: TourFlowText(widget.cancelLabel)),
+        FilledButton(onPressed: _save, child: TourFlowText(widget.saveLabel)),
       ],
     );
   }
@@ -1891,7 +1885,10 @@ class _ComplaintOptionsError extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      TourFlowText(message, style: const TextStyle(color: TourFlowColors.danger)),
+      TourFlowText(
+        message,
+        style: const TextStyle(color: TourFlowColors.danger),
+      ),
       const SizedBox(height: 8),
       OutlinedButton.icon(
         onPressed: onRetry,
@@ -1946,47 +1943,47 @@ class _ComplaintGuideCopy {
 
   String prompt(String field) => switch (field) {
     'attraction' => _text(
-        english: 'Which attraction is this complaint about?',
-        mandarin: '你要投诉哪个景点？',
-        bahasa: 'Aduan ini berkaitan tarikan yang mana?',
-        japanese: 'どの観光地についての苦情ですか？',
-        korean: '어느 관광지에 대한 불만인가요?',
-      ),
+      english: 'Which attraction is this complaint about?',
+      mandarin: '你要投诉哪个景点？',
+      bahasa: 'Aduan ini berkaitan tarikan yang mana?',
+      japanese: 'どの観光地についての苦情ですか？',
+      korean: '어느 관광지에 대한 불만인가요?',
+    ),
     'category' => _text(
-        english: 'Choose the complaint category.',
-        mandarin: '请选择投诉类别。',
-        bahasa: 'Pilih kategori aduan.',
-        japanese: '苦情カテゴリーを選んでください。',
-        korean: '불만 유형을 선택하세요.',
-      ),
+      english: 'Choose the complaint category.',
+      mandarin: '请选择投诉类别。',
+      bahasa: 'Pilih kategori aduan.',
+      japanese: '苦情カテゴリーを選んでください。',
+      korean: '불만 유형을 선택하세요.',
+    ),
     'booking' => _text(
-        english: 'Is there a related booking?',
-        mandarin: '是否有相关的预订？',
-        bahasa: 'Adakah terdapat tempahan berkaitan?',
-        japanese: '関連する予約はありますか？',
-        korean: '관련 예약이 있나요?',
-      ),
+      english: 'Is there a related booking?',
+      mandarin: '是否有相关的预订？',
+      bahasa: 'Adakah terdapat tempahan berkaitan?',
+      japanese: '関連する予約はありますか？',
+      korean: '관련 예약이 있나요?',
+    ),
     'description' => _text(
-        english: 'Choose the issue that best matches what happened.',
-        mandarin: '请选择最符合实际情况的问题。',
-        bahasa: 'Pilih isu yang paling sesuai dengan perkara yang berlaku.',
-        japanese: '発生した内容に最も近い問題を選んでください。',
-        korean: '발생한 상황과 가장 가까운 문제를 선택하세요.',
-      ),
+      english: 'Choose the issue that best matches what happened.',
+      mandarin: '请选择最符合实际情况的问题。',
+      bahasa: 'Pilih isu yang paling sesuai dengan perkara yang berlaku.',
+      japanese: '発生した内容に最も近い問題を選んでください。',
+      korean: '발생한 상황과 가장 가까운 문제를 선택하세요.',
+    ),
     'additionalDetails' => _text(
-        english: 'Would you like to add more details?',
-        mandarin: '你需要添加补充说明吗？',
-        bahasa: 'Adakah anda mahu menambah butiran lanjut?',
-        japanese: '補足情報を追加しますか？',
-        korean: '추가 설명을 입력하시겠습니까?',
-      ),
+      english: 'Would you like to add more details?',
+      mandarin: '你需要添加补充说明吗？',
+      bahasa: 'Adakah anda mahu menambah butiran lanjut?',
+      japanese: '補足情報を追加しますか？',
+      korean: '추가 설명을 입력하시겠습니까?',
+    ),
     'photoChoice' => _text(
-        english: 'Would you like to attach a photo?',
-        mandarin: '你需要上传照片吗？',
-        bahasa: 'Adakah anda mahu melampirkan foto?',
-        japanese: '写真を添付しますか？',
-        korean: '사진을 첨부하시겠습니까?',
-      ),
+      english: 'Would you like to attach a photo?',
+      mandarin: '你需要上传照片吗？',
+      bahasa: 'Adakah anda mahu melampirkan foto?',
+      japanese: '写真を添付しますか？',
+      korean: '사진을 첨부하시겠습니까?',
+    ),
     _ => unavailable,
   };
 
@@ -2243,46 +2240,180 @@ class _ComplaintGuideCopy {
     ),
   ];
 
-  List<_ComplaintGuideOption> issueOptions(String? category) => switch (category) {
-    'overcrowding' => [
-        _issue('too_crowded', 'Too crowded', '现场过度拥挤', 'Terlalu sesak', '非常に混雑', '너무 혼잡함'),
-        _issue('long_wait', 'Long waiting time', '等候时间过长', 'Masa menunggu lama', '待ち時間が長い', '대기 시간이 김'),
-        _issue('inaccurate_crowd', 'Inaccurate crowd information', '人流信息不准确', 'Maklumat kesesakan tidak tepat', '混雑情報が不正確', '혼잡 정보가 부정확함'),
-        _issue('poor_crowd_control', 'Poor crowd control', '人流管控不足', 'Kawalan orang ramai lemah', '混雑管理が不十分', '인파 관리 부족'),
-      ],
-    'facility_damage' => [
-        _issue('damaged_facility', 'Damaged or unusable facility', '设施损坏或无法使用', 'Kemudahan rosak', '設備が破損・使用不可', '시설 파손 또는 사용 불가'),
-        _issue('restroom_issue', 'Restroom problem', '洗手间问题', 'Masalah tandas', 'トイレの問題', '화장실 문제'),
-        _issue('cleanliness', 'Cleanliness or maintenance problem', '清洁或维护问题', 'Masalah kebersihan', '清掃・管理の問題', '청결 또는 관리 문제'),
-        _issue('accessibility_facility', 'Accessibility facility problem', '无障碍设施问题', 'Masalah kemudahan aksesibiliti', 'バリアフリー設備の問題', '접근성 시설 문제'),
-      ],
-    'safety' => [
-        _issue('unsafe_environment', 'Unsafe environment', '环境不安全', 'Persekitaran tidak selamat', '危険な環境', '안전하지 않은 환경'),
-        _issue('hazard_not_addressed', 'Hazard not handled by staff', '安全隐患未被处理', 'Bahaya tidak ditangani', '危険が未対応', '위험 요소 미처리'),
-        _issue('emergency_exit', 'Emergency exit or route problem', '紧急出口或路线问题', 'Masalah laluan kecemasan', '非常口・避難経路の問題', '비상구 또는 대피 경로 문제'),
-        _issue('injury_risk', 'Possible injury risk', '可能导致受伤', 'Risiko kecederaan', 'けがの危険', '부상 위험'),
-      ],
-    'staff_service' => [
-        _issue('unhelpful_staff', 'Staff was not helpful', '工作人员没有提供帮助', 'Kakitangan tidak membantu', 'スタッフが非協力的', '직원이 도움이 되지 않음'),
-        _issue('rude_staff', 'Rude or unprofessional staff', '工作人员态度差', 'Kakitangan kasar', '失礼・不適切な対応', '무례하거나 비전문적인 직원'),
-        _issue('slow_service', 'Service was too slow', '服务速度太慢', 'Perkhidmatan terlalu lambat', '対応が遅い', '서비스가 너무 느림'),
-        _issue('incorrect_information', 'Incorrect or unclear information', '提供错误或不清楚的信息', 'Maklumat salah atau tidak jelas', '誤った・不明確な案内', '부정확하거나 불명확한 정보'),
-      ],
-    'other' => [
-        _issue('booking_problem', 'Booking problem', '预订问题', 'Masalah tempahan', '予約の問題', '예약 문제'),
-        _issue('check_in_problem', 'Check-in or QR code problem', '签到或二维码问题', 'Masalah daftar masuk atau QR', 'チェックイン・QRの問題', '체크인 또는 QR 문제'),
-        _issue('inaccurate_attraction_info', 'Inaccurate attraction information', '景点资料不准确', 'Maklumat tarikan tidak tepat', '観光地情報が不正確', '관광지 정보가 부정확함'),
-        _issue(
-          'other_issue',
-          'Other — describe it',
-          '其他——请自行说明',
-          'Lain-lain — terangkan',
-          'その他 — 内容を入力',
-          '기타 — 직접 설명',
-        ),
-      ],
-    _ => const [],
-  };
+  List<_ComplaintGuideOption> issueOptions(String? category) =>
+      switch (category) {
+        'overcrowding' => [
+          _issue(
+            'too_crowded',
+            'Too crowded',
+            '现场过度拥挤',
+            'Terlalu sesak',
+            '非常に混雑',
+            '너무 혼잡함',
+          ),
+          _issue(
+            'long_wait',
+            'Long waiting time',
+            '等候时间过长',
+            'Masa menunggu lama',
+            '待ち時間が長い',
+            '대기 시간이 김',
+          ),
+          _issue(
+            'inaccurate_crowd',
+            'Inaccurate crowd information',
+            '人流信息不准确',
+            'Maklumat kesesakan tidak tepat',
+            '混雑情報が不正確',
+            '혼잡 정보가 부정확함',
+          ),
+          _issue(
+            'poor_crowd_control',
+            'Poor crowd control',
+            '人流管控不足',
+            'Kawalan orang ramai lemah',
+            '混雑管理が不十分',
+            '인파 관리 부족',
+          ),
+        ],
+        'facility_damage' => [
+          _issue(
+            'damaged_facility',
+            'Damaged or unusable facility',
+            '设施损坏或无法使用',
+            'Kemudahan rosak',
+            '設備が破損・使用不可',
+            '시설 파손 또는 사용 불가',
+          ),
+          _issue(
+            'restroom_issue',
+            'Restroom problem',
+            '洗手间问题',
+            'Masalah tandas',
+            'トイレの問題',
+            '화장실 문제',
+          ),
+          _issue(
+            'cleanliness',
+            'Cleanliness or maintenance problem',
+            '清洁或维护问题',
+            'Masalah kebersihan',
+            '清掃・管理の問題',
+            '청결 또는 관리 문제',
+          ),
+          _issue(
+            'accessibility_facility',
+            'Accessibility facility problem',
+            '无障碍设施问题',
+            'Masalah kemudahan aksesibiliti',
+            'バリアフリー設備の問題',
+            '접근성 시설 문제',
+          ),
+        ],
+        'safety' => [
+          _issue(
+            'unsafe_environment',
+            'Unsafe environment',
+            '环境不安全',
+            'Persekitaran tidak selamat',
+            '危険な環境',
+            '안전하지 않은 환경',
+          ),
+          _issue(
+            'hazard_not_addressed',
+            'Hazard not handled by staff',
+            '安全隐患未被处理',
+            'Bahaya tidak ditangani',
+            '危険が未対応',
+            '위험 요소 미처리',
+          ),
+          _issue(
+            'emergency_exit',
+            'Emergency exit or route problem',
+            '紧急出口或路线问题',
+            'Masalah laluan kecemasan',
+            '非常口・避難経路の問題',
+            '비상구 또는 대피 경로 문제',
+          ),
+          _issue(
+            'injury_risk',
+            'Possible injury risk',
+            '可能导致受伤',
+            'Risiko kecederaan',
+            'けがの危険',
+            '부상 위험',
+          ),
+        ],
+        'staff_service' => [
+          _issue(
+            'unhelpful_staff',
+            'Staff was not helpful',
+            '工作人员没有提供帮助',
+            'Kakitangan tidak membantu',
+            'スタッフが非協力的',
+            '직원이 도움이 되지 않음',
+          ),
+          _issue(
+            'rude_staff',
+            'Rude or unprofessional staff',
+            '工作人员态度差',
+            'Kakitangan kasar',
+            '失礼・不適切な対応',
+            '무례하거나 비전문적인 직원',
+          ),
+          _issue(
+            'slow_service',
+            'Service was too slow',
+            '服务速度太慢',
+            'Perkhidmatan terlalu lambat',
+            '対応が遅い',
+            '서비스가 너무 느림',
+          ),
+          _issue(
+            'incorrect_information',
+            'Incorrect or unclear information',
+            '提供错误或不清楚的信息',
+            'Maklumat salah atau tidak jelas',
+            '誤った・不明確な案内',
+            '부정확하거나 불명확한 정보',
+          ),
+        ],
+        'other' => [
+          _issue(
+            'booking_problem',
+            'Booking problem',
+            '预订问题',
+            'Masalah tempahan',
+            '予約の問題',
+            '예약 문제',
+          ),
+          _issue(
+            'check_in_problem',
+            'Check-in or QR code problem',
+            '签到或二维码问题',
+            'Masalah daftar masuk atau QR',
+            'チェックイン・QRの問題',
+            '체크인 또는 QR 문제',
+          ),
+          _issue(
+            'inaccurate_attraction_info',
+            'Inaccurate attraction information',
+            '景点资料不准确',
+            'Maklumat tarikan tidak tepat',
+            '観光地情報が不正確',
+            '관광지 정보가 부정확함',
+          ),
+          _issue(
+            'other_issue',
+            'Other — describe it',
+            '其他——请自行说明',
+            'Lain-lain — terangkan',
+            'その他 — 内容を入力',
+            '기타 — 직접 설명',
+          ),
+        ],
+        _ => const [],
+      };
 
   _ComplaintGuideOption _issue(
     String value,
@@ -2328,7 +2459,8 @@ class _ComplaintConfirmationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canSubmit = !isSubmitting && (!draft.requiresPhoto || photoName != null);
+    final canSubmit =
+        !isSubmitting && (!draft.requiresPhoto || photoName != null);
     return ModuleCard(
       color: const Color(0xFFFFFBEB),
       child: Column(
@@ -2384,7 +2516,9 @@ class _ComplaintConfirmationCard extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: isSubmitting ? null : onPickPhoto,
                   icon: const Icon(Icons.add_photo_alternate_outlined),
-                  label: TourFlowText(photoName == null ? 'Choose Photo' : 'Change Photo'),
+                  label: TourFlowText(
+                    photoName == null ? 'Choose Photo' : 'Change Photo',
+                  ),
                 ),
                 if (photoName != null)
                   TextButton.icon(
@@ -2848,7 +2982,8 @@ class _ChatMessage {
     final minute = message.createdAt.minute.toString().padLeft(2, '0');
     final normalized = message.content.replaceAll(r'\n', '\n');
     final ticketCode = RegExp(r'TF-\d{4}-\d+').firstMatch(normalized)?.group(0);
-    final isComplaintConfirmation = !message.isUser &&
+    final isComplaintConfirmation =
+        !message.isUser &&
         ticketCode != null &&
         (normalized.contains('Complaint submitted') ||
             normalized.contains('投诉已提交') ||
@@ -2857,7 +2992,7 @@ class _ChatMessage {
             normalized.contains('불만이 제출되었습니다'));
     return _ChatMessage(
       text: isComplaintConfirmation
-          ? _ComplaintGuideCopy(language).submittedMessage(ticketCode!)
+          ? _ComplaintGuideCopy(language).submittedMessage(ticketCode)
           : normalized,
       isUser: message.isUser,
       time: '$hour:$minute',
@@ -2892,12 +3027,9 @@ class _ComplaintDraftPickerCopy {
   String description(int count) => switch (language) {
     'Bahasa Malaysia' =>
       'Anda mempunyai $count draf aduan yang belum dihantar. Teruskan satu draf atau mulakan aduan baharu.',
-    'Mandarin' =>
-      '你有 $count 个尚未提交的投诉草稿。请选择一个继续填写，或新建投诉。',
-    'Japanese' =>
-      '未送信の苦情下書きが$count件あります。下書きを続けるか、新しい苦情を作成してください。',
-    'Korean' =>
-      '제출하지 않은 불만 초안이 $count개 있습니다. 초안을 계속하거나 새 불만을 시작하세요.',
+    'Mandarin' => '你有 $count 个尚未提交的投诉草稿。请选择一个继续填写，或新建投诉。',
+    'Japanese' => '未送信の苦情下書きが$count件あります。下書きを続けるか、新しい苦情を作成してください。',
+    'Korean' => '제출하지 않은 불만 초안이 $count개 있습니다. 초안을 계속하거나 새 불만을 시작하세요.',
     _ =>
       'You have $count unsubmitted complaint draft${count == 1 ? '' : 's'}. Continue one or start a new complaint.',
   };

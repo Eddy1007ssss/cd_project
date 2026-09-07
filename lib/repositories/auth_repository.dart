@@ -3,8 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/tourflow_localization.dart';
 import '../models/user_profile.dart';
+import 'profile_security_gateway.dart';
 
-class AuthRepository {
+class AuthRepository implements ProfileSecurityGateway {
   AuthRepository({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
@@ -14,6 +15,7 @@ class AuthRepository {
       ValueNotifier<UserProfile?>(null);
 
   Session? get currentSession => _client.auth.currentSession;
+  @override
   User? get currentUser => _client.auth.currentUser;
   UserProfile? get cachedProfile => _profileNotifier.value;
   ValueListenable<UserProfile?> get profileChanges => _profileNotifier;
@@ -72,6 +74,7 @@ class AuthRepository {
     return profile;
   }
 
+  @override
   Future<UserProfile> getCurrentProfile() {
     final user = currentUser;
     if (user == null) {
@@ -80,6 +83,7 @@ class AuthRepository {
     return getProfile(user.id);
   }
 
+  @override
   Future<UserProfile> updateMyProfile({
     required String fullName,
     required String phone,
@@ -108,6 +112,7 @@ class AuthRepository {
     return getProfile(user.id);
   }
 
+  @override
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -127,6 +132,7 @@ class AuthRepository {
     await _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
+  @override
   Future<void> sendPasswordReset(String email) =>
       _client.auth.resetPasswordForEmail(email.trim());
 

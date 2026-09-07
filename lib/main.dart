@@ -3,8 +3,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'config/supabase.dart';
 import 'l10n/tourflow_localization.dart';
-import 'screens/staff/admin_attraction_review_page.dart';
-import 'screens/staff/admin_user_management_page.dart';
 import 'screens/staff/attraction_configuration_page.dart';
 import 'screens/staff/attraction_details_page.dart';
 import 'screens/staff/operator_dashboard_page.dart';
@@ -58,7 +56,6 @@ import 'widgets/navigation/navigation_routes.dart';
 import 'widgets/navigation/operator_navigation_shell.dart';
 import 'widgets/navigation/user_navigation_shell.dart';
 import 'widgets/tourflow_widgets.dart';
-import 'screens/staff/admin_analytics_dashboard_page.dart';
 import 'screens/staff/admin_generate_report_page.dart';
 import 'screens/staff/admin_performance_report_page.dart';
 import 'screens/staff/admin_sustainability_report_page.dart';
@@ -144,8 +141,10 @@ class _TourFlowMaterialApp extends StatelessWidget {
         GeofencePage.routeName: (_) => const GeofencePage(),
         OperatorRegistrationPage.routeName: (_) =>
             const OperatorRegistrationPage(),
-        TourFlowRoutes.adminDashboard: (context) => const AdminNavigationShell(initialIndex: 1),
-        TourFlowRoutes.adminSupportTickets: (context) => const AdminNavigationShell(initialIndex: 3),
+        TourFlowRoutes.adminDashboard: (context) =>
+            const AdminNavigationShell(initialIndex: 1),
+        TourFlowRoutes.adminSupportTickets: (context) =>
+            const AdminNavigationShell(initialIndex: 3),
         TourFlowRoutes.staffSupportTickets: (_) =>
             const SupportTicketManagementPage(
               navigationRole: TourFlowNavigationRole.operator,
@@ -155,7 +154,8 @@ class _TourFlowMaterialApp extends StatelessWidget {
             const OperatorNavigationShell(initialIndex: 1),
         AttractionConfigurationPage.routeName: (_) =>
             const AttractionConfigurationPage(),
-        TourFlowRoutes.adminAttractionReview: (context) => const AdminNavigationShell(initialIndex: 2),
+        TourFlowRoutes.adminAttractionReview: (context) =>
+            const AdminNavigationShell(initialIndex: 2),
         SlotManagerPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 2),
         BookingDetailsPage.routeName: (_) => const BookingDetailsPage(),
@@ -177,8 +177,7 @@ class _TourFlowMaterialApp extends StatelessWidget {
             const StaffSupportTicketDetailsPage(),
         OperatorFeedbackPage.routeName: (_) => const OperatorFeedbackPage(),
         StaffQrScannerPage.routeName: (_) => const StaffQrScannerPage(),
-        OperatorLiveCrowdPage.routeName: (_) =>
-            const OperatorLiveCrowdPage(),
+        OperatorLiveCrowdPage.routeName: (_) => const OperatorLiveCrowdPage(),
         OperatorLiveCrowdDetailsPage.routeName: (_) =>
             const OperatorLiveCrowdDetailsPage(),
         OperatorReportQueuePage.routeName: (_) =>
@@ -189,10 +188,14 @@ class _TourFlowMaterialApp extends StatelessWidget {
             const PromotionSuggestionPage(),
         VisitorStatisticsPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 4),
-        TourFlowRoutes.adminAnalyticsDashboard: (context) => const AdminNavigationShell(initialIndex: 0),
-        AdminGenerateReportPage.routeName: (context) => const AdminGenerateReportPage(),
-        AdminPerformanceReportPage.routeName: (context) => const AdminPerformanceReportPage(),
-        AdminSustainabilityReportPage.routeName: (context) => const AdminSustainabilityReportPage(),
+        TourFlowRoutes.adminAnalyticsDashboard: (context) =>
+            const AdminNavigationShell(initialIndex: 0),
+        AdminGenerateReportPage.routeName: (context) =>
+            const AdminGenerateReportPage(),
+        AdminPerformanceReportPage.routeName: (context) =>
+            const AdminPerformanceReportPage(),
+        AdminSustainabilityReportPage.routeName: (context) =>
+            const AdminSustainabilityReportPage(),
       },
     );
   }

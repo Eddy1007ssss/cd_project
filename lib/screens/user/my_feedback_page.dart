@@ -64,7 +64,7 @@ class _MyFeedbackPageState extends State<MyFeedbackPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ...entries.map(
-                    (entry) => Padding(
+                (entry) => Padding(
                   padding: const EdgeInsets.only(bottom: 14),
                   child: _FeedbackCard(entry: entry),
                 ),
@@ -77,103 +77,8 @@ class _MyFeedbackPageState extends State<MyFeedbackPage> {
   }
 }
 
-class _FeedbackSummary extends StatelessWidget {
-  const _FeedbackSummary({
-    required this.count,
-    required this.onRefresh,
-  });
-
-  final int count;
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F6FB),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE1E6F0),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8ECFA),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.rate_review_outlined,
-              color: Color(0xFF5C6FD6),
-              size: 20,
-            ),
-          ),
-
-          const SizedBox(width: 11),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Your Feedback',
-                  style: TextStyle(
-                    color: Color(0xFF101828),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '$count feedback ${count == 1 ? 'submission' : 'submissions'}',
-                  style: const TextStyle(
-                    color: Color(0xFF667085),
-                    fontSize: 9.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onRefresh,
-              borderRadius: BorderRadius.circular(9),
-              child: Container(
-                width: 34,
-                height: 34,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(
-                    color: const Color(0xFFDDE2EA),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.refresh_rounded,
-                  color: Color(0xFF667085),
-                  size: 18,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _FeedbackCard extends StatelessWidget {
-  const _FeedbackCard({
-    required this.entry,
-  });
+  const _FeedbackCard({required this.entry});
 
   final FeedbackEntry entry;
 
@@ -185,9 +90,7 @@ class _FeedbackCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: const Color(0xFFE1E5EA),
-        ),
+        border: Border.all(color: const Color(0xFFE1E5EA)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x08000000),
@@ -248,10 +151,7 @@ class _FeedbackCard extends StatelessWidget {
               const SizedBox(width: 8),
 
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 5,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFECF8F0),
                   borderRadius: BorderRadius.circular(20),
@@ -283,16 +183,11 @@ class _FeedbackCard extends StatelessWidget {
 
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 11,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             decoration: BoxDecoration(
               color: const Color(0xFFFFFBF2),
               borderRadius: BorderRadius.circular(11),
-              border: Border.all(
-                color: const Color(0xFFF4E8C9),
-              ),
+              border: Border.all(color: const Color(0xFFF4E8C9)),
             ),
             child: Row(
               children: [
@@ -313,7 +208,7 @@ class _FeedbackCard extends StatelessWidget {
                       Row(
                         children: List.generate(
                           5,
-                              (index) => Padding(
+                          (index) => Padding(
                             padding: const EdgeInsets.only(right: 2),
                             child: Icon(
                               index < entry.overallRating
@@ -337,9 +232,7 @@ class _FeedbackCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(9),
-                    border: Border.all(
-                      color: const Color(0xFFF0E1BA),
-                    ),
+                    border: Border.all(color: const Color(0xFFF0E1BA)),
                   ),
                   child: Text(
                     '${entry.overallRating}/5',
@@ -358,16 +251,11 @@ class _FeedbackCard extends StatelessWidget {
 
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: const Color(0xFFF7F5FC),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: const Color(0xFFE9E3F4),
-              ),
+              border: Border.all(color: const Color(0xFFE9E3F4)),
             ),
             child: Row(
               children: [
@@ -436,9 +324,7 @@ class _FeedbackCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFF4F6FA),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFFE2E6EC),
-                    ),
+                    border: Border.all(color: const Color(0xFFE2E6EC)),
                   ),
                   child: Text(
                     tag,
@@ -473,9 +359,7 @@ class _FeedbackCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFF8F9FB),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: const Color(0xFFE9ECF0),
-                ),
+                border: Border.all(color: const Color(0xFFE9ECF0)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,10 +389,7 @@ class _FeedbackCard extends StatelessWidget {
 
           const SizedBox(height: 14),
 
-          const Divider(
-            height: 1,
-            color: Color(0xFFEAECF0),
-          ),
+          const Divider(height: 1, color: Color(0xFFEAECF0)),
 
           const SizedBox(height: 10),
 
@@ -598,10 +479,7 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _ErrorState extends StatelessWidget {
-  const _ErrorState({
-    required this.error,
-    required this.onRetry,
-  });
+  const _ErrorState({required this.error, required this.onRetry});
 
   final String error;
   final VoidCallback onRetry;
@@ -648,10 +526,7 @@ class _ErrorState extends StatelessWidget {
 
             OutlinedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(
-                Icons.refresh_rounded,
-                size: 16,
-              ),
+              icon: const Icon(Icons.refresh_rounded, size: 16),
               label: const Text('Retry'),
             ),
 

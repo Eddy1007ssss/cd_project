@@ -9,9 +9,14 @@ import 'admin_bottom_navigation_bar.dart';
 import 'persistent_navigation_shell.dart';
 
 class AdminNavigationShell extends StatelessWidget {
-  const AdminNavigationShell({this.initialIndex = 0, super.key});
+  const AdminNavigationShell({
+    this.initialIndex = 0,
+    this.dashboardBuilder,
+    super.key,
+  });
 
   final int initialIndex;
+  final WidgetBuilder? dashboardBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +24,10 @@ class AdminNavigationShell extends StatelessWidget {
       items: adminNavigationItems,
       initialIndex: initialIndex,
       tabBuilders: [
-            (_) => const AdminAnalyticsDashboardPage(),
-            (_) => const AdminUserManagementPage(),
-            (_) => const AdminAttractionReviewPage(),
-            (_) => const SupportTicketManagementPage(
+        dashboardBuilder ?? (_) => const AdminAnalyticsDashboardPage(),
+        (_) => const AdminUserManagementPage(),
+        (_) => const AdminAttractionReviewPage(),
+        (_) => const SupportTicketManagementPage(
           navigationRole: TourFlowNavigationRole.administrator,
         ),
       ],

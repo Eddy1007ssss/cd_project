@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/user_profile.dart';
 import '../../repositories/auth_repository.dart';
+import '../../repositories/profile_security_gateway.dart';
 import '../../widgets/navigation/navigation_routes.dart';
 import '../../widgets/tourflow_widgets.dart';
 import 'language_settings_page.dart';
@@ -12,6 +13,7 @@ class ProfileSecurityPage extends StatefulWidget {
     this.navigationRole = TourFlowNavigationRole.tourist,
     this.pageLevel = TourFlowPageLevel.topLevel,
     this.selectedNavigationIndex = 4,
+    this.gateway,
     super.key,
   });
 
@@ -20,13 +22,14 @@ class ProfileSecurityPage extends StatefulWidget {
   final TourFlowNavigationRole navigationRole;
   final TourFlowPageLevel pageLevel;
   final int selectedNavigationIndex;
+  final ProfileSecurityGateway? gateway;
 
   @override
   State<ProfileSecurityPage> createState() => _ProfileSecurityPageState();
 }
 
 class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
-  final AuthRepository _authRepository = AuthRepository();
+  late final ProfileSecurityGateway _authRepository;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -41,6 +44,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
   @override
   void initState() {
     super.initState();
+    _authRepository = widget.gateway ?? AuthRepository();
     _loadProfile();
   }
 
@@ -365,8 +369,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 CircleAvatar(
                   radius: 34,
                   backgroundColor: TourFlowColors.primary,
-                  backgroundImage:
-                      avatarUrl == null || avatarUrl.isEmpty
+                  backgroundImage: avatarUrl == null || avatarUrl.isEmpty
                       ? null
                       : NetworkImage(avatarUrl),
                   child: avatarUrl == null || avatarUrl.isEmpty
@@ -511,7 +514,9 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.save_outlined),
-              label: TourFlowText(_isSaving ? 'Saving...' : 'Save Profile Changes'),
+              label: TourFlowText(
+                _isSaving ? 'Saving...' : 'Save Profile Changes',
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -521,7 +526,9 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.rate_review_outlined),
                 title: const TourFlowText('Feedback Centre'),
-                subtitle: const TourFlowText('Ratings, feedback and issue reports'),
+                subtitle: const TourFlowText(
+                  'Ratings, feedback and issue reports',
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => Navigator.pushNamed(context, '/feedback-centre'),
               ),
