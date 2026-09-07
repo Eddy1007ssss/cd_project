@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../screens/staff/admin_analytics_dashboard_page.dart';
 import '../../screens/staff/admin_attraction_review_page.dart';
 import '../../screens/staff/admin_user_management_page.dart';
 import '../../screens/staff/support_ticket_management_page.dart';
@@ -18,9 +19,10 @@ class AdminNavigationShell extends StatelessWidget {
       items: adminNavigationItems,
       initialIndex: initialIndex,
       tabBuilders: [
-        (_) => const AdminUserManagementPage(),
-        (_) => const AdminAttractionReviewPage(),
-        (_) => const SupportTicketManagementPage(
+            (_) => const AdminAnalyticsDashboardPage(),
+            (_) => const AdminUserManagementPage(),
+            (_) => const AdminAttractionReviewPage(),
+            (_) => const SupportTicketManagementPage(
           navigationRole: TourFlowNavigationRole.administrator,
         ),
       ],

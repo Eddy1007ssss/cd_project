@@ -1,32 +1,359 @@
 import 'package:flutter/material.dart';
 
+import '../../models/engagement_models.dart';
+import '../../repositories/engagement_repository.dart';
 import '../../widgets/tourflow_widgets.dart';
 import '../../widgets/navigation/navigation_routes.dart';
 import '../../widgets/navigation/navigation_scope.dart';
 import 'attraction_details_page.dart';
 import 'slot_manager_page.dart';
 
-class OperatorDashboardPage extends StatelessWidget {
+class OperatorDashboardPage extends StatefulWidget {
   const OperatorDashboardPage({super.key});
 
-  static const routeName = TourFlowRoutes.operatorDashboard;
+  static const routeName =
+      TourFlowRoutes.operatorDashboard;
+
+  @override
+  State<OperatorDashboardPage> createState() =>
+      _OperatorDashboardPageState();
+}
+
+class _OperatorDashboardPageState
+    extends State<OperatorDashboardPage> {
+  final _repository = EngagementRepository();
+
+  late Future<List<OperatorFeedbackEntry>> _feedback;
+  late Future<List<VisitorTrendEntry>> _visitorTrends;
+  late Future<List<RevenueEntry>> _revenue;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _feedback = _repository.fetchOperatorFeedback();
+    _visitorTrends = _repository.fetchOperatorVisitorTrends();
+    _revenue = _repository.fetchOperatorRevenue();
+  }
+
+  double _currentMonthRevenue(
+      List<RevenueEntry> entries,
+      ) {
+    final now = DateTime.now();
+
+    final start =
+    DateTime(now.year, now.month, 1);
+
+    final end =
+    DateTime(now.year, now.month, now.day + 1);
+
+    return entries
+        .where(
+          (entry) =>
+      !entry.completedAt.isBefore(start) &&
+          entry.completedAt.isBefore(end),
+    )
+        .fold<double>(
+      0.0,
+          (sum, entry) =>
+      sum + entry.revenue,
+    );
+  }
+
+  double _previousMonthToDateRevenue(
+      List<RevenueEntry> entries,
+      ) {
+    final now = DateTime.now();
+
+    final previousMonth = DateTime(
+      now.year,
+      now.month - 1,
+      1,
+    );
+
+    final daysInPreviousMonth = DateTime(
+      previousMonth.year,
+      previousMonth.month + 1,
+      0,
+    ).day;
+
+    final comparisonDay =
+    now.day > daysInPreviousMonth
+        ? daysInPreviousMonth
+        : now.day;
+
+    final start = DateTime(
+      previousMonth.year,
+      previousMonth.month,
+      1,
+    );
+
+    final end = DateTime(
+      previousMonth.year,
+      previousMonth.month,
+      comparisonDay + 1,
+    );
+
+    return entries
+        .where(
+          (entry) =>
+      !entry.completedAt.isBefore(start) &&
+          entry.completedAt.isBefore(end),
+    )
+        .fold<double>(
+      0.0,
+          (sum, entry) =>
+      sum + entry.revenue,
+    );
+  }
+
+  String _revenueChangeNote(
+      List<RevenueEntry> entries,
+      ) {
+    final current =
+    _currentMonthRevenue(entries);
+
+    final previous =
+    _previousMonthToDateRevenue(entries);
+
+    if (previous == 0) {
+      if (current > 0) {
+        return '+RM ${current.toStringAsFixed(0)} vs prev.';
+      }
+
+      return 'No revenue';
+    }
+
+    final percentage =
+        ((current - previous) / previous) * 100;
+
+    if (percentage > 0) {
+      return '+${percentage.toStringAsFixed(1)}% vs prev.';
+    }
+
+    if (percentage < 0) {
+      return '${percentage.toStringAsFixed(1)}% vs prev.';
+    }
+
+    return 'No change';
+  }
+
+  double _averageRating(
+      List<OperatorFeedbackEntry> entries,
+      ) {
+    if (entries.isEmpty) {
+      return 0.0;
+    }
+
+    final total = entries.fold<int>(
+      0,
+          (sum, entry) =>
+      sum + entry.overallRating,
+    );
+
+    return total / entries.length;
+  }
+
+  int _currentMonthVisitors(
+      List<VisitorTrendEntry> entries,
+      ) {
+    final now = DateTime.now();
+
+    return entries
+        .where(
+          (entry) =>
+      entry.checkedInAt.year ==
+          now.year &&
+          entry.checkedInAt.month ==
+              now.month,
+    )
+        .fold<int>(
+      0,
+          (sum, entry) =>
+      sum + entry.visitorCount,
+    );
+  }
+
+  int _previousMonthVisitors(
+      List<VisitorTrendEntry> entries,
+      ) {
+    final now = DateTime.now();
+
+    final previousMonth = DateTime(
+      now.year,
+      now.month - 1,
+      1,
+    );
+
+    return entries
+        .where(
+          (entry) =>
+      entry.checkedInAt.year ==
+          previousMonth.year &&
+          entry.checkedInAt.month ==
+              previousMonth.month,
+    )
+        .fold<int>(
+      0,
+          (sum, entry) =>
+      sum + entry.visitorCount,
+    );
+  }
+
+  String _visitorChangeNote(
+      List<VisitorTrendEntry> entries,
+      ) {
+    final current =
+    _currentMonthVisitors(entries);
+
+    final previous =
+    _previousMonthVisitors(entries);
+
+    if (previous == 0) {
+      return 'This month';
+    }
+
+    final percentage =
+        ((current - previous) / previous) * 100;
+
+    if (percentage > 0) {
+      return '+${percentage.toStringAsFixed(1)}% vs last month';
+    }
+
+    if (percentage < 0) {
+      return '${percentage.toStringAsFixed(1)}% vs last month';
+    }
+
+    return 'No change vs last month';
+  }
+
+  Map<String, int> _buildDashboardVisitorTrend(
+      List<VisitorTrendEntry> entries,
+      ) {
+    final now = DateTime.now();
+
+    final today = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    );
+
+    final startDate = today.subtract(
+      const Duration(days: 6),
+    );
+
+    const dayNames = [
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun',
+    ];
+
+    final data = <String, int>{};
+
+    for (var i = 0; i < 7; i++) {
+      final date = startDate.add(
+        Duration(days: i),
+      );
+
+      final label =
+      dayNames[date.weekday - 1];
+
+      data[label] = 0;
+    }
+
+    for (final entry in entries) {
+      final date = DateTime(
+        entry.checkedInAt.year,
+        entry.checkedInAt.month,
+        entry.checkedInAt.day,
+      );
+
+      if (date.isBefore(startDate) ||
+          date.isAfter(today)) {
+        continue;
+      }
+
+      final label =
+      dayNames[date.weekday - 1];
+
+      data[label] =
+          (data[label] ?? 0) +
+              entry.visitorCount;
+    }
+
+    return data;
+  }
+
+  int _last7DaysVisitors(
+      List<VisitorTrendEntry> entries,
+      ) {
+    final now = DateTime.now();
+
+    final today = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    );
+
+    final startDate = today.subtract(
+      const Duration(days: 6),
+    );
+
+    return entries.where((entry) {
+      final date = DateTime(
+        entry.checkedInAt.year,
+        entry.checkedInAt.month,
+        entry.checkedInAt.day,
+      );
+
+      return !date.isBefore(startDate) &&
+          !date.isAfter(today);
+    }).fold<int>(
+      0,
+          (sum, entry) =>
+      sum + entry.visitorCount,
+    );
+  }
+
+  Future<void> _openVisitorStatistics() async {
+    await Navigator.pushNamed(
+      context,
+      '/visitor-statistics',
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _visitorTrends =
+          _repository.fetchOperatorVisitorTrends();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return TourFlowPage(
       title: 'Operator Dashboard',
       role: 'TOURFLOW · OPERATOR',
-      navigationRole: TourFlowNavigationRole.operator,
-      pageLevel: TourFlowPageLevel.topLevel,
+      navigationRole:
+      TourFlowNavigationRole.operator,
+      pageLevel:
+      TourFlowPageLevel.topLevel,
       selectedNavigationIndex: 0,
       actions: [
         IconButton(
           onPressed: () {},
-          icon: const Icon(Icons.notifications_none_rounded),
+          icon: const Icon(
+            Icons.notifications_none_rounded,
+          ),
         ),
       ],
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
         children: [
           ModuleCard(
             color: TourFlowColors.lavender,
@@ -34,21 +361,25 @@ class OperatorDashboardPage extends StatelessWidget {
               children: [
                 const Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Good morning, Alex',
                         style: TextStyle(
-                          color: TourFlowColors.heading,
+                          color:
+                          TourFlowColors.heading,
                           fontSize: 19,
-                          fontWeight: FontWeight.w800,
+                          fontWeight:
+                          FontWeight.w800,
                         ),
                       ),
                       SizedBox(height: 5),
                       Text(
                         'Manage attractions, visitor capacity and daily operations.',
                         style: TextStyle(
-                          color: TourFlowColors.muted,
+                          color:
+                          TourFlowColors.muted,
                           fontSize: 11,
                           height: 1.4,
                         ),
@@ -60,12 +391,15 @@ class OperatorDashboardPage extends StatelessWidget {
                   width: 54,
                   height: 54,
                   decoration: BoxDecoration(
-                    color: TourFlowColors.primary,
-                    borderRadius: BorderRadius.circular(16),
+                    color:
+                    TourFlowColors.primary,
+                    borderRadius:
+                    BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.storefront_rounded,
-                    color: TourFlowColors.primaryText,
+                    color:
+                    TourFlowColors.primaryText,
                   ),
                 ),
               ],
@@ -76,34 +410,47 @@ class OperatorDashboardPage extends StatelessWidget {
 
           PrimaryButton(
             label: 'Register New Attraction',
-            icon: Icons.add_location_alt_outlined,
+            icon:
+            Icons.add_location_alt_outlined,
             onPressed: () {
               selectNavigationTabOrPush(
                 context,
                 index: 1,
-                routeName: AttractionDetailsPage.routeName,
+                routeName:
+                AttractionDetailsPage.routeName,
               );
             },
           ),
 
           const SizedBox(height: 16),
 
-          // =========================
-          // ROW 1
-          // Revenue + Visitors
-          // =========================
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/revenue-promotion');
-                  },
-                  child: const MetricCard(
-                    label: 'Total Revenue',
-                    value: 'RM 42,850',
-                    icon: Icons.payments_outlined,
-                    note: '+12% this month',
+                child: SizedBox(
+                  height: 112,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/revenue-promotion',
+                      );
+                    },
+                    child: FutureBuilder<List<RevenueEntry>>(
+                      future: _revenue,
+                      builder: (context, snapshot) {
+                        final entries = snapshot.data ?? const <RevenueEntry>[];
+                        final revenue = _currentMonthRevenue(entries);
+                        final note = _revenueChangeNote(entries);
+
+                        return MetricCard(
+                          label: 'Total Revenue',
+                          value: 'RM ${revenue.toStringAsFixed(2)}',
+                          icon: Icons.payments_outlined,
+                          note: note,
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -111,15 +458,37 @@ class OperatorDashboardPage extends StatelessWidget {
               const SizedBox(width: 10),
 
               Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/visitor-statistics');
-                  },
-                  child: const MetricCard(
-                    label: 'Total Visitors',
-                    value: '1,248',
-                    icon: Icons.groups_outlined,
-                    note: '+8% this month',
+                child: SizedBox(
+                  height: 112,
+                  child: FutureBuilder<
+                      List<VisitorTrendEntry>>(
+                    future: _visitorTrends,
+                    builder:
+                        (context, snapshot) {
+                      final entries =
+                          snapshot.data ??
+                              const <
+                                  VisitorTrendEntry>[];
+
+                      final total =
+                      _currentMonthVisitors(
+                        entries,
+                      );
+
+                      final note =
+                      _visitorChangeNote(
+                        entries,
+                      );
+
+                      return MetricCard(
+                        label:
+                        'Total Visitors',
+                        value: '$total',
+                        icon:
+                        Icons.groups_outlined,
+                        note: note,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -128,22 +497,52 @@ class OperatorDashboardPage extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          // =========================
-          // ROW 2
-          // Average Rating + Live Crowd
-          // =========================
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/operator-feedback');
-                  },
-                  child: const MetricCard(
-                    label: 'Average Rating',
-                    value: '4.9 / 5.0',
-                    icon: Icons.star_outline_rounded,
-                    note: '+0.2 this month',
+                child: SizedBox(
+                  height: 112,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await Navigator.pushNamed(
+                        context,
+                        '/operator-feedback',
+                      );
+
+                      if (!mounted) return;
+
+                      setState(() {
+                        _feedback = _repository
+                            .fetchOperatorFeedback();
+                      });
+                    },
+                    child: FutureBuilder<
+                        List<
+                            OperatorFeedbackEntry>>(
+                      future: _feedback,
+                      builder:
+                          (context, snapshot) {
+                        final entries =
+                            snapshot.data ??
+                                const [];
+
+                        final average =
+                        _averageRating(
+                          entries,
+                        );
+
+                        return MetricCard(
+                          label:
+                          'Average Rating',
+                          value:
+                          '${average.toStringAsFixed(1)} / 5.0',
+                          icon: Icons
+                              .star_outline_rounded,
+                          note:
+                          '${entries.length} tourist reviews',
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -151,48 +550,229 @@ class OperatorDashboardPage extends StatelessWidget {
               const SizedBox(width: 10),
 
               Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/live-crowd');
-                  },
-                  child: const MetricCard(
-                    label: 'Live Crowd',
-                    value: '68 / 120',
-                    icon: Icons.groups_outlined,
-                    note: 'MODERATE · 57%',
+                child: SizedBox(
+                  height: 112,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/live-crowd',
+                      );
+                    },
+                    child:
+                    const MetricCard(
+                      label: 'Live Crowd',
+                      value: '68 / 120',
+                      icon:
+                      Icons.groups_outlined,
+                      note:
+                      'MODERATE · 57%',
+                    ),
                   ),
                 ),
               ),
             ],
           ),
 
-          // =========================
-          // VIEW REPORT BUTTON
-          // =========================
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          PrimaryButton(
-            label: 'View Report',
-            icon: Icons.assignment_outlined,
-            onPressed: () {
-              selectNavigationTabOrPush(
-                context,
-                index: 4,
-                routeName: TourFlowRoutes.operatorReports,
+          FutureBuilder<
+              List<VisitorTrendEntry>>(
+            future: _visitorTrends,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState !=
+                  ConnectionState.done &&
+                  !snapshot.hasData) {
+                return const ModuleCard(
+                  child: SizedBox(
+                    height: 125,
+                    child: Center(
+                      child:
+                      CircularProgressIndicator(),
+                    ),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return ModuleCard(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons
+                              .error_outline_rounded,
+                          color:
+                          TourFlowColors.muted,
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        const Text(
+                          'Unable to load visitor trends.',
+                          style: TextStyle(
+                            color:
+                            TourFlowColors.muted,
+                            fontSize: 10,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _visitorTrends =
+                                  _repository
+                                      .fetchOperatorVisitorTrends();
+                            });
+                          },
+                          child: const Text(
+                            'Try Again',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final entries =
+                  snapshot.data ??
+                      const <
+                          VisitorTrendEntry>[];
+
+              final trend =
+              _buildDashboardVisitorTrend(
+                entries,
+              );
+
+              final sevenDayTotal =
+              _last7DaysVisitors(
+                entries,
+              );
+
+              return GestureDetector(
+                onTap:
+                _openVisitorStatistics,
+                child: ModuleCard(
+                  child: Column(
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start,
+                              children: [
+                                Text(
+                                  'Visitor Trends',
+                                  style: TextStyle(
+                                    color:
+                                    TourFlowColors
+                                        .heading,
+                                    fontSize: 13,
+                                    fontWeight:
+                                    FontWeight
+                                        .w800,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 3,
+                                ),
+                                Text(
+                                  'Last 7 days',
+                                  style: TextStyle(
+                                    color:
+                                    TourFlowColors
+                                        .muted,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '$sevenDayTotal visitors',
+                            style:
+                            const TextStyle(
+                              color:
+                              Color(
+                                0xFF8A5A00,
+                              ),
+                              fontSize: 11,
+                              fontWeight:
+                              FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 4,
+                          ),
+                          const Icon(
+                            Icons
+                                .chevron_right_rounded,
+                            color:
+                            TourFlowColors.muted,
+                            size: 18,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(
+                        height: 10,
+                      ),
+
+                      SizedBox(
+                        height: 105,
+                        width: double.infinity,
+                        child: CustomPaint(
+                          painter:
+                          _DashboardVisitorTrendPainter(
+                            data: trend,
+                          ),
+                        ),
+                      ),
+
+                      if (sevenDayTotal == 0) ...[
+                        const SizedBox(
+                          height: 6,
+                        ),
+                        const Center(
+                          child: Text(
+                            'No check-ins recorded in the last 7 days.',
+                            style: TextStyle(
+                              color:
+                              TourFlowColors.muted,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               );
             },
           ),
 
           const SizedBox(height: 22),
 
-          // =========================
-          // YOUR ATTRACTIONS
-          // =========================
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+            MainAxisAlignment.spaceBetween,
             children: [
-              const SectionTitle('Your Attractions'),
-              TextButton(onPressed: () {}, child: const Text('View all')),
+              const SectionTitle(
+                'Your Attractions',
+              ),
+              TextButton(
+                onPressed: () {},
+                child:
+                const Text('View all'),
+              ),
             ],
           ),
 
@@ -201,9 +781,21 @@ class OperatorDashboardPage extends StatelessWidget {
           const Wrap(
             spacing: 8,
             children: [
-              StatusChip(label: 'All (12)', color: TourFlowColors.primaryText),
-              StatusChip(label: 'Draft (2)', color: TourFlowColors.muted),
-              StatusChip(label: 'Pending (3)', color: TourFlowColors.warning),
+              StatusChip(
+                label: 'All (12)',
+                color:
+                TourFlowColors.primaryText,
+              ),
+              StatusChip(
+                label: 'Draft (2)',
+                color:
+                TourFlowColors.muted,
+              ),
+              StatusChip(
+                label: 'Pending (3)',
+                color:
+                TourFlowColors.warning,
+              ),
             ],
           ),
 
@@ -211,17 +803,22 @@ class OperatorDashboardPage extends StatelessWidget {
 
           _AttractionSummaryCard(
             name: 'Old Town Square',
-            location: 'Kuala Lumpur City Centre',
-            visitors: '642 visitors today',
+            location:
+            'Kuala Lumpur City Centre',
+            visitors:
+            '642 visitors today',
             rating: '4.9',
             status: 'ACTIVE',
-            statusColor: TourFlowColors.success,
-            icon: Icons.account_balance_rounded,
+            statusColor:
+            TourFlowColors.success,
+            icon:
+            Icons.account_balance_rounded,
             onTap: () {
               selectNavigationTabOrPush(
                 context,
                 index: 1,
-                routeName: AttractionDetailsPage.routeName,
+                routeName:
+                AttractionDetailsPage.routeName,
               );
             },
           ),
@@ -229,26 +826,36 @@ class OperatorDashboardPage extends StatelessWidget {
           const SizedBox(height: 12),
 
           _AttractionSummaryCard(
-            name: 'Heritage Walking Tour',
-            location: 'Merdeka Square',
-            visitors: '124 visitors today',
+            name:
+            'Heritage Walking Tour',
+            location:
+            'Merdeka Square',
+            visitors:
+            '124 visitors today',
             rating: '4.8',
             status: 'PENDING',
-            statusColor: TourFlowColors.warning,
-            icon: Icons.directions_walk_rounded,
+            statusColor:
+            TourFlowColors.warning,
+            icon:
+            Icons.directions_walk_rounded,
             onTap: () {},
           ),
 
           const SizedBox(height: 12),
 
           _AttractionSummaryCard(
-            name: 'Lumina Botanical Gardens',
-            location: 'Perdana Botanical Gardens',
-            visitors: 'Not yet published',
+            name:
+            'Lumina Botanical Gardens',
+            location:
+            'Perdana Botanical Gardens',
+            visitors:
+            'Not yet published',
             rating: '—',
             status: 'DRAFT',
-            statusColor: TourFlowColors.muted,
-            icon: Icons.local_florist_rounded,
+            statusColor:
+            TourFlowColors.muted,
+            icon:
+            Icons.local_florist_rounded,
             onTap: () {},
           ),
 
@@ -257,13 +864,16 @@ class OperatorDashboardPage extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlineActionButton(
-              label: 'Open Slot Manager',
-              icon: Icons.schedule_rounded,
+              label:
+              'Open Slot Manager',
+              icon:
+              Icons.schedule_rounded,
               onPressed: () {
                 selectNavigationTabOrPush(
                   context,
                   index: 2,
-                  routeName: SlotManagerPage.routeName,
+                  routeName:
+                  SlotManagerPage.routeName,
                 );
               },
             ),
@@ -274,7 +884,217 @@ class OperatorDashboardPage extends StatelessWidget {
   }
 }
 
-class _AttractionSummaryCard extends StatelessWidget {
+class _DashboardVisitorTrendPainter
+    extends CustomPainter {
+  const _DashboardVisitorTrendPainter({
+    required this.data,
+  });
+
+  final Map<String, int> data;
+
+  @override
+  void paint(
+      Canvas canvas,
+      Size size,
+      ) {
+    final entries =
+    data.entries.toList();
+
+    if (entries.isEmpty) {
+      return;
+    }
+
+    const leftPadding = 26.0;
+    const rightPadding = 8.0;
+    const topPadding = 6.0;
+    const bottomPadding = 22.0;
+
+    final chartWidth =
+        size.width -
+            leftPadding -
+            rightPadding;
+
+    final chartHeight =
+        size.height -
+            topPadding -
+            bottomPadding;
+
+    final maxValue =
+    entries.fold<int>(
+      0,
+          (max, entry) =>
+      entry.value > max
+          ? entry.value
+          : max,
+    );
+
+    final safeMax =
+    maxValue == 0
+        ? 1
+        : maxValue;
+
+    final gridPaint = Paint()
+      ..color =
+      const Color(0xFFE9EDF2)
+      ..strokeWidth = 1;
+
+    final linePaint = Paint()
+      ..color =
+      const Color(0xFFFF9800)
+      ..strokeWidth = 2.5
+      ..style =
+          PaintingStyle.stroke
+      ..strokeCap =
+          StrokeCap.round
+      ..strokeJoin =
+          StrokeJoin.round;
+
+    final pointPaint = Paint()
+      ..color =
+      const Color(0xFFFF9800)
+      ..style =
+          PaintingStyle.fill;
+
+    for (var i = 0; i <= 3; i++) {
+      final y =
+          topPadding +
+              chartHeight *
+                  i /
+                  3;
+
+      canvas.drawLine(
+        Offset(
+          leftPadding,
+          y,
+        ),
+        Offset(
+          size.width -
+              rightPadding,
+          y,
+        ),
+        gridPaint,
+      );
+    }
+
+    final points = <Offset>[];
+
+    for (var i = 0;
+    i < entries.length;
+    i++) {
+      final x =
+          leftPadding +
+              chartWidth *
+                  i /
+                  (entries.length - 1);
+
+      final ratio =
+          entries[i].value /
+              safeMax;
+
+      final y =
+          topPadding +
+              chartHeight *
+                  (1 - ratio);
+
+      points.add(
+        Offset(x, y),
+      );
+    }
+
+    if (points.length > 1) {
+      final path = Path()
+        ..moveTo(
+          points.first.dx,
+          points.first.dy,
+        );
+
+      for (var i = 1;
+      i < points.length;
+      i++) {
+        final previous =
+        points[i - 1];
+
+        final current =
+        points[i];
+
+        final controlX =
+            (previous.dx +
+                current.dx) /
+                2;
+
+        path.cubicTo(
+          controlX,
+          previous.dy,
+          controlX,
+          current.dy,
+          current.dx,
+          current.dy,
+        );
+      }
+
+      canvas.drawPath(
+        path,
+        linePaint,
+      );
+    }
+
+    for (var i = 0;
+    i < points.length;
+    i++) {
+      if (entries[i].value > 0) {
+        canvas.drawCircle(
+          points[i],
+          3.5,
+          pointPaint,
+        );
+      }
+
+      final labelPainter =
+      TextPainter(
+        text: TextSpan(
+          text:
+          entries[i].key,
+          style:
+          const TextStyle(
+            color:
+            Color(
+              0xFF98A2B3,
+            ),
+            fontSize: 7,
+            fontWeight:
+            FontWeight.w500,
+          ),
+        ),
+        textDirection:
+        TextDirection.ltr,
+      )..layout();
+
+      labelPainter.paint(
+        canvas,
+        Offset(
+          points[i].dx -
+              labelPainter.width /
+                  2,
+          size.height -
+              bottomPadding +
+              8,
+        ),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(
+      covariant
+      _DashboardVisitorTrendPainter
+      oldDelegate,
+      ) {
+    return oldDelegate.data != data;
+  }
+}
+
+class _AttractionSummaryCard
+    extends StatelessWidget {
   const _AttractionSummaryCard({
     required this.name,
     required this.location,
@@ -301,76 +1121,109 @@ class _AttractionSummaryCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius:
+        BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding:
+          const EdgeInsets.all(14),
           child: Row(
             children: [
               Container(
                 width: 70,
                 height: 70,
-                decoration: BoxDecoration(
-                  color: TourFlowColors.lavenderStrong,
-                  borderRadius: BorderRadius.circular(12),
+                decoration:
+                BoxDecoration(
+                  color:
+                  TourFlowColors
+                      .lavenderStrong,
+                  borderRadius:
+                  BorderRadius.circular(
+                    12,
+                  ),
                 ),
-                child: Icon(icon, color: TourFlowColors.primaryText, size: 32),
+                child: Icon(
+                  icon,
+                  color:
+                  TourFlowColors.primaryText,
+                  size: 32,
+                ),
               ),
 
               const SizedBox(width: 12),
 
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         Expanded(
                           child: Text(
                             name,
-                            style: const TextStyle(
-                              color: TourFlowColors.heading,
-                              fontWeight: FontWeight.w700,
+                            style:
+                            const TextStyle(
+                              color:
+                              TourFlowColors.heading,
+                              fontWeight:
+                              FontWeight.w700,
                             ),
                           ),
                         ),
-                        StatusChip(label: status, color: statusColor),
+                        StatusChip(
+                          label: status,
+                          color:
+                          statusColor,
+                        ),
                       ],
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(
+                      height: 4,
+                    ),
 
                     Text(
                       location,
-                      style: const TextStyle(
-                        color: TourFlowColors.muted,
+                      style:
+                      const TextStyle(
+                        color:
+                        TourFlowColors.muted,
                         fontSize: 10,
                       ),
                     ),
 
-                    const SizedBox(height: 9),
+                    const SizedBox(
+                      height: 9,
+                    ),
 
                     Row(
                       children: [
                         Expanded(
                           child: Text(
                             visitors,
-                            style: const TextStyle(
-                              color: TourFlowColors.body,
+                            style:
+                            const TextStyle(
+                              color:
+                              TourFlowColors.body,
                               fontSize: 10,
                             ),
                           ),
                         ),
                         const Icon(
                           Icons.star_rounded,
-                          color: TourFlowColors.warning,
+                          color:
+                          TourFlowColors.warning,
                           size: 15,
                         ),
                         Text(
                           rating,
-                          style: const TextStyle(
-                            color: TourFlowColors.heading,
+                          style:
+                          const TextStyle(
+                            color:
+                            TourFlowColors.heading,
                             fontSize: 11,
-                            fontWeight: FontWeight.w700,
+                            fontWeight:
+                            FontWeight.w700,
                           ),
                         ),
                       ],

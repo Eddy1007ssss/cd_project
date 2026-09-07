@@ -54,6 +54,10 @@ import 'widgets/navigation/navigation_routes.dart';
 import 'widgets/navigation/operator_navigation_shell.dart';
 import 'widgets/navigation/user_navigation_shell.dart';
 import 'widgets/tourflow_widgets.dart';
+import 'screens/staff/admin_analytics_dashboard_page.dart';
+import 'screens/staff/admin_generate_report_page.dart';
+import 'screens/staff/admin_performance_report_page.dart';
+import 'screens/staff/admin_sustainability_report_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -115,16 +119,14 @@ class MyApp extends StatelessWidget {
         GeofencePage.routeName: (_) => const GeofencePage(),
         OperatorRegistrationPage.routeName: (_) =>
             const OperatorRegistrationPage(),
-        AdminUserManagementPage.routeName: (_) => const AdminNavigationShell(),
-        TourFlowRoutes.adminSupportTickets: (_) =>
-            const AdminNavigationShell(initialIndex: 2),
+        TourFlowRoutes.adminDashboard: (context) => const AdminNavigationShell(initialIndex: 1),
+        TourFlowRoutes.adminSupportTickets: (context) => const AdminNavigationShell(initialIndex: 3),
         OperatorDashboardPage.routeName: (_) => const OperatorNavigationShell(),
         AttractionDetailsPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 1),
         AttractionConfigurationPage.routeName: (_) =>
             const AttractionConfigurationPage(),
-        AdminAttractionReviewPage.routeName: (_) =>
-            const AdminNavigationShell(initialIndex: 1),
+        TourFlowRoutes.adminAttractionReview: (context) => const AdminNavigationShell(initialIndex: 2),
         SlotManagerPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 2),
         BookingDetailsPage.routeName: (_) => const BookingDetailsPage(),
@@ -150,6 +152,10 @@ class MyApp extends StatelessWidget {
             const PromotionSuggestionPage(),
         VisitorStatisticsPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 4),
+        TourFlowRoutes.adminAnalyticsDashboard: (context) => const AdminNavigationShell(initialIndex: 0),
+        AdminGenerateReportPage.routeName: (context) => const AdminGenerateReportPage(),
+        AdminPerformanceReportPage.routeName: (context) => const AdminPerformanceReportPage(),
+        AdminSustainabilityReportPage.routeName: (context) => const AdminSustainabilityReportPage(),
       },
     );
   }

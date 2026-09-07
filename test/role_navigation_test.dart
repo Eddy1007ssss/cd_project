@@ -151,4 +151,14 @@ class _FakeStaffCheckInGateway implements StaffCheckInGateway {
   Future<StaffBookingVerification> verifyStaffBooking(String value) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<StaffBookingVerification> confirmStaffCheckOut(
+      String bookingId,
+      ) async {
+    return StaffBookingVerification(
+      status: StaffBookingStatus.checkedOut,
+      bookingId: bookingId,
+    );
+  }
 }

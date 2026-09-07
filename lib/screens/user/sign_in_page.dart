@@ -11,6 +11,7 @@ import '../staff/operator_dashboard_page.dart';
 import '../staff/operator_registration_page.dart';
 import '../staff/staff_qr_scanner_page.dart';
 import 'tourist_registration_page.dart';
+import '../staff/admin_analytics_dashboard_page.dart';
 
 enum _DemoRole { tourist, operator, staff, administrator }
 
@@ -18,7 +19,7 @@ String landingRouteForRole(UserRole role) => switch (role) {
   UserRole.tourist => UserHomePage.routeName,
   UserRole.operator => OperatorDashboardPage.routeName,
   UserRole.staff => StaffQrScannerPage.routeName,
-  UserRole.administrator => AdminUserManagementPage.routeName,
+  UserRole.administrator => TourFlowRoutes.adminAnalyticsDashboard,
 };
 
 class SignInPage extends StatefulWidget {

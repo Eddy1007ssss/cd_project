@@ -127,4 +127,14 @@ class _FakeStaffCheckInGateway implements StaffCheckInGateway {
     confirmedBookingId = bookingId;
     return confirmation;
   }
+
+  @override
+  Future<StaffBookingVerification> confirmStaffCheckOut(
+      String bookingId,
+      ) async {
+    return StaffBookingVerification(
+      status: StaffBookingStatus.checkedOut,
+      bookingId: bookingId,
+    );
+  }
 }
