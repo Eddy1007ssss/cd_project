@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cd_project/l10n/tourflow_localization.dart';
 
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
@@ -41,7 +42,7 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Booking rescheduled. Old capacity was released.'),
+          content: TourFlowText('Booking rescheduled. Old capacity was released.'),
         ),
       );
       Navigator.pop(context, booking);
@@ -49,7 +50,7 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(bookingErrorMessage(error))));
+        ).showSnackBar(SnackBar(content: TourFlowText(bookingErrorMessage(error))));
       }
     } finally {
       if (mounted) {
@@ -63,11 +64,11 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
     final booking = _booking;
     if (booking == null) {
       return const Scaffold(
-        body: Center(child: Text('Booking details are missing.')),
+        body: Center(child: TourFlowText('Booking details are missing.')),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Reschedule Booking')),
+      appBar: AppBar(title: const TourFlowText('Reschedule Booking')),
       body: Column(
         children: [
           Card(
@@ -75,7 +76,7 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
             color: const Color(0xFFFFF3CD),
             child: Padding(
               padding: const EdgeInsets.all(14),
-              child: Text(
+              child: TourFlowText(
                 'Current: ${shortDate(booking.slot.startsAt)} · ${slotTime(booking.slot)}',
               ),
             ),
@@ -89,13 +90,13 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
                 }
                 if (snapshot.hasError) {
                   return const Center(
-                    child: Text('Could not load alternative slots.'),
+                    child: TourFlowText('Could not load alternative slots.'),
                   );
                 }
                 final slots = snapshot.data ?? const [];
                 if (slots.isEmpty) {
                   return const Center(
-                    child: Text('No suitable alternative slots are available.'),
+                    child: TourFlowText('No suitable alternative slots are available.'),
                   );
                 }
                 return ListView.builder(
@@ -110,11 +111,11 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
                             ? Icons.radio_button_checked
                             : Icons.radio_button_unchecked,
                       ),
-                      title: Text(
+                      title: TourFlowText(
                         '${shortDate(slots[index].startsAt)} · ${slotTime(slots[index])}',
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
-                      subtitle: Text(
+                      subtitle: TourFlowText(
                         '${slots[index].remainingCapacity} spaces remaining',
                       ),
                     ),
@@ -132,7 +133,7 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.all(15),
                 ),
-                child: Text(_busy ? 'Checking…' : 'Confirm New Slot'),
+                child: TourFlowText(_busy ? 'Checking…' : 'Confirm New Slot'),
               ),
             ),
           ),

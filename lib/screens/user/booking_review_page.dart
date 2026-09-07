@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cd_project/l10n/tourflow_localization.dart';
 
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
@@ -53,11 +54,11 @@ class _BookingReviewPageState extends State<BookingReviewPage> {
     final data = ModalRoute.of(context)?.settings.arguments;
     if (data is! BookingReviewArguments) {
       return const Scaffold(
-        body: Center(child: Text('Booking details are missing.')),
+        body: Center(child: TourFlowText('Booking details are missing.')),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Review Booking')),
+      appBar: AppBar(title: const TourFlowText('Review Booking')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -66,7 +67,7 @@ class _BookingReviewPageState extends State<BookingReviewPage> {
             size: 54,
             color: Color(0xFF79571E),
           ),
-          Text(
+          TourFlowText(
             data.slot.attractionName,
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
@@ -94,7 +95,7 @@ class _BookingReviewPageState extends State<BookingReviewPage> {
             color: Color(0xFFFFF3CD),
             child: Padding(
               padding: EdgeInsets.all(14),
-              child: Text(
+              child: TourFlowText(
                 'Capacity, closures, overlaps and travel time are checked again when you confirm.',
               ),
             ),
@@ -106,10 +107,10 @@ class _BookingReviewPageState extends State<BookingReviewPage> {
                 padding: const EdgeInsets.all(14),
                 child: Column(
                   children: [
-                    Text(_error!),
+                    TourFlowText(_error!),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('View alternative slots'),
+                      child: const TourFlowText('View alternative slots'),
                     ),
                   ],
                 ),
@@ -127,7 +128,7 @@ class _BookingReviewPageState extends State<BookingReviewPage> {
                     dimension: 22,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Confirm Booking'),
+                : const TourFlowText('Confirm Booking'),
           ),
         ],
       ),
@@ -145,9 +146,9 @@ class _Row extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(width: 90, child: Text(label)),
+        SizedBox(width: 90, child: TourFlowText(label)),
         Expanded(
-          child: Text(
+          child: TourFlowText(
             value,
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),

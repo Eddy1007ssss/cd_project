@@ -1,31 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../models/support_ticket_models.dart';
+import '../../services/support_ticket_service.dart';
+import '../../widgets/fullscreen_network_image_viewer.dart';
 import '../../widgets/tourflow_widgets.dart';
 
 class StaffSupportTicketArguments {
   const StaffSupportTicketArguments({
+    required this.ticketId,
     this.navigationRole = TourFlowNavigationRole.staff,
-    required this.id,
-    required this.subject,
-    required this.tourist,
-    required this.category,
-    required this.status,
-    required this.priority,
-    required this.submitted,
-    required this.assignee,
-    required this.description,
   });
 
+  final String ticketId;
   final TourFlowNavigationRole navigationRole;
-  final String id;
-  final String subject;
-  final String tourist;
-  final String category;
-  final String status;
-  final String priority;
-  final String submitted;
-  final String assignee;
-  final String description;
 }
 
 class StaffSupportTicketDetailsPage extends StatefulWidget {
@@ -40,11 +27,31 @@ class StaffSupportTicketDetailsPage extends StatefulWidget {
 
 class _StaffSupportTicketDetailsPageState
     extends State<StaffSupportTicketDetailsPage> {
+  final SupportTicketService _service = SupportTicketService();
   final TextEditingController _responseController = TextEditingController();
-  String _status = 'Pending';
-  String _assignee = 'Unassigned';
-  bool _initialized = false;
-  bool _responseSent = false;
+
+  StaffSupportTicketArguments? _arguments;
+  SupportTicketDetailsData? _details;
+  String _status = 'pending';
+  bool _loading = true;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_arguments != null) return;
+    final value = ModalRoute.of(context)?.settings.arguments;
+    if (value is! StaffSupportTicketArguments) {
+      setState(() {
+        _loading = false;
+        _error = 'Support ticket ID is missing.';
+      });
+      return;
+    }
+    _arguments = value;
+    _load();
+  }
 
   @override
   void dispose() {
@@ -52,279 +59,380 @@ class _StaffSupportTicketDetailsPageState
     super.dispose();
   }
 
+  Future<void> _load() async {
+    final id = _arguments?.ticketId;
+    if (id == null) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final details = await _service.fetchTicketDetails(id);
+      if (!mounted) return;
+      setState(() {
+        _details = details;
+        _status = details.ticket.status;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = _message(error);
+      });
+    }
+  }
+
+  Future<void> _sendResponse() async {
+    final text = _responseController.text.trim();
+    if (text.length < 2 || _saving) {
+      if (text.length < 2) _snack('Write a response before sending.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final status = await _service.replyToTicket(
+        _arguments!.ticketId,
+        text,
+      );
+      _responseController.clear();
+      _status = status;
+      await _load();
+      if (mounted) _snack('Response sent to the tourist.');
+    } catch (error) {
+      if (mounted) _snack(_message(error));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _saveStatus() async {
+    if (_saving || _details?.ticket.status == _status) return;
+    setState(() => _saving = true);
+    try {
+      await _service.updateTicketStatus(_arguments!.ticketId, _status);
+      await _load();
+      if (mounted) _snack('Ticket status updated.');
+    } catch (error) {
+      if (mounted) _snack(_message(error));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final routeArguments = ModalRoute.of(context)?.settings.arguments;
-    final ticket = routeArguments is StaffSupportTicketArguments
-        ? routeArguments
-        : const StaffSupportTicketArguments(
-            id: 'TF-SUP-1048',
-            subject: 'Unable to reschedule museum booking',
-            tourist: 'Alex Tan',
-            category: 'Booking Problem',
-            status: 'Pending',
-            priority: 'High',
-            submitted: '12 minutes ago',
-            assignee: 'Unassigned',
-            description:
-                'The new time slot appears available, but the reschedule button does not complete the request.',
-          );
-
-    if (!_initialized) {
-      _status = ticket.status;
-      _assignee = ticket.assignee;
-      _initialized = true;
-    }
-
+    final navigationRole =
+        _arguments?.navigationRole ?? TourFlowNavigationRole.staff;
     return TourFlowPage(
       title: 'Support Ticket Details',
-      role: ticket.navigationRole == TourFlowNavigationRole.administrator
+      role: navigationRole == TourFlowNavigationRole.administrator
           ? 'TOURFLOW · ADMINISTRATOR'
+          : navigationRole == TourFlowNavigationRole.operator
+          ? 'TOURFLOW · OPERATOR'
           : 'TOURFLOW · STAFF',
-      navigationRole: ticket.navigationRole,
+      navigationRole: navigationRole,
       selectedNavigationIndex:
-          ticket.navigationRole == TourFlowNavigationRole.administrator ? 2 : 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ModuleCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        ticket.id,
-                        style: const TextStyle(
-                          color: TourFlowColors.primaryText,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: .6,
-                        ),
+          navigationRole == TourFlowNavigationRole.administrator ? 2 : 0,
+      actions: [
+        IconButton(
+          tooltip: 'Refresh',
+          onPressed: _loading ? null : _load,
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
+      child: _loading
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 60),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : _error != null
+          ? ModuleCard(
+              child: Column(
+                children: [
+                  Text(_error!, textAlign: TextAlign.center),
+                  TextButton(onPressed: _load, child: const Text('Retry')),
+                ],
+              ),
+            )
+          : _buildDetails(),
+    );
+  }
+
+  Widget _buildDetails() {
+    final data = _details!;
+    final ticket = data.ticket;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ModuleCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      ticket.code,
+                      style: const TextStyle(
+                        color: TourFlowColors.primaryText,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    StatusChip(
-                      label: ticket.priority.toUpperCase(),
-                      color: ticket.priority == 'Critical'
-                          ? TourFlowColors.danger
-                          : TourFlowColors.warning,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  ticket.subject,
-                  style: const TextStyle(
-                    color: TourFlowColors.heading,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
                   ),
+                  StatusChip(
+                    label: ticket.priorityLabel.toUpperCase(),
+                    color: ticket.priority == 'urgent'
+                        ? TourFlowColors.danger
+                        : TourFlowColors.warning,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                ticket.subject,
+                style: const TextStyle(
+                  color: TourFlowColors.heading,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
                 ),
-                const SizedBox(height: 9),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 7,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                '${ticket.requesterName} · ${ticket.attractionName}',
+                style: const TextStyle(
+                  color: TourFlowColors.muted,
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                ),
+                child: Row(
                   children: [
-                    _Metadata(
-                      icon: Icons.person_outline_rounded,
-                      text: ticket.tourist,
+                    const Icon(
+                      Icons.translate_rounded,
+                      size: 17,
+                      color: Color(0xFF1D4ED8),
                     ),
-                    _Metadata(
-                      icon: Icons.category_outlined,
-                      text: ticket.category,
-                    ),
-                    _Metadata(
-                      icon: Icons.schedule_rounded,
-                      text: ticket.submitted,
-                    ),
-                  ],
-                ),
-                const Divider(height: 26),
-                const Text(
-                  'Tourist message',
-                  style: TextStyle(
-                    color: TourFlowColors.heading,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  ticket.description,
-                  style: const TextStyle(
-                    color: TourFlowColors.body,
-                    fontSize: 12,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          const SectionTitle('Assignment and status'),
-          const SizedBox(height: 12),
-          ModuleCard(
-            child: Column(
-              children: [
-                DropdownButtonFormField<String>(
-                  initialValue: _assignee,
-                  decoration: InputDecoration(
-                    labelText: 'Assign ticket to',
-                    prefixIcon: const Icon(Icons.support_agent_rounded),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  items:
-                      const [
-                            'Unassigned',
-                            'TourFlow Administrator',
-                            'National Museum Operator',
-                            'Old Town Square Operator',
-                          ]
-                          .map(
-                            (value) => DropdownMenuItem(
-                              value: value,
-                              child: Text(value),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (value) {
-                    if (value != null) setState(() => _assignee = value);
-                  },
-                ),
-                const SizedBox(height: 14),
-                DropdownButtonFormField<String>(
-                  initialValue: _status,
-                  decoration: InputDecoration(
-                    labelText: 'Ticket status',
-                    prefixIcon: const Icon(Icons.flag_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  items: const ['Pending', 'In Progress', 'Resolved']
-                      .map(
-                        (value) =>
-                            DropdownMenuItem(value: value, child: Text(value)),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) setState(() => _status = value);
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          const SectionTitle('Respond to tourist'),
-          const SizedBox(height: 12),
-          ModuleCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: _responseController,
-                  minLines: 4,
-                  maxLines: 7,
-                  decoration: InputDecoration(
-                    hintText:
-                        'Write a clear response or request more information...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.attach_file_rounded),
-                      label: const Text('Attach'),
-                    ),
-                    const Spacer(),
-                    FilledButton.icon(
-                      onPressed: () {
-                        if (_responseController.text.trim().isEmpty) return;
-                        setState(() {
-                          _responseSent = true;
-                          if (_status == 'Pending') _status = 'In Progress';
-                        });
-                        _responseController.clear();
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: TourFlowColors.primary,
-                        foregroundColor: TourFlowColors.primaryText,
-                      ),
-                      icon: const Icon(Icons.send_rounded),
-                      label: const Text('Send Response'),
-                    ),
-                  ],
-                ),
-                if (_responseSent) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDCFCE7),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      'Response sent to the tourist successfully.',
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Submission language:',
                       style: TextStyle(
-                        color: TourFlowColors.success,
-                        fontSize: 12,
+                        color: TourFlowColors.muted,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Ticket updated: $_status · $_assignee'),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        ticket.submissionLanguageLabel,
+                        style: const TextStyle(
+                          color: Color(0xFF1D4ED8),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              style: FilledButton.styleFrom(
-                backgroundColor: TourFlowColors.primary,
-                foregroundColor: TourFlowColors.primaryText,
-                padding: const EdgeInsets.symmetric(vertical: 15),
+              if (ticket.bookingCode != null) ...[
+                const SizedBox(height: 5),
+                Text(
+                  'Booking: ${ticket.bookingCode}',
+                  style: const TextStyle(
+                    color: TourFlowColors.muted,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+              const Divider(height: 25),
+              Text(
+                ticket.description,
+                style: const TextStyle(
+                  color: TourFlowColors.body,
+                  fontSize: 12,
+                  height: 1.5,
+                ),
               ),
-              icon: const Icon(Icons.save_outlined),
-              label: const Text('Save Ticket Update'),
+            ],
+          ),
+        ),
+        if (data.attachments.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const SectionTitle('Complaint photos'),
+          const SizedBox(height: 10),
+          ...data.attachments.map(
+            (attachment) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: ModuleCard(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FullscreenNetworkImageViewer(
+                      imageUrl: attachment.signedUrl,
+                      fileName: attachment.fileName,
+                      heroTag: 'staff-ticket-attachment-${attachment.id}',
+                    ),
+                    const SizedBox(height: 7),
+                    Text(attachment.fileName),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Metadata extends StatelessWidget {
-  const _Metadata({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 15, color: TourFlowColors.muted),
-        const SizedBox(width: 5),
-        Text(
-          text,
-          style: const TextStyle(color: TourFlowColors.muted, fontSize: 10),
+        const SizedBox(height: 16),
+        const SectionTitle('Status'),
+        const SizedBox(height: 10),
+        ModuleCard(
+          child: Column(
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: _status,
+                decoration: const InputDecoration(
+                  labelText: 'Ticket status',
+                  border: OutlineInputBorder(),
+                ),
+                items: const {
+                  'pending': 'Pending',
+                  'in_progress': 'In Progress',
+                  'resolved': 'Resolved',
+                }.entries
+                    .map(
+                      (entry) => DropdownMenuItem(
+                        value: entry.key,
+                        child: Text(entry.value),
+                      ),
+                    )
+                    .toList(),
+                onChanged: _saving
+                    ? null
+                    : (value) => setState(() => _status = value ?? _status),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _saving || ticket.status == _status
+                      ? null
+                      : _saveStatus,
+                  icon: const Icon(Icons.save_outlined),
+                  label: const Text('Save Status'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const SectionTitle('Reply to tourist'),
+        const SizedBox(height: 10),
+        ModuleCard(
+          child: Column(
+            children: [
+              TextField(
+                controller: _responseController,
+                minLines: 3,
+                maxLines: 6,
+                maxLength: 4000,
+                enabled: !_saving,
+                decoration: const InputDecoration(
+                  hintText: 'Write a clear response or request more information…',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _saving ? null : _sendResponse,
+                  icon: const Icon(Icons.send_rounded),
+                  label: const Text('Send Response'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const SectionTitle(
+          'Complete processing history',
+          subtitle: 'Oldest activity appears first.',
+        ),
+        const SizedBox(height: 10),
+        ...data.events.map(
+          (event) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: ModuleCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _eventTitle(event),
+                    style: const TextStyle(
+                      color: TourFlowColors.heading,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${event.actorName} · ${_dateTime(event.createdAt)}',
+                    style: const TextStyle(
+                      color: TourFlowColors.muted,
+                      fontSize: 10,
+                    ),
+                  ),
+                  if (event.message?.isNotEmpty == true) ...[
+                    const SizedBox(height: 7),
+                    Text(
+                      event.message!,
+                      style: const TextStyle(
+                        color: TourFlowColors.body,
+                        fontSize: 12,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
         ),
       ],
     );
   }
+
+  void _snack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+}
+
+String _eventTitle(SupportTicketEvent event) => switch (event.eventType) {
+  'created' => 'Ticket submitted',
+  'status_changed' =>
+    'Status changed to ${supportTicketStatusLabel(event.toStatus)}',
+  'attachment' => 'Attachment added',
+  _ => '${event.actorName} replied',
+};
+
+String _message(Object error) =>
+    error.toString().replaceFirst('Exception: ', '').trim();
+
+String _dateTime(DateTime value) {
+  final day = value.day.toString().padLeft(2, '0');
+  final month = value.month.toString().padLeft(2, '0');
+  final hour = value.hour.toString().padLeft(2, '0');
+  final minute = value.minute.toString().padLeft(2, '0');
+  return '$day/$month/${value.year} $hour:$minute';
 }

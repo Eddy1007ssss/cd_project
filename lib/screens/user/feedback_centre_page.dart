@@ -29,7 +29,7 @@ class FeedbackCentrePage extends StatelessWidget {
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                TourFlowText(
                   'How was your visit?',
                   style: TextStyle(
                     color: Color(0xFF8A5A00),
@@ -38,7 +38,7 @@ class FeedbackCentrePage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 8),
-                Text(
+                TourFlowText(
                   'Your feedback improves crowd planning and attraction quality.',
                   style: TextStyle(
                     color: Color(0xFF475467),
@@ -194,7 +194,7 @@ class _FeedbackMenuCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TourFlowText(
                       title,
                       style: const TextStyle(
                         color: Color(0xFF101828),
@@ -208,7 +208,7 @@ class _FeedbackMenuCard extends StatelessWidget {
 
                     const SizedBox(height: 6),
 
-                    Text(
+                    TourFlowText(
                       subtitle,
                       style: const TextStyle(
                         color: Color(0xFF667085),

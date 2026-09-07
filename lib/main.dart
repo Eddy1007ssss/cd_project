@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'config/supabase.dart';
+import 'l10n/tourflow_localization.dart';
 import 'screens/staff/admin_attraction_review_page.dart';
 import 'screens/staff/admin_user_management_page.dart';
 import 'screens/staff/attraction_configuration_page.dart';
@@ -10,6 +12,7 @@ import 'screens/staff/operator_registration_page.dart';
 import 'screens/staff/resolve_report_page.dart';
 import 'screens/staff/slot_manager_page.dart';
 import 'screens/staff/staff_support_ticket_details_page.dart';
+import 'screens/staff/support_ticket_management_page.dart';
 import 'screens/staff/operator_feedback_page.dart';
 
 import 'screens/user/attraction_details_page.dart' as user;
@@ -63,6 +66,7 @@ import 'screens/staff/admin_sustainability_report_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseConfig.initialize();
+  await TourFlowLocaleController.instance.loadForCurrentUser();
   runApp(const MyApp());
 }
 
@@ -71,9 +75,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return TourFlowLanguageScope(
+      controller: TourFlowLocaleController.instance,
+      child: const _TourFlowMaterialApp(),
+    );
+  }
+}
+
+class _TourFlowMaterialApp extends StatelessWidget {
+  const _TourFlowMaterialApp();
+
+  @override
+  Widget build(BuildContext context) {
+    final localeController = TourFlowLanguageScope.of(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'TourFlow',
+      locale: localeController.locale,
+      supportedLocales: TourFlowLocaleController.supportedLocales,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFFD08B)),
@@ -122,6 +146,10 @@ class MyApp extends StatelessWidget {
             const OperatorRegistrationPage(),
         TourFlowRoutes.adminDashboard: (context) => const AdminNavigationShell(initialIndex: 1),
         TourFlowRoutes.adminSupportTickets: (context) => const AdminNavigationShell(initialIndex: 3),
+        TourFlowRoutes.staffSupportTickets: (_) =>
+            const SupportTicketManagementPage(
+              navigationRole: TourFlowNavigationRole.operator,
+            ),
         OperatorDashboardPage.routeName: (_) => const OperatorNavigationShell(),
         AttractionDetailsPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 1),
@@ -132,8 +160,13 @@ class MyApp extends StatelessWidget {
             const OperatorNavigationShell(initialIndex: 2),
         BookingDetailsPage.routeName: (_) => const BookingDetailsPage(),
         BookingQrPage.routeName: (_) => const BookingQrPage(),
-        ChatSupportPage.routeName: (_) =>
-            const UserNavigationShell(initialIndex: 3),
+        ChatSupportPage.routeName: (context) {
+          final argument = ModalRoute.of(context)?.settings.arguments;
+          return UserNavigationShell(
+            initialIndex: 3,
+            chatConversationId: argument is String ? argument : null,
+          );
+        },
         ChatHistoryPage.routeName: (_) => const ChatHistoryPage(),
         LanguageSettingsPage.routeName: (_) => const LanguageSettingsPage(),
         SupportTicketFormPage.routeName: (_) => const SupportTicketFormPage(),

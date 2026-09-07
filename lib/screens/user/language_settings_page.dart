@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/tourflow_localization.dart';
+import '../../repositories/auth_repository.dart';
+import '../../services/gemini_chat_service.dart';
 import '../../widgets/tourflow_widgets.dart';
 
 class LanguageSettingsPage extends StatefulWidget {
@@ -12,25 +15,75 @@ class LanguageSettingsPage extends StatefulWidget {
 }
 
 class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
-  String _selectedLanguage = 'English';
+  final GeminiChatService _chatService = GeminiChatService();
+
+  String _selectedLanguage = 'en';
+  String _displayName = 'Tourist';
+  String _email = '';
+  bool _isLoading = true;
+  bool _isSaving = false;
 
   static const _languages = [
-    ('English', 'English', 'EN'),
-    ('Bahasa Malaysia', 'Bahasa Malaysia', 'BM'),
-    ('Mandarin', '简体中文', '中文'),
-    ('Japanese', '日本語', '日'),
-    ('Korean', '한국어', '한'),
+    ('en', 'English', 'English', 'EN'),
+    ('ms', 'Bahasa Malaysia', 'Bahasa Malaysia', 'BM'),
+    ('zh', 'Mandarin', '简体中文', '中文'),
+    ('ja', 'Japanese', '日本語', '日'),
+    ('ko', 'Korean', '한국어', '한'),
   ];
 
-  void _saveLanguage() {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = TourFlowLocaleController.instance.languageCode;
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    try {
+      final userContext = await _chatService.getCurrentUserContext();
+      if (!mounted) return;
+      setState(() {
+        _selectedLanguage = TourFlowLocaleController.normalizeLanguageCode(
+          userContext.languageCode,
+        );
+        _displayName = userContext.displayName;
+        _email = userContext.email;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Preferred language changed to $_selectedLanguage.'),
+          content: TourFlowText(error.toString().replaceFirst('Exception: ', '')),
         ),
       );
-    Navigator.pop(context);
+    }
+  }
+
+  Future<void> _saveLanguage() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
+    try {
+      await TourFlowLocaleController.instance.saveLanguageCode(
+        _selectedLanguage,
+      );
+      await AuthRepository().getCurrentProfile();
+      if (!mounted) return;
+      Navigator.pop(
+        context,
+        TourFlowLocaleController.instance.languageName,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TourFlowText(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
   }
 
   @override
@@ -39,57 +92,65 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
       title: 'Language Settings',
       role: 'TOURFLOW · TOURIST',
       selectedNavigationIndex: 3,
-      displayName: 'Alex Tan',
-      email: 'alex@example.com',
+      displayName: _displayName,
+      email: _email,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SectionTitle(
-            'Preferred chatbot language',
+            'Preferred app language',
             subtitle:
-                'TourFlow will automatically translate chatbot responses into your selected language.',
+                'Navigation, pages, system messages and the chatbot will use the same language.',
           ),
           const SizedBox(height: 16),
-          ModuleCard(
-            padding: EdgeInsets.zero,
-            child: RadioGroup<String>(
-              groupValue: _selectedLanguage,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedLanguage = value);
-                }
-              },
-              child: Column(
-                children: _languages.map((language) {
-                  final selected = _selectedLanguage == language.$1;
-                  return RadioListTile<String>(
-                    value: language.$1,
-                    secondary: CircleAvatar(
-                      backgroundColor: selected
-                          ? TourFlowColors.primary
-                          : TourFlowColors.lavender,
-                      foregroundColor: selected
-                          ? TourFlowColors.primaryText
-                          : TourFlowColors.muted,
-                      child: Text(
-                        language.$3,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
+          if (_isLoading)
+            const ModuleCard(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 28),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            )
+          else
+            ModuleCard(
+              padding: EdgeInsets.zero,
+              child: RadioGroup<String>(
+                groupValue: _selectedLanguage,
+                onChanged: (value) {
+                  if (!_isSaving && value != null) {
+                    setState(() => _selectedLanguage = value);
+                  }
+                },
+                child: Column(
+                  children: _languages.map((language) {
+                    final selected = _selectedLanguage == language.$1;
+                    return RadioListTile<String>(
+                      value: language.$1,
+                      secondary: CircleAvatar(
+                        backgroundColor: selected
+                            ? TourFlowColors.primary
+                            : TourFlowColors.lavender,
+                        foregroundColor: selected
+                            ? TourFlowColors.primaryText
+                            : TourFlowColors.muted,
+                        child: TourFlowText(
+                          language.$4,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                    ),
-                    title: Text(
-                      language.$1,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    subtitle: Text(language.$2),
-                    activeColor: TourFlowColors.primaryText,
-                  );
-                }).toList(),
+                      title: TourFlowText(
+                        context.tr(language.$2),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      subtitle: TourFlowText(language.$3),
+                      activeColor: TourFlowColors.primaryText,
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(14),
@@ -97,18 +158,20 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
               color: const Color(0xFFFFF6E8),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
+                const Icon(
                   Icons.info_outline_rounded,
                   color: TourFlowColors.primaryText,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    'Attraction names, addresses and registration codes will remain unchanged to prevent confusion.',
-                    style: TextStyle(
+                  child: TourFlowText(
+                    context.tr(
+                      'The selected language applies to the whole TourFlow app, including navigation, pages, system messages and the chatbot. Attraction names, addresses, booking codes and user-written content remain unchanged.',
+                    ),
+                    style: const TextStyle(
                       color: TourFlowColors.body,
                       fontSize: 12,
                       height: 1.4,
@@ -122,14 +185,22 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: _saveLanguage,
+              onPressed: _isLoading || _isSaving ? null : _saveLanguage,
               style: FilledButton.styleFrom(
                 backgroundColor: TourFlowColors.primary,
                 foregroundColor: TourFlowColors.primaryText,
                 padding: const EdgeInsets.symmetric(vertical: 15),
               ),
-              icon: const Icon(Icons.check_rounded),
-              label: const Text('Save Language'),
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_rounded),
+              label: TourFlowText(
+                context.tr(_isSaving ? 'Saving...' : 'Save Language'),
+              ),
             ),
           ),
         ],

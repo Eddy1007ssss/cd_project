@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cd_project/l10n/tourflow_localization.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../models/module3_models.dart';
@@ -13,11 +14,11 @@ class BookingConfirmationPage extends StatelessWidget {
     final value = ModalRoute.of(context)?.settings.arguments;
     if (value is! TourBooking) {
       return const Scaffold(
-        body: Center(child: Text('Booking confirmation is missing.')),
+        body: Center(child: TourFlowText('Booking confirmation is missing.')),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Booking Confirmed')),
+      appBar: AppBar(title: const TourFlowText('Booking Confirmed')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -28,7 +29,7 @@ class BookingConfirmationPage extends StatelessWidget {
             child: Icon(Icons.check, size: 42),
           ),
           const SizedBox(height: 12),
-          const Text(
+          const TourFlowText(
             'You are registered!',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
@@ -40,7 +41,7 @@ class BookingConfirmationPage extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               child: Column(
                 children: [
-                  Text(
+                  TourFlowText(
                     value.bookingCode,
                     style: const TextStyle(
                       color: Color(0xFF79571E),
@@ -54,16 +55,16 @@ class BookingConfirmationPage extends StatelessWidget {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.place_outlined),
-                    title: Text(value.slot.attractionName),
-                    subtitle: Text(
+                    title: TourFlowText(value.slot.attractionName),
+                    subtitle: TourFlowText(
                       '${shortDate(value.slot.startsAt)} · ${slotTime(value.slot)}',
                     ),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.group_outlined),
-                    title: Text('${value.visitorCount} visitors'),
-                    subtitle: const Text('Please arrive 10 minutes early.'),
+                    title: TourFlowText('${value.visitorCount} visitors'),
+                    subtitle: const TourFlowText('Please arrive 10 minutes early.'),
                   ),
                 ],
               ),
@@ -73,13 +74,13 @@ class BookingConfirmationPage extends StatelessWidget {
           FilledButton(
             onPressed: () =>
                 Navigator.pushNamed(context, BookingHistoryPage.routeName),
-            child: const Text('View Trips'),
+            child: const TourFlowText('View Trips'),
           ),
           TextButton.icon(
             onPressed: () =>
                 Navigator.pushNamed(context, ItineraryPlannerPage.routeName),
             icon: const Icon(Icons.route_outlined),
-            label: const Text('Add to itinerary'),
+            label: const TourFlowText('Add to itinerary'),
           ),
         ],
       ),

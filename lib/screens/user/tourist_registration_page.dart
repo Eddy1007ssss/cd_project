@@ -65,8 +65,8 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
             Icons.check_circle_outline_rounded,
             color: TourFlowColors.success,
           ),
-          title: const Text('Account Created'),
-          content: const Text(
+          title: const TourFlowText('Account Created'),
+          content: const TourFlowText(
             'Your tourist account is ready. Sign in to start planning visits.',
           ),
           actions: [
@@ -79,7 +79,7 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                   (route) => false,
                 );
               },
-              child: const Text('Continue to Sign In'),
+              child: const TourFlowText('Continue to Sign In'),
             ),
           ],
         ),
@@ -102,7 +102,7 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(SnackBar(content: TourFlowText(message)));
   }
 
   String? _required(String? value) =>
@@ -117,7 +117,7 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
         surfaceTintColor: Colors.transparent,
         elevation: 1,
         shadowColor: const Color(0x140F172A),
-        title: const Text(
+        title: const TourFlowText(
           'Sign Up',
           style: TextStyle(
             color: TourFlowColors.heading,
@@ -147,8 +147,8 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                         controller: _fullNameController,
                         validator: _required,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Full Name',
+                        decoration: InputDecoration(
+                          labelText: context.tr('Full Name'),
                           prefixIcon: Icon(Icons.person_outline),
                           border: OutlineInputBorder(),
                         ),
@@ -165,8 +165,8 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                         },
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Email Address',
+                        decoration: InputDecoration(
+                          labelText: context.tr('Email Address'),
                           prefixIcon: Icon(Icons.email_outlined),
                           border: OutlineInputBorder(),
                         ),
@@ -180,30 +180,30 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                             child: DropdownButtonFormField<String>(
                               initialValue: _phoneCountryCode,
                               isExpanded: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Code',
+                              decoration: InputDecoration(
+                                labelText: context.tr('Code'),
                                 border: OutlineInputBorder(),
                               ),
                               items: const [
                                 DropdownMenuItem(
                                   value: '+60',
-                                  child: Text('MY +60'),
+                                  child: TourFlowText('MY +60'),
                                 ),
                                 DropdownMenuItem(
                                   value: '+65',
-                                  child: Text('SG +65'),
+                                  child: TourFlowText('SG +65'),
                                 ),
                                 DropdownMenuItem(
                                   value: '+62',
-                                  child: Text('ID +62'),
+                                  child: TourFlowText('ID +62'),
                                 ),
                                 DropdownMenuItem(
                                   value: '+66',
-                                  child: Text('TH +66'),
+                                  child: TourFlowText('TH +66'),
                                 ),
                                 DropdownMenuItem(
                                   value: '+86',
-                                  child: Text('CN +86'),
+                                  child: TourFlowText('CN +86'),
                                 ),
                               ],
                               onChanged: (value) => setState(
@@ -230,9 +230,9 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
                               ],
-                              decoration: const InputDecoration(
-                                labelText: 'Phone Number',
-                                hintText: '123456789',
+                              decoration: InputDecoration(
+                                labelText: context.tr('Phone Number'),
+                                hintText: context.tr('123456789'),
                                 prefixIcon: Icon(Icons.phone_outlined),
                                 border: OutlineInputBorder(),
                               ),
@@ -249,7 +249,7 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                         obscureText: !_showPassword,
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
-                          labelText: 'Password',
+                          labelText: context.tr('Password'),
                           prefixIcon: const Icon(Icons.lock_outline),
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
@@ -266,18 +266,18 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                       const SizedBox(height: 14),
                       DropdownButtonFormField<String>(
                         initialValue: _preferredLanguage,
-                        decoration: const InputDecoration(
-                          labelText: 'Preferred Language',
+                        decoration: InputDecoration(
+                          labelText: context.tr('Preferred Language'),
                           prefixIcon: Icon(Icons.language_rounded),
                           border: OutlineInputBorder(),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'en', child: Text('English')),
+                          DropdownMenuItem(value: 'en', child: TourFlowText('English')),
                           DropdownMenuItem(
                             value: 'ms',
-                            child: Text('Bahasa Melayu'),
+                            child: TourFlowText('Bahasa Melayu'),
                           ),
-                          DropdownMenuItem(value: 'zh', child: Text('中文')),
+                          DropdownMenuItem(value: 'zh', child: TourFlowText('中文')),
                         ],
                         onChanged: (value) =>
                             setState(() => _preferredLanguage = value ?? 'en'),
@@ -291,7 +291,7 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                         onChanged: (value) {
                           setState(() => _acceptedTerms = value ?? false);
                         },
-                        title: const Text(
+                        title: const TourFlowText(
                           'I agree to the Terms of Service and Privacy Policy.',
                           style: TextStyle(
                             color: TourFlowColors.body,
@@ -316,7 +316,7 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                 onPressed: () {
                   Navigator.pushReplacementNamed(context, SignInPage.routeName);
                 },
-                child: const Text('Already have an account? Sign In'),
+                child: const TourFlowText('Already have an account? Sign In'),
               ),
             ],
           ),

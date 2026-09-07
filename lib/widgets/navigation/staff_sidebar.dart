@@ -47,6 +47,12 @@ const List<TourFlowSidebarItem> operatorSidebarItems = [
     navigationIndex: -1,
     routeName: '/operator-feedback',
   ),
+  TourFlowSidebarItem(
+    label: 'Support Tickets',
+    icon: Icons.support_agent_outlined,
+    navigationIndex: -1,
+    routeName: TourFlowRoutes.staffSupportTickets,
+  ),
 ];
 
 const List<TourFlowSidebarItem> adminSidebarItems = [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cd_project/l10n/tourflow_localization.dart';
 
 import '../../widgets/navigation/user_sidebar.dart';
 import '../../widgets/navigation/navigation_logout.dart';
@@ -35,7 +36,7 @@ class UserHomePage extends StatelessWidget {
         backgroundColor: const Color(0xFFFAF8FF),
         surfaceTintColor: Colors.transparent,
         foregroundColor: const Color(0xFF7A581F),
-        title: const Text(
+        title: const TourFlowText(
           'TourFlow',
           style: TextStyle(
             color: Color(0xFF7A581F),
@@ -45,7 +46,7 @@ class UserHomePage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            tooltip: 'Search',
+            tooltip: context.tr('Search'),
             onPressed: () => _changePage(context, 1),
             icon: const Icon(Icons.search_rounded, size: 22),
           ),
@@ -161,7 +162,7 @@ class _SearchAndCategories extends StatelessWidget {
                     ),
                     SizedBox(width: 12),
                     Expanded(
-                      child: Text(
+                      child: TourFlowText(
                         'Search Kuala Lumpur attractions...',
                         style: TextStyle(
                           color: Color(0xFF6B7280),
@@ -200,7 +201,7 @@ class _SearchAndCategories extends StatelessWidget {
                         : const Color(0xFFEAEDFF),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
+                  child: TourFlowText(
                     categories[index],
                     style: TextStyle(
                       color: selected
@@ -244,7 +245,7 @@ class _SectionHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                TourFlowText(
                   eyebrow,
                   style: const TextStyle(
                     color: Color(0xFF7A581F),
@@ -254,7 +255,7 @@ class _SectionHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
+                TourFlowText(
                   title,
                   style: const TextStyle(
                     color: Color(0xFF131B2E),
@@ -268,7 +269,7 @@ class _SectionHeader extends StatelessWidget {
           if (onViewAll != null)
             TextButton(
               onPressed: onViewAll,
-              child: const Text(
+              child: const TourFlowText(
                 'View all',
                 style: TextStyle(color: Color(0xFF7A581F), fontSize: 12),
               ),
@@ -385,7 +386,7 @@ class _RecommendedCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
+          TourFlowText(
             name,
             style: const TextStyle(
               color: Color(0xFF131B2E),
@@ -402,7 +403,7 @@ class _RecommendedCard extends StatelessWidget {
                 color: Color(0xFF4F4539),
               ),
               const SizedBox(width: 4),
-              Text(
+              TourFlowText(
                 '$distance  •  $category',
                 style: const TextStyle(color: Color(0xFF4F4539), fontSize: 12),
               ),
@@ -456,7 +457,7 @@ class _FeaturedAttractionCard extends StatelessWidget {
               children: [
                 _CrowdBadge(text: 'VERY BUSY', color: Color(0xFFDC2626)),
                 SizedBox(height: 8),
-                Text(
+                TourFlowText(
                   'KL Tower & Eco Park',
                   style: TextStyle(
                     color: Colors.white,
@@ -475,7 +476,7 @@ class _FeaturedAttractionCard extends StatelessWidget {
                     ),
                     SizedBox(width: 4),
                     Expanded(
-                      child: Text(
+                      child: TourFlowText(
                         'Bukit Nanas, KL',
                         style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
@@ -486,7 +487,7 @@ class _FeaturedAttractionCard extends StatelessWidget {
                       color: Color(0xFFFFD166),
                     ),
                     SizedBox(width: 3),
-                    Text(
+                    TourFlowText(
                       '4.8',
                       style: TextStyle(
                         color: Colors.white,
@@ -553,7 +554,7 @@ class _CompactAttractionCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                TourFlowText(
                   name,
                   style: const TextStyle(
                     color: Color(0xFF131B2E),
@@ -570,7 +571,7 @@ class _CompactAttractionCard extends StatelessWidget {
                       color: Color(0xFF4F4539),
                     ),
                     const SizedBox(width: 4),
-                    Text(
+                    TourFlowText(
                       location,
                       style: const TextStyle(
                         color: Color(0xFF4F4539),
@@ -614,7 +615,7 @@ class _RatingBadge extends StatelessWidget {
         children: [
           const Icon(Icons.star_rounded, size: 14, color: Color(0xFFFACC15)),
           const SizedBox(width: 2),
-          Text(
+          TourFlowText(
             rating,
             style: const TextStyle(
               color: Color(0xFF131B2E),
@@ -642,7 +643,7 @@ class _CrowdBadge extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(
+      child: TourFlowText(
         text,
         style: const TextStyle(
           color: Colors.white,
@@ -677,7 +678,7 @@ class _CrowdLevelGuide extends StatelessWidget {
                 color: Color(0xFF4F4539),
               ),
               SizedBox(width: 8),
-              Text(
+              TourFlowText(
                 'CROWD LEVEL GUIDE',
                 style: TextStyle(
                   color: Color(0xFF4F4539),
@@ -740,7 +741,7 @@ class _GuideItem extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 7),
-        Text(
+        TourFlowText(
           text,
           style: const TextStyle(
             color: Color(0xFF131B2E),

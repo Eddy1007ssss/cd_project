@@ -9,9 +9,14 @@ import 'persistent_navigation_shell.dart';
 import 'user_bottom_navigation_bar.dart';
 
 class UserNavigationShell extends StatelessWidget {
-  const UserNavigationShell({this.initialIndex = 0, super.key});
+  const UserNavigationShell({
+    this.initialIndex = 0,
+    this.chatConversationId,
+    super.key,
+  });
 
   final int initialIndex;
+  final String? chatConversationId;
 
   @override
   Widget build(BuildContext context) {
@@ -19,17 +24,20 @@ class UserNavigationShell extends StatelessWidget {
       items: userNavigationItems,
       initialIndex: initialIndex,
       tabBuilders: [
-        (_) => const UserHomePage(),
-        (_) => const AttractionDiscoveryPage(),
-        (_) => const BookingHistoryPage(),
-        (_) => const ChatSupportPage(),
-        (_) => const ProfileSecurityPage(),
+            (_) => const UserHomePage(),
+            (_) => const AttractionDiscoveryPage(),
+            (_) => const BookingHistoryPage(),
+            (_) => ChatSupportPage(
+          conversationId: chatConversationId,
+        ),
+            (_) => const ProfileSecurityPage(),
       ],
-      bottomBarBuilder: (_, selectedIndex, onItemSelected) =>
-          UserBottomNavigationBar(
-            selectedIndex: selectedIndex,
-            onItemSelected: onItemSelected,
-          ),
+      bottomBarBuilder: (_, selectedIndex, onItemSelected) {
+        return UserBottomNavigationBar(
+          selectedIndex: selectedIndex,
+          onItemSelected: onItemSelected,
+        );
+      },
     );
   }
 }
