@@ -22,11 +22,9 @@ class StaffQrScannerPage extends StatefulWidget {
 }
 
 class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
-  final TextEditingController _bookingCodeController =
-  TextEditingController();
+  final _bookingCodeController = TextEditingController();
 
-  final MobileScannerController _scannerController =
-  MobileScannerController(
+  final _scannerController = MobileScannerController(
     autoStart: false,
     formats: const [
       BarcodeFormat.qrCode,
@@ -44,20 +42,12 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
   StaffCheckInGateway get _gateway =>
       widget.gateway ?? EngagementRepository();
 
-  // ============================================================
-  // DISPOSE
-  // ============================================================
-
   @override
   void dispose() {
     _bookingCodeController.dispose();
     _scannerController.dispose();
     super.dispose();
   }
-
-  // ============================================================
-  // OPEN CAMERA
-  // ============================================================
 
   Future<void> _openCamera() async {
     if (_isBusy || _sheetOpen || _cameraOpen) {
@@ -96,10 +86,6 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
     }
   }
 
-  // ============================================================
-  // CLOSE CAMERA
-  // ============================================================
-
   Future<void> _closeCamera() async {
     _acceptingScan = false;
 
@@ -119,10 +105,6 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
       }
     }
   }
-
-  // ============================================================
-  // HANDLE QR DETECTED
-  // ============================================================
 
   Future<void> _handleQrDetected(
       BarcodeCapture capture,
@@ -153,18 +135,6 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
       updateInput: true,
     );
   }
-
-  // ============================================================
-  // VERIFY BOOKING
-  //
-  // updateInput = true
-  // Normal Verify / QR Scan:
-  // booking code may be shown in the input.
-  //
-  // updateInput = false
-  // View button:
-  // refresh booking status but NEVER touch input.
-  // ============================================================
 
   Future<void> _verify({
     String? scannedValue,
@@ -209,13 +179,14 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
         _latestResult = result;
         _latestLookupValue = lookupValue;
 
-        // Only normal Verify / QR scan is allowed
-        // to change the visible input field.
         if (updateInput) {
           final bookingCode = result.bookingCode;
 
-          if (bookingCode != null && bookingCode.isNotEmpty) {
+          if (bookingCode != null &&
+              bookingCode.isNotEmpty) {
             _bookingCodeController.text = bookingCode;
+          } else if (scannedValue != null) {
+            _bookingCodeController.clear();
           }
         }
       });
@@ -226,7 +197,9 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
         return;
       }
 
-      if (error.toString().contains('STAFF_ACCESS_DENIED')) {
+      if (error.toString().contains(
+        'STAFF_ACCESS_DENIED',
+      )) {
         _showMessage(
           'Please sign in using an active Staff account.',
         );
@@ -250,20 +223,19 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
     }
   }
 
-  // ============================================================
-  // CONFIRM CHECK-IN / CHECK-OUT
-  // ============================================================
-
   Future<void> _confirm(
       StaffBookingVerification booking,
       ) async {
     final bookingId = booking.bookingId;
 
-    if (!mounted || bookingId == null || _isBusy) {
+    if (!mounted ||
+        bookingId == null ||
+        _isBusy) {
       return;
     }
 
-    if (!booking.canCheckIn && !booking.canCheckOut) {
+    if (!booking.canCheckIn &&
+        !booking.canCheckOut) {
       return;
     }
 
@@ -287,23 +259,18 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
       }
 
       final succeeded = checkingOut
-          ? result.status == StaffBookingStatus.checkedOut
-          : result.status == StaffBookingStatus.checkedIn;
+          ? result.status ==
+          StaffBookingStatus.checkedOut
+          : result.status ==
+          StaffBookingStatus.checkedIn;
 
       setState(() {
-        // Keep latest result so the bottom card stays visible.
         _latestResult = result;
 
-        // Keep booking code internally so View still works.
-        final bookingCode = result.bookingCode;
-
-        if (bookingCode != null && bookingCode.isNotEmpty) {
-          _latestLookupValue = bookingCode;
+        if (result.bookingCode != null &&
+            result.bookingCode!.isNotEmpty) {
+          _latestLookupValue = result.bookingCode;
         }
-
-        // ====================================================
-        // ONLY SUCCESSFUL CHECK-IN / CHECK-OUT CLEARS INPUT
-        // ====================================================
 
         if (succeeded) {
           _bookingCodeController.clear();
@@ -311,14 +278,14 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
       });
 
       if (succeeded) {
-        FocusScope.of(context).unfocus();
-
         await _showSuccess(
           result,
         );
       } else {
         _showMessage(
-          _statusMessage(result.status),
+          _statusMessage(
+            result.status,
+          ),
         );
       }
     } catch (error) {
@@ -326,9 +293,12 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
         return;
       }
 
-      final action = checkingOut ? 'Check-out' : 'Check-in';
+      final action =
+      checkingOut ? 'Check-out' : 'Check-in';
 
-      if (error.toString().contains('STAFF_ACCESS_DENIED')) {
+      if (error.toString().contains(
+        'STAFF_ACCESS_DENIED',
+      )) {
         _showMessage(
           'Please sign in using an active Staff account.',
         );
@@ -346,10 +316,6 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
       }
     }
   }
-
-  // ============================================================
-  // SHOW VERIFICATION SHEET
-  // ============================================================
 
   Future<void> _showVerification(
       StaffBookingVerification result,
@@ -371,7 +337,8 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
         showDragHandle: true,
         builder: (sheetContext) => _VerificationSheet(
           result: result,
-          onConfirm: result.canCheckIn || result.canCheckOut
+          onConfirm:
+          result.canCheckIn || result.canCheckOut
               ? () {
             Navigator.pop(
               sheetContext,
@@ -390,13 +357,11 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
     }
 
     if (confirmed == true && mounted) {
-      await _confirm(result);
+      await _confirm(
+        result,
+      );
     }
   }
-
-  // ============================================================
-  // SHOW SUCCESS SHEET
-  // ============================================================
 
   Future<void> _showSuccess(
       StaffBookingVerification result,
@@ -406,7 +371,8 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
     }
 
     final checkedOut =
-        result.status == StaffBookingStatus.checkedOut;
+        result.status ==
+            StaffBookingStatus.checkedOut;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -428,9 +394,9 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
                 size: 56,
                 color: TourFlowColors.success,
               ),
-
-              const SizedBox(height: 12),
-
+              const SizedBox(
+                height: 12,
+              ),
               Text(
                 checkedOut
                     ? 'Check-Out Successful'
@@ -440,30 +406,28 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-
-              const SizedBox(height: 8),
-
+              const SizedBox(
+                height: 8,
+              ),
               Text(
                 checkedOut
-                    ? '${result.visitorName ?? 'Visitor'} '
-                    'has been checked out.'
-                    : '${result.visitorName ?? 'Visitor'} '
-                    'has been checked in.',
+                    ? '${result.visitorName ?? 'Visitor'} has been checked out.'
+                    : '${result.visitorName ?? 'Visitor'} has been checked in.',
                 textAlign: TextAlign.center,
               ),
-
               if (checkedOut) ...[
-                const SizedBox(height: 8),
-
+                const SizedBox(
+                  height: 8,
+                ),
                 const Text(
                   'The booking is completed. '
                       'The tourist can now submit feedback.',
                   textAlign: TextAlign.center,
                 ),
               ],
-
-              const SizedBox(height: 16),
-
+              const SizedBox(
+                height: 16,
+              ),
               Text(
                 'Current visitor count: '
                     '${result.currentVisitorCount ?? 0}',
@@ -475,9 +439,9 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-
-              const SizedBox(height: 20),
-
+              const SizedBox(
+                height: 20,
+              ),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -498,10 +462,6 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
     );
   }
 
-  // ============================================================
-  // SHOW MESSAGE
-  // ============================================================
-
   void _showMessage(
       String message,
       ) {
@@ -513,147 +473,134 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: Text(
+            message,
+          ),
         ),
       );
   }
-
-  // ============================================================
-  // BUILD
-  // ============================================================
 
   @override
   Widget build(
       BuildContext context,
       ) {
-    final controlsDisabled = _isBusy || _sheetOpen;
+    final controlsDisabled =
+        _isBusy || _sheetOpen;
 
     return TourFlowPage(
       title: 'Scan QR',
-      role: 'TOURFLOW · STAFF',
-      navigationRole: TourFlowNavigationRole.staff,
-      pageLevel: TourFlowPageLevel.topLevel,
+      role: '',
+      navigationRole:
+      TourFlowNavigationRole.staff,
+      pageLevel:
+      TourFlowPageLevel.topLevel,
       selectedNavigationIndex: 0,
       displayName: 'Check-In Staff',
       email: 'staff@tourflow.com',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment:
+        CrossAxisAlignment.stretch,
         children: [
-          // ====================================================
-          // INTRO
-          // ====================================================
-
-          const ModuleCard(
-            color: Color(0xFFEEF5FF),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Visitor Check-In / Check-Out',
-                  style: TextStyle(
-                    color: Color(0xFF2563EB),
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-
-                SizedBox(height: 6),
-
-                Text(
-                  'Scan a booking QR code or enter its booking code manually.',
-                  style: TextStyle(
-                    color: TourFlowColors.muted,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // ====================================================
-          // CAMERA
-          // ====================================================
-
           Container(
             height: 280,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: const Color(0xFF111827),
-              borderRadius: BorderRadius.circular(16),
+              color: const Color(
+                0xFF111827,
+              ),
+              borderRadius:
+              BorderRadius.circular(
+                16,
+              ),
             ),
             child: _cameraOpen
                 ? Stack(
               fit: StackFit.expand,
               children: [
                 MobileScanner(
-                  controller: _scannerController,
-                  onDetect: _handleQrDetected,
+                  controller:
+                  _scannerController,
+                  onDetect:
+                  _handleQrDetected,
                 ),
-
                 Center(
                   child: Container(
                     width: 190,
                     height: 190,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color(0xFF22C55E),
+                    decoration:
+                    BoxDecoration(
+                      border:
+                      Border.all(
+                        color:
+                        const Color(
+                          0xFF22C55E,
+                        ),
                         width: 4,
                       ),
-                      borderRadius: BorderRadius.circular(
+                      borderRadius:
+                      BorderRadius
+                          .circular(
                         16,
                       ),
                     ),
                   ),
                 ),
-
                 Positioned(
                   right: 10,
                   top: 10,
-                  child: IconButton.filledTonal(
-                    tooltip: 'Close camera',
-                    onPressed: controlsDisabled
+                  child:
+                  IconButton.filledTonal(
+                    tooltip:
+                    'Close camera',
+                    onPressed:
+                    controlsDisabled
                         ? null
                         : _closeCamera,
-                    icon: const Icon(
-                      Icons.close_rounded,
+                    icon:
+                    const Icon(
+                      Icons
+                          .close_rounded,
                     ),
                   ),
                 ),
               ],
             )
                 : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment:
+              MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.qr_code_scanner_rounded,
+                  Icons
+                      .qr_code_scanner_rounded,
                   color: Colors.white,
                   size: 64,
                 ),
-
-                const SizedBox(height: 12),
-
+                const SizedBox(
+                  height: 12,
+                ),
                 const Text(
                   'Scan Tourist QR Code',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 17,
-                    fontWeight: FontWeight.w800,
+                    fontWeight:
+                    FontWeight.w800,
                   ),
                 ),
-
-                const SizedBox(height: 16),
-
+                const SizedBox(
+                  height: 16,
+                ),
                 FilledButton.icon(
                   key: const Key(
                     'open-qr-camera',
                   ),
-                  onPressed: controlsDisabled
+                  onPressed:
+                  controlsDisabled
                       ? null
                       : _openCamera,
                   icon: const Icon(
-                    Icons.camera_alt_outlined,
+                    Icons
+                        .camera_alt_outlined,
                   ),
                   label: const Text(
                     'Open Camera',
@@ -662,80 +609,82 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
               ],
             ),
           ),
-
-          const SizedBox(height: 16),
-
-          // ====================================================
-          // MANUAL BOOKING CODE
-          // ====================================================
-
+          const SizedBox(
+            height: 16,
+          ),
           ModuleCard(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
               children: [
                 const SectionTitle(
                   'Manual Booking Code',
                   subtitle:
                   'Use this when the QR code cannot be scanned.',
                 ),
-
-                const SizedBox(height: 14),
-
+                const SizedBox(
+                  height: 14,
+                ),
                 TextField(
                   key: const Key(
                     'manual-booking-code',
                   ),
-                  controller: _bookingCodeController,
+                  controller:
+                  _bookingCodeController,
                   textCapitalization:
                   TextCapitalization.characters,
-                  enabled: !controlsDisabled,
+                  enabled:
+                  !controlsDisabled,
                   onSubmitted: (_) {
-                    // Verify only.
-                    // DO NOT clear input.
                     _verify(
                       updateInput: true,
                     );
                   },
-                  decoration: const InputDecoration(
-                    labelText: 'Booking code',
-                    hintText: 'e.g. TF-ABC123',
+                  decoration:
+                  const InputDecoration(
+                    labelText:
+                    'Booking code',
+                    hintText:
+                    'e.g. TF-ABC123',
                     prefixIcon: Icon(
-                      Icons.confirmation_number_outlined,
+                      Icons
+                          .confirmation_number_outlined,
                     ),
-                    border: OutlineInputBorder(),
+                    border:
+                    OutlineInputBorder(),
                   ),
                 ),
-
-                const SizedBox(height: 12),
-
+                const SizedBox(
+                  height: 12,
+                ),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton.icon(
+                  child:
+                  FilledButton.icon(
                     key: const Key(
                       'verify-booking',
                     ),
-                    onPressed: controlsDisabled
+                    onPressed:
+                    controlsDisabled
                         ? null
                         : () {
-                      // =================================
-                      // VERIFY BOOKING
-                      //
-                      // Keep Booking Code in input.
-                      // =================================
-
                       _verify(
-                        updateInput: true,
+                        updateInput:
+                        true,
                       );
                     },
                     icon: _isBusy
                         ? const SizedBox.square(
                       dimension: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                      child:
+                      CircularProgressIndicator(
+                        strokeWidth:
+                        2,
                       ),
                     )
                         : const Icon(
-                      Icons.search_rounded,
+                      Icons
+                          .search_rounded,
                     ),
                     label: Text(
                       _isBusy
@@ -747,18 +696,14 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
               ],
             ),
           ),
-
-          // ====================================================
-          // LATEST RESULT
-          // ====================================================
-
           if (_latestResult case final result?) ...[
-            const SizedBox(height: 16),
-
+            const SizedBox(
+              height: 16,
+            ),
             ModuleCard(
               child: ListTile(
-                contentPadding: EdgeInsets.zero,
-
+                contentPadding:
+                EdgeInsets.zero,
                 leading: Icon(
                   _statusIcon(
                     result.status,
@@ -767,42 +712,35 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
                     result.status,
                   ),
                 ),
-
                 title: Text(
                   result.status.label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
+                  style:
+                  const TextStyle(
+                    fontWeight:
+                    FontWeight.w800,
                   ),
                 ),
-
                 subtitle: Text(
                   result.bookingCode ??
                       'No matching booking was found.',
                 ),
-
                 trailing: TextButton(
-                  onPressed: controlsDisabled
+                  onPressed:
+                  controlsDisabled
                       ? null
                       : () {
                     final lookup =
                         _latestLookupValue ??
-                            result.bookingCode;
-
-                    if (lookup == null ||
-                        lookup.trim().isEmpty) {
-                      return;
-                    }
-
-                    // ===============================
-                    // VIEW
-                    //
-                    // Refresh booking details/status,
-                    // but NEVER change input field.
-                    // ===============================
+                            result
+                                .bookingCode ??
+                            _bookingCodeController
+                                .text;
 
                     _verify(
-                      scannedValue: lookup,
-                      updateInput: false,
+                      scannedValue:
+                      lookup,
+                      updateInput:
+                      false,
                     );
                   },
                   child: const Text(
@@ -817,10 +755,6 @@ class _StaffQrScannerPageState extends State<StaffQrScannerPage> {
     );
   }
 }
-
-// ============================================================
-// VERIFICATION SHEET
-// ============================================================
 
 class _VerificationSheet extends StatelessWidget {
   const _VerificationSheet({
@@ -837,14 +771,16 @@ class _VerificationSheet extends StatelessWidget {
       ) {
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
+        padding:
+        const EdgeInsets.fromLTRB(
           24,
           4,
           24,
           28,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment:
+          CrossAxisAlignment.stretch,
           children: [
             Icon(
               _statusIcon(
@@ -855,9 +791,9 @@ class _VerificationSheet extends StatelessWidget {
               ),
               size: 48,
             ),
-
-            const SizedBox(height: 10),
-
+            const SizedBox(
+              height: 10,
+            ),
             Text(
               result.status.label,
               key: Key(
@@ -866,45 +802,43 @@ class _VerificationSheet extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.w800,
+                fontWeight:
+                FontWeight.w800,
               ),
             ),
-
-            const SizedBox(height: 6),
-
+            const SizedBox(
+              height: 6,
+            ),
             Text(
               _statusMessage(
                 result.status,
               ),
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: TourFlowColors.muted,
+                color:
+                TourFlowColors.muted,
               ),
             ),
-
             if (result.hasBookingDetails) ...[
-              const SizedBox(height: 20),
-
+              const SizedBox(
+                height: 20,
+              ),
               _DetailRow(
                 'Booking',
                 result.bookingCode ?? '-',
               ),
-
               _DetailRow(
                 'Visitor',
                 result.visitorName ?? '-',
               ),
-
               _DetailRow(
                 'Party size',
                 '${result.visitorCount ?? 0} visitor(s)',
               ),
-
               _DetailRow(
                 'Attraction',
                 result.attractionName ?? '-',
               ),
-
               _DetailRow(
                 'Slot',
                 _slotLabel(
@@ -912,8 +846,8 @@ class _VerificationSheet extends StatelessWidget {
                   result,
                 ),
               ),
-
-              if (result.checkedInAt != null)
+              if (result.checkedInAt !=
+                  null)
                 _DetailRow(
                   'Check-in',
                   _dateTimeLabel(
@@ -921,8 +855,8 @@ class _VerificationSheet extends StatelessWidget {
                     result.checkedInAt!,
                   ),
                 ),
-
-              if (result.checkedOutAt != null)
+              if (result.checkedOutAt !=
+                  null)
                 _DetailRow(
                   'Check-out',
                   _dateTimeLabel(
@@ -931,10 +865,10 @@ class _VerificationSheet extends StatelessWidget {
                   ),
                 ),
             ],
-
             if (onConfirm != null) ...[
-              const SizedBox(height: 20),
-
+              const SizedBox(
+                height: 20,
+              ),
               FilledButton.icon(
                 key: Key(
                   result.canCheckOut
@@ -945,7 +879,8 @@ class _VerificationSheet extends StatelessWidget {
                 icon: Icon(
                   result.canCheckOut
                       ? Icons.logout_rounded
-                      : Icons.how_to_reg_rounded,
+                      : Icons
+                      .how_to_reg_rounded,
                 ),
                 label: Text(
                   result.canCheckOut
@@ -961,10 +896,6 @@ class _VerificationSheet extends StatelessWidget {
   }
 }
 
-// ============================================================
-// DETAIL ROW
-// ============================================================
-
 class _DetailRow extends StatelessWidget {
   const _DetailRow(
       this.label,
@@ -979,27 +910,30 @@ class _DetailRow extends StatelessWidget {
       BuildContext context,
       ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
+      padding:
+      const EdgeInsets.symmetric(
         vertical: 7,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 90,
             child: Text(
               label,
               style: const TextStyle(
-                color: TourFlowColors.muted,
+                color:
+                TourFlowColors.muted,
               ),
             ),
           ),
-
           Expanded(
             child: Text(
               value,
               style: const TextStyle(
-                fontWeight: FontWeight.w700,
+                fontWeight:
+                FontWeight.w700,
               ),
             ),
           ),
@@ -1009,10 +943,6 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-// ============================================================
-// STATUS COLOR
-// ============================================================
-
 Color _statusColor(
     StaffBookingStatus status,
     ) =>
@@ -1021,17 +951,11 @@ Color _statusColor(
       StaffBookingStatus.checkedIn ||
       StaffBookingStatus.checkedOut =>
       TourFlowColors.success,
-
       StaffBookingStatus.wrongSlot ||
       StaffBookingStatus.alreadyUsed =>
       TourFlowColors.warning,
-
       _ => TourFlowColors.danger,
     };
-
-// ============================================================
-// STATUS ICON
-// ============================================================
 
 IconData _statusIcon(
     StaffBookingStatus status,
@@ -1039,29 +963,19 @@ IconData _statusIcon(
     switch (status) {
       StaffBookingStatus.valid =>
       Icons.verified_rounded,
-
       StaffBookingStatus.checkedIn =>
       Icons.how_to_reg_rounded,
-
       StaffBookingStatus.checkedOut =>
       Icons.logout_rounded,
-
       StaffBookingStatus.alreadyUsed =>
       Icons.task_alt_rounded,
-
       StaffBookingStatus.wrongAttraction =>
       Icons.wrong_location_rounded,
-
       StaffBookingStatus.wrongSlot =>
       Icons.schedule_rounded,
-
       StaffBookingStatus.invalid =>
       Icons.cancel_rounded,
     };
-
-// ============================================================
-// STATUS MESSAGE
-// ============================================================
 
 String _statusMessage(
     StaffBookingStatus status,
@@ -1069,41 +983,35 @@ String _statusMessage(
     switch (status) {
       StaffBookingStatus.valid =>
       'This booking is ready for check-in.',
-
       StaffBookingStatus.invalid =>
       'This booking code is invalid or inactive.',
-
       StaffBookingStatus.alreadyUsed =>
       'This booking has already been used. Verify it again.',
-
       StaffBookingStatus.wrongAttraction =>
       'This booking does not belong to your staff organisation.',
-
       StaffBookingStatus.wrongSlot =>
       'Check-in is unavailable. Check the visit time, '
           'slot status, closures and remaining attraction capacity.',
-
       StaffBookingStatus.checkedIn =>
       'The visitors are currently checked in. '
           'Confirm check-out when the whole party leaves.',
-
       StaffBookingStatus.checkedOut =>
       'This visit has already been checked out. '
           'No further check-in or check-out is allowed.',
     };
 
-// ============================================================
-// SLOT LABEL
-// ============================================================
-
 String _slotLabel(
     BuildContext context,
     StaffBookingVerification verification,
     ) {
-  final startsAt = verification.startsAt;
-  final endsAt = verification.endsAt;
+  final startsAt =
+      verification.startsAt;
 
-  if (startsAt == null || endsAt == null) {
+  final endsAt =
+      verification.endsAt;
+
+  if (startsAt == null ||
+      endsAt == null) {
     return '-';
   }
 
@@ -1111,21 +1019,22 @@ String _slotLabel(
       '${_dateTimeLabel(context, endsAt)}';
 }
 
-// ============================================================
-// DATE TIME LABEL
-// ============================================================
-
 String _dateTimeLabel(
     BuildContext context,
     DateTime value,
     ) {
-  final localValue = value.toLocal();
+  final localValue =
+  value.toLocal();
 
   final localizations =
-  MaterialLocalizations.of(context);
+  MaterialLocalizations.of(
+    context,
+  );
 
   return '${localizations.formatShortDate(localValue)} '
       '${localizations.formatTimeOfDay(
-    TimeOfDay.fromDateTime(localValue),
+    TimeOfDay.fromDateTime(
+      localValue,
+    ),
   )}';
 }

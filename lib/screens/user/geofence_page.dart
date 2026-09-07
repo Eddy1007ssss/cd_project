@@ -16,13 +16,19 @@ class GeofencePage extends StatefulWidget {
   static const routeName = '/geofence';
 
   @override
-  State<GeofencePage> createState() => _GeofencePageState();
+  State<GeofencePage> createState() =>
+      _GeofencePageState();
 }
 
 class _GeofencePageState extends State<GeofencePage> {
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final GeofenceService _geofenceService = GeofenceService();
-  final MapController _mapController = MapController();
+  final SupabaseClient _supabase =
+      Supabase.instance.client;
+
+  final GeofenceService _geofenceService =
+  GeofenceService();
+
+  final MapController _mapController =
+  MapController();
 
   StreamSubscription<Position>? _positionSubscription;
 
@@ -37,18 +43,18 @@ class _GeofencePageState extends State<GeofencePage> {
 
   String? _error;
 
-  // ============================================================
-  // INITIALIZE
-  // ============================================================
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    if (_initialized) return;
+    if (_initialized) {
+      return;
+    }
+
     _initialized = true;
 
-    final arguments = ModalRoute.of(context)?.settings.arguments;
+    final arguments =
+        ModalRoute.of(context)?.settings.arguments;
 
     if (arguments is! TourBooking) {
       setState(() {
@@ -64,14 +70,12 @@ class _GeofencePageState extends State<GeofencePage> {
     _load();
   }
 
-  // ============================================================
-  // LOAD ATTRACTION + CURRENT LOCATION
-  // ============================================================
-
   Future<void> _load() async {
     final booking = _booking;
 
-    if (booking == null) return;
+    if (booking == null) {
+      return;
+    }
 
     setState(() {
       _loading = true;
@@ -79,11 +83,13 @@ class _GeofencePageState extends State<GeofencePage> {
     });
 
     try {
-      // Get attraction_id from the booking slot.
       final slotRow = await _supabase
           .from('attraction_slots')
           .select('attraction_id')
-          .eq('id', booking.slot.id)
+          .eq(
+        'id',
+        booking.slot.id,
+      )
           .single();
 
       final attractionId =
@@ -96,11 +102,6 @@ class _GeofencePageState extends State<GeofencePage> {
         );
       }
 
-      // Get attraction map information.
-      //
-      // This works for BOTH:
-      // 1. geofence attractions
-      // 2. staff_scan attractions
       final attractionRow = await _supabase
           .from('attractions')
           .select(
@@ -116,7 +117,10 @@ class _GeofencePageState extends State<GeofencePage> {
             'geofence_entry_dwell_seconds, '
             'geofence_exit_dwell_seconds',
       )
-          .eq('id', attractionId)
+          .eq(
+        'id',
+        attractionId,
+      )
           .single();
 
       final attraction =
@@ -127,10 +131,11 @@ class _GeofencePageState extends State<GeofencePage> {
       );
 
       final position =
-      await _geofenceService
-          .getCurrentPosition();
+      await _geofenceService.getCurrentPosition();
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         _attraction = attraction;
@@ -140,18 +145,18 @@ class _GeofencePageState extends State<GeofencePage> {
 
       await _startLocationUpdates();
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         _loading = false;
-        _error = _mapErrorMessage(error);
+        _error = _mapErrorMessage(
+          error,
+        );
       });
     }
   }
-
-  // ============================================================
-  // LIVE USER LOCATION
-  // ============================================================
 
   Future<void> _startLocationUpdates() async {
     await _positionSubscription?.cancel();
@@ -167,29 +172,35 @@ class _GeofencePageState extends State<GeofencePage> {
           locationSettings: locationSettings,
         ).listen(
               (position) {
-            if (!mounted) return;
+            if (!mounted) {
+              return;
+            }
 
             setState(() {
               _position = position;
               _error = null;
             });
           },
-          onError: (Object error) {
-            if (!mounted) return;
+          onError: (
+              Object error,
+              ) {
+            if (!mounted) {
+              return;
+            }
 
             setState(() {
-              _error = _mapErrorMessage(error);
+              _error = _mapErrorMessage(
+                error,
+              );
             });
           },
         );
   }
 
-  // ============================================================
-  // REFRESH LOCATION
-  // ============================================================
-
   Future<void> _refreshLocation() async {
-    if (_refreshing) return;
+    if (_refreshing) {
+      return;
+    }
 
     setState(() {
       _refreshing = true;
@@ -197,20 +208,25 @@ class _GeofencePageState extends State<GeofencePage> {
 
     try {
       final position =
-      await _geofenceService
-          .getCurrentPosition();
+      await _geofenceService.getCurrentPosition();
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         _position = position;
         _error = null;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
-        _error = _mapErrorMessage(error);
+        _error = _mapErrorMessage(
+          error,
+        );
       });
     } finally {
       if (mounted) {
@@ -220,10 +236,6 @@ class _GeofencePageState extends State<GeofencePage> {
       }
     }
   }
-
-  // ============================================================
-  // DISTANCE
-  // ============================================================
 
   double? get _distance {
     final attraction = _attraction;
@@ -256,10 +268,6 @@ class _GeofencePageState extends State<GeofencePage> {
     return '${(distance / 1000).toStringAsFixed(2)} km';
   }
 
-  // ============================================================
-  // GEOFENCE STATUS
-  // ============================================================
-
   String get _geofenceStatus {
     final attraction = _attraction;
     final position = _position;
@@ -286,9 +294,9 @@ class _GeofencePageState extends State<GeofencePage> {
       return 'Geofence configuration unavailable';
     }
 
-    final accuracy = position.accuracy;
+    final accuracy =
+        position.accuracy;
 
-    // Same safe entry rule as automatic check-in.
     final safelyInside =
         distance + accuracy <= entryRadius;
 
@@ -296,7 +304,6 @@ class _GeofencePageState extends State<GeofencePage> {
       return 'Inside Entry Geofence';
     }
 
-    // Same safe exit rule as automatic check-out.
     final safelyOutside =
         distance - accuracy > exitRadius;
 
@@ -311,22 +318,32 @@ class _GeofencePageState extends State<GeofencePage> {
     final attraction = _attraction;
 
     if (attraction == null) {
-      return const Color(0xFF6B7280);
+      return const Color(
+        0xFF6B7280,
+      );
     }
 
     if (!attraction.usesGeofence) {
-      return const Color(0xFF2563EB);
+      return const Color(
+        0xFF2563EB,
+      );
     }
 
     switch (_geofenceStatus) {
       case 'Inside Entry Geofence':
-        return const Color(0xFF15803D);
+        return const Color(
+          0xFF15803D,
+        );
 
       case 'Outside Geofence':
-        return const Color(0xFFB91C1C);
+        return const Color(
+          0xFFB91C1C,
+        );
 
       default:
-        return const Color(0xFFB45309);
+        return const Color(
+          0xFFB45309,
+        );
     }
   }
 
@@ -353,14 +370,12 @@ class _GeofencePageState extends State<GeofencePage> {
     }
   }
 
-  // ============================================================
-  // MAP CONTROLS
-  // ============================================================
-
   void _goToAttraction() {
     final attraction = _attraction;
 
-    if (attraction == null) return;
+    if (attraction == null) {
+      return;
+    }
 
     _mapController.move(
       LatLng(
@@ -374,7 +389,9 @@ class _GeofencePageState extends State<GeofencePage> {
   void _goToMyLocation() {
     final position = _position;
 
-    if (position == null) return;
+    if (position == null) {
+      return;
+    }
 
     _mapController.move(
       LatLng(
@@ -385,33 +402,23 @@ class _GeofencePageState extends State<GeofencePage> {
     );
   }
 
-  // ============================================================
-  // DISPOSE
-  // ============================================================
-
   @override
   void dispose() {
     _positionSubscription?.cancel();
 
-    // IMPORTANT:
-    // Do not dispose GeofenceService here.
-    //
-    // Automatic check-in/check-out may still
-    // be running elsewhere in the app.
-
     super.dispose();
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     return TourFlowPage(
       title: 'Attraction Map',
-      role: 'TOURIST',
+      role: '',
+      pageLevel: TourFlowPageLevel.secondary,
       selectedNavigationIndex: 2,
+      showMenuButton: false,
       child: _buildContent(),
     );
   }
@@ -420,7 +427,9 @@ class _GeofencePageState extends State<GeofencePage> {
     if (_loading) {
       return const Center(
         child: Padding(
-          padding: EdgeInsets.all(30),
+          padding: EdgeInsets.all(
+            30,
+          ),
           child: CircularProgressIndicator(),
         ),
       );
@@ -436,10 +445,13 @@ class _GeofencePageState extends State<GeofencePage> {
               'Unable to Load Map',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
+                fontWeight:
+                FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
             Text(
               _error ??
                   'Attraction location is unavailable.',
@@ -449,16 +461,23 @@ class _GeofencePageState extends State<GeofencePage> {
       );
     }
 
-    final booking = _booking!;
-    final attraction = _attraction!;
-    final position = _position;
+    final booking =
+    _booking!;
 
-    final attractionPoint = LatLng(
+    final attraction =
+    _attraction!;
+
+    final position =
+        _position;
+
+    final attractionPoint =
+    LatLng(
       attraction.latitude,
       attraction.longitude,
     );
 
-    final touristPoint = position == null
+    final touristPoint =
+    position == null
         ? null
         : LatLng(
       position.latitude,
@@ -469,10 +488,6 @@ class _GeofencePageState extends State<GeofencePage> {
       crossAxisAlignment:
       CrossAxisAlignment.stretch,
       children: [
-        // ======================================================
-        // ATTRACTION INFORMATION
-        // ======================================================
-
         ModuleCard(
           child: Column(
             crossAxisAlignment:
@@ -482,13 +497,19 @@ class _GeofencePageState extends State<GeofencePage> {
                 children: [
                   const Icon(
                     Icons.place_rounded,
-                    color: Color(0xFF79571E),
+                    color:
+                    Color(
+                      0xFF79571E,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(
+                    width: 8,
+                  ),
                   Expanded(
                     child: Text(
                       attraction.name,
-                      style: const TextStyle(
+                      style:
+                      const TextStyle(
                         fontSize: 18,
                         fontWeight:
                         FontWeight.w800,
@@ -498,17 +519,27 @@ class _GeofencePageState extends State<GeofencePage> {
                 ],
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(
+                height: 8,
+              ),
 
               Text(
                 'Booking ${booking.bookingCode}',
-                style: const TextStyle(
-                  color: Color(0xFF6B7280),
+                style:
+                const TextStyle(
+                  color:
+                  Color(
+                    0xFF6B7280,
+                  ),
                 ),
               ),
 
-              if (attraction.address.isNotEmpty) ...[
-                const SizedBox(height: 8),
+              if (attraction
+                  .address.isNotEmpty) ...[
+                const SizedBox(
+                  height: 8,
+                ),
+
                 Row(
                   crossAxisAlignment:
                   CrossAxisAlignment.start,
@@ -516,15 +547,25 @@ class _GeofencePageState extends State<GeofencePage> {
                     const Icon(
                       Icons.location_on_outlined,
                       size: 18,
-                      color: Color(0xFF6B7280),
+                      color:
+                      Color(
+                        0xFF6B7280,
+                      ),
                     ),
-                    const SizedBox(width: 6),
+
+                    const SizedBox(
+                      width: 6,
+                    ),
+
                     Expanded(
                       child: Text(
                         attraction.address,
-                        style: const TextStyle(
+                        style:
+                        const TextStyle(
                           color:
-                          Color(0xFF6B7280),
+                          Color(
+                            0xFF6B7280,
+                          ),
                         ),
                       ),
                     ),
@@ -532,7 +573,9 @@ class _GeofencePageState extends State<GeofencePage> {
                 ),
               ],
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
               Container(
                 padding:
@@ -540,22 +583,37 @@ class _GeofencePageState extends State<GeofencePage> {
                   horizontal: 10,
                   vertical: 6,
                 ),
-                decoration: BoxDecoration(
-                  color: attraction.usesGeofence
-                      ? const Color(0xFFEAF7ED)
-                      : const Color(0xFFEFF6FF),
+                decoration:
+                BoxDecoration(
+                  color:
+                  attraction.usesGeofence
+                      ? const Color(
+                    0xFFEAF7ED,
+                  )
+                      : const Color(
+                    0xFFEFF6FF,
+                  ),
                   borderRadius:
-                  BorderRadius.circular(20),
+                  BorderRadius.circular(
+                    20,
+                  ),
                 ),
                 child: Text(
                   attraction.usesGeofence
                       ? 'Automatic Geofence Entry'
                       : 'Staff QR Verification',
-                  style: TextStyle(
-                    color: attraction.usesGeofence
-                        ? const Color(0xFF15803D)
-                        : const Color(0xFF2563EB),
-                    fontWeight: FontWeight.w700,
+                  style:
+                  TextStyle(
+                    color:
+                    attraction.usesGeofence
+                        ? const Color(
+                      0xFF15803D,
+                    )
+                        : const Color(
+                      0xFF2563EB,
+                    ),
+                    fontWeight:
+                    FontWeight.w700,
                   ),
                 ),
               ),
@@ -563,33 +621,29 @@ class _GeofencePageState extends State<GeofencePage> {
           ),
         ),
 
-        const SizedBox(height: 14),
-
-        // ======================================================
-        // MAP
-        // ======================================================
+        const SizedBox(
+          height: 14,
+        ),
 
         ClipRRect(
           borderRadius:
-          BorderRadius.circular(16),
+          BorderRadius.circular(
+            16,
+          ),
           child: SizedBox(
             height: 430,
             child: FlutterMap(
-              mapController: _mapController,
-
-              options: MapOptions(
+              mapController:
+              _mapController,
+              options:
+              MapOptions(
                 initialCenter:
                 attractionPoint,
                 initialZoom: 16,
                 minZoom: 3,
                 maxZoom: 19,
               ),
-
               children: [
-                // ------------------------------------------------
-                // OPENSTREETMAP
-                // ------------------------------------------------
-
                 TileLayer(
                   urlTemplate:
                   'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -597,23 +651,20 @@ class _GeofencePageState extends State<GeofencePage> {
                   'com.example.cd_project',
                 ),
 
-                // ------------------------------------------------
-                // GEOFENCE CIRCLES
-                //
-                // ONLY show these for geofence attractions.
-                // Staff scan attractions will NOT have circles.
-                // ------------------------------------------------
-
                 if (attraction.usesGeofence &&
-                    attraction.exitRadiusM != null)
+                    attraction.exitRadiusM !=
+                        null)
                   CircleLayer(
                     circles: [
                       CircleMarker(
-                        point: attractionPoint,
+                        point:
+                        attractionPoint,
                         radius:
                         attraction.exitRadiusM!,
-                        useRadiusInMeter: true,
-                        color: const Color(
+                        useRadiusInMeter:
+                        true,
+                        color:
+                        const Color(
                           0xFFF59E0B,
                         ).withValues(
                           alpha: 0.08,
@@ -622,21 +673,26 @@ class _GeofencePageState extends State<GeofencePage> {
                         const Color(
                           0xFFF59E0B,
                         ),
-                        borderStrokeWidth: 2,
+                        borderStrokeWidth:
+                        2,
                       ),
                     ],
                   ),
 
                 if (attraction.usesGeofence &&
-                    attraction.entryRadiusM != null)
+                    attraction.entryRadiusM !=
+                        null)
                   CircleLayer(
                     circles: [
                       CircleMarker(
-                        point: attractionPoint,
+                        point:
+                        attractionPoint,
                         radius:
                         attraction.entryRadiusM!,
-                        useRadiusInMeter: true,
-                        color: const Color(
+                        useRadiusInMeter:
+                        true,
+                        color:
+                        const Color(
                           0xFF16A34A,
                         ).withValues(
                           alpha: 0.15,
@@ -645,24 +701,21 @@ class _GeofencePageState extends State<GeofencePage> {
                         const Color(
                           0xFF15803D,
                         ),
-                        borderStrokeWidth: 2,
+                        borderStrokeWidth:
+                        2,
                       ),
                     ],
                   ),
 
-                // ------------------------------------------------
-                // MARKERS
-                // ------------------------------------------------
-
                 MarkerLayer(
                   markers: [
-                    // Attraction marker
                     Marker(
                       point:
                       attractionPoint,
                       width: 58,
                       height: 58,
-                      child: const _MapPin(
+                      child:
+                      const _MapPin(
                         icon:
                         Icons.place_rounded,
                         background:
@@ -674,16 +727,17 @@ class _GeofencePageState extends State<GeofencePage> {
                       ),
                     ),
 
-                    // Tourist marker
-                    if (touristPoint != null)
+                    if (touristPoint !=
+                        null)
                       Marker(
                         point:
                         touristPoint,
                         width: 58,
                         height: 58,
-                        child: const _MapPin(
-                          icon:
-                          Icons.person_pin_circle,
+                        child:
+                        const _MapPin(
+                          icon: Icons
+                              .person_pin_circle,
                           background:
                           Color(
                             0xFF2563EB,
@@ -694,10 +748,6 @@ class _GeofencePageState extends State<GeofencePage> {
                       ),
                   ],
                 ),
-
-                // ------------------------------------------------
-                // OSM ATTRIBUTION
-                // ------------------------------------------------
 
                 const RichAttributionWidget(
                   attributions: [
@@ -711,39 +761,45 @@ class _GeofencePageState extends State<GeofencePage> {
           ),
         ),
 
-        const SizedBox(height: 10),
-
-        // ======================================================
-        // MAP CONTROLS
-        // ======================================================
+        const SizedBox(
+          height: 10,
+        ),
 
         Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
+              child:
+              OutlinedButton.icon(
                 onPressed:
                 _goToAttraction,
-                icon: const Icon(
+                icon:
+                const Icon(
                   Icons.place_outlined,
                 ),
-                label: const Text(
+                label:
+                const Text(
                   'Attraction',
                 ),
               ),
             ),
 
-            const SizedBox(width: 10),
+            const SizedBox(
+              width: 10,
+            ),
 
             Expanded(
-              child: OutlinedButton.icon(
+              child:
+              OutlinedButton.icon(
                 onPressed:
                 position == null
                     ? null
                     : _goToMyLocation,
-                icon: const Icon(
+                icon:
+                const Icon(
                   Icons.my_location_rounded,
                 ),
-                label: const Text(
+                label:
+                const Text(
                   'My Location',
                 ),
               ),
@@ -751,11 +807,9 @@ class _GeofencePageState extends State<GeofencePage> {
           ],
         ),
 
-        const SizedBox(height: 14),
-
-        // ======================================================
-        // DISTANCE
-        // ======================================================
+        const SizedBox(
+          height: 14,
+        ),
 
         ModuleCard(
           child: Column(
@@ -767,12 +821,17 @@ class _GeofencePageState extends State<GeofencePage> {
                   Icon(
                     Icons.route_outlined,
                     color:
-                    Color(0xFF79571E),
+                    Color(
+                      0xFF79571E,
+                    ),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(
+                    width: 8,
+                  ),
                   Text(
                     'Distance to Attraction',
-                    style: TextStyle(
+                    style:
+                    TextStyle(
                       fontWeight:
                       FontWeight.w700,
                     ),
@@ -780,39 +839,26 @@ class _GeofencePageState extends State<GeofencePage> {
                 ],
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
               Text(
                 _distanceText,
-                style: const TextStyle(
+                style:
+                const TextStyle(
                   fontSize: 30,
                   fontWeight:
                   FontWeight.w900,
                 ),
               ),
-
-              if (position != null) ...[
-                const SizedBox(height: 5),
-
-                Text(
-                  'GPS accuracy: ±'
-                      '${position.accuracy.toStringAsFixed(0)} m',
-                  style: const TextStyle(
-                    color:
-                    Color(0xFF6B7280),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
             ],
           ),
         ),
 
-        const SizedBox(height: 12),
-
-        // ======================================================
-        // ENTRY METHOD / STATUS
-        // ======================================================
+        const SizedBox(
+          height: 12,
+        ),
 
         ModuleCard(
           child: Row(
@@ -821,11 +867,14 @@ class _GeofencePageState extends State<GeofencePage> {
             children: [
               Icon(
                 _statusIcon,
-                color: _statusColor,
+                color:
+                _statusColor,
                 size: 30,
               ),
 
-              const SizedBox(width: 12),
+              const SizedBox(
+                width: 12,
+              ),
 
               Expanded(
                 child: Column(
@@ -836,18 +885,25 @@ class _GeofencePageState extends State<GeofencePage> {
                       attraction.usesGeofence
                           ? 'Current Geofence Status'
                           : 'Entry Method',
-                      style: const TextStyle(
+                      style:
+                      const TextStyle(
                         color:
-                        Color(0xFF6B7280),
+                        Color(
+                          0xFF6B7280,
+                        ),
                       ),
                     ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(
+                      height: 4,
+                    ),
 
                     Text(
                       _geofenceStatus,
-                      style: TextStyle(
-                        color: _statusColor,
+                      style:
+                      TextStyle(
+                        color:
+                        _statusColor,
                         fontSize: 18,
                         fontWeight:
                         FontWeight.w800,
@@ -856,15 +912,18 @@ class _GeofencePageState extends State<GeofencePage> {
 
                     if (!attraction
                         .usesGeofence) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(
+                        height: 6,
+                      ),
 
                       const Text(
-                        'Show your booking QR code '
-                            'to Staff for check-in and '
-                            'check-out.',
-                        style: TextStyle(
+                        'Show your QR code to Staff for check-in and check-out.',
+                        style:
+                        TextStyle(
                           color:
-                          Color(0xFF6B7280),
+                          Color(
+                            0xFF6B7280,
+                          ),
                           height: 1.4,
                         ),
                       ),
@@ -876,149 +935,158 @@ class _GeofencePageState extends State<GeofencePage> {
           ),
         ),
 
-        // ======================================================
-        // GEOFENCE DETAILS
-        //
-        // ONLY geofence attractions show this.
-        // ======================================================
-
-        if (attraction.usesGeofence) ...[
-          const SizedBox(height: 12),
+        if (attraction
+            .usesGeofence) ...[
+          const SizedBox(
+            height: 12,
+          ),
 
           ModuleCard(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _InfoRow(
-                  label: 'Entry Radius',
-                  value:
-                  '${attraction.entryRadiusM?.toStringAsFixed(0) ?? '-'} m',
+                const Text(
+                  'Required Time For Check-In and Check-Out',
+                  style: TextStyle(
+                    color: TourFlowColors.heading,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-
-                const Divider(),
-
+                const SizedBox(height: 12),
                 _InfoRow(
-                  label: 'Auto Check-In',
-                  value: attraction
-                      .entryDwellSeconds ==
-                      null
+                  label: 'Check-In',
+                  value: attraction.entryDwellSeconds == null
                       ? '-'
-                      : '${attraction.entryDwellSeconds} seconds',
+                      : '${attraction.entryDwellSeconds}s',
                 ),
-
                 const Divider(),
-
                 _InfoRow(
-                  label: 'Exit Radius',
-                  value:
-                  '${attraction.exitRadiusM?.toStringAsFixed(0) ?? '-'} m',
-                ),
-
-                const Divider(),
-
-                _InfoRow(
-                  label: 'Auto Check-Out',
-                  value: attraction
-                      .exitDwellSeconds ==
-                      null
+                  label: 'Check-Out',
+                  value: attraction.exitDwellSeconds == null
                       ? '-'
-                      : '${attraction.exitDwellSeconds} seconds',
+                      : '${attraction.exitDwellSeconds}s',
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(
+            height: 12,
+          ),
 
           Container(
+            width:
+            double.infinity,
             padding:
-            const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color:
-              const Color(0xFFFFF7EA),
-              borderRadius:
-              BorderRadius.circular(12),
+            const EdgeInsets.all(
+              14,
             ),
-            child: const Text(
-              'Check-in and check-out are automatic. '
-                  'Stay inside the entry Geofence for the '
-                  'required time to check in. After your visit, '
-                  'remain outside the exit Geofence for the '
-                  'required time to check out.',
+            decoration:
+            BoxDecoration(
+              color:
+              const Color(
+                0xFFFFF7EA,
+              ),
+              borderRadius:
+              BorderRadius.circular(
+                12,
+              ),
+            ),
+            child:
+            const Text(
+              'Stay inside to check in. '
+                  'Stay outside to check out.',
               textAlign:
               TextAlign.center,
-              style: TextStyle(
-                height: 1.5,
+              style:
+              TextStyle(
+                height: 1.4,
               ),
             ),
           ),
         ],
 
-        // ======================================================
-        // STAFF SCAN INFORMATION
-        // ======================================================
-
-        if (attraction.usesStaffScan) ...[
-          const SizedBox(height: 12),
+        if (attraction
+            .usesStaffScan) ...[
+          const SizedBox(
+            height: 12,
+          ),
 
           Container(
+            width:
+            double.infinity,
             padding:
-            const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color:
-              const Color(0xFFEFF6FF),
-              borderRadius:
-              BorderRadius.circular(12),
+            const EdgeInsets.all(
+              14,
             ),
-            child: const Text(
-              'This attraction uses Staff QR verification. '
-                  'The map is provided to help you locate the '
-                  'attraction and see how far away you are. '
-                  'Check-in and check-out must still be verified '
-                  'by Staff.',
+            decoration:
+            BoxDecoration(
+              color:
+              const Color(
+                0xFFEFF6FF,
+              ),
+              borderRadius:
+              BorderRadius.circular(
+                12,
+              ),
+            ),
+            child:
+            const Text(
+              'Use the map to find the attraction. '
+                  'Staff will scan your QR code for check-in and check-out.',
               textAlign:
               TextAlign.center,
-              style: TextStyle(
-                height: 1.5,
+              style:
+              TextStyle(
+                height: 1.4,
               ),
             ),
           ),
         ],
 
         if (_error != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(
+            height: 12,
+          ),
 
           Text(
             _error!,
-            style: const TextStyle(
+            style:
+            const TextStyle(
               color:
-              Color(0xFFB45309),
+              Color(
+                0xFFB45309,
+              ),
             ),
           ),
         ],
 
-        const SizedBox(height: 14),
-
-        // ======================================================
-        // REFRESH LOCATION
-        // ======================================================
+        const SizedBox(
+          height: 14,
+        ),
 
         OutlinedButton.icon(
           onPressed:
           _refreshing
               ? null
               : _refreshLocation,
-          icon: _refreshing
+          icon:
+          _refreshing
               ? const SizedBox.square(
-            dimension: 17,
+            dimension:
+            17,
             child:
             CircularProgressIndicator(
-              strokeWidth: 2,
+              strokeWidth:
+              2,
             ),
           )
               : const Icon(
             Icons.refresh_rounded,
           ),
-          label: Text(
+          label:
+          Text(
             _refreshing
                 ? 'Refreshing...'
                 : 'Refresh Location',
@@ -1028,10 +1096,6 @@ class _GeofencePageState extends State<GeofencePage> {
     );
   }
 }
-
-// ============================================================
-// ATTRACTION MAP DATA
-// ============================================================
 
 class AttractionMapData {
   const AttractionMapData({
@@ -1073,8 +1137,11 @@ class AttractionMapData {
   factory AttractionMapData.fromJson(
       Map<String, dynamic> json,
       ) {
-    final latitude = json['latitude'];
-    final longitude = json['longitude'];
+    final latitude =
+    json['latitude'];
+
+    final longitude =
+    json['longitude'];
 
     if (latitude == null ||
         longitude == null) {
@@ -1084,25 +1151,36 @@ class AttractionMapData {
     }
 
     return AttractionMapData(
-      id: json['id']?.toString() ?? '',
+      id:
+      json['id']?.toString() ??
+          '',
+
       name:
       json['name']?.toString() ??
           'Attraction',
+
       address:
       json['address']?.toString() ??
           '',
+
       locationName:
       json['location_name']
           ?.toString() ??
           '',
+
       latitude:
-      (latitude as num).toDouble(),
+      (latitude as num)
+          .toDouble(),
+
       longitude:
-      (longitude as num).toDouble(),
+      (longitude as num)
+          .toDouble(),
+
       checkInMethod:
       json['check_in_method']
           ?.toString() ??
           '',
+
       entryRadiusM:
       json['geofence_radius_m'] ==
           null
@@ -1110,6 +1188,7 @@ class AttractionMapData {
           : (json['geofence_radius_m']
       as num)
           .toDouble(),
+
       exitRadiusM:
       json['geofence_exit_radius_m'] ==
           null
@@ -1117,6 +1196,7 @@ class AttractionMapData {
           : (json['geofence_exit_radius_m']
       as num)
           .toDouble(),
+
       entryDwellSeconds:
       json['geofence_entry_dwell_seconds'] ==
           null
@@ -1125,6 +1205,7 @@ class AttractionMapData {
       'geofence_entry_dwell_seconds']
       as num)
           .toInt(),
+
       exitDwellSeconds:
       json['geofence_exit_dwell_seconds'] ==
           null
@@ -1136,10 +1217,6 @@ class AttractionMapData {
     );
   }
 }
-
-// ============================================================
-// MAP MARKER
-// ============================================================
 
 class _MapPin extends StatelessWidget {
   const _MapPin({
@@ -1153,37 +1230,48 @@ class _MapPin extends StatelessWidget {
   final String tooltip;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     return Tooltip(
-      message: tooltip,
+      message:
+      tooltip,
       child: Container(
-        decoration: BoxDecoration(
-          color: background,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white,
-            width: 3,
+        decoration:
+        BoxDecoration(
+          color:
+          background,
+          shape:
+          BoxShape.circle,
+          border:
+          Border.all(
+            color:
+            Colors.white,
+            width:
+            3,
           ),
-          boxShadow: const [
+          boxShadow:
+          const [
             BoxShadow(
-              blurRadius: 7,
-              color: Colors.black26,
+              blurRadius:
+              7,
+              color:
+              Colors.black26,
             ),
           ],
         ),
-        child: Icon(
+        child:
+        Icon(
           icon,
-          color: Colors.white,
-          size: 31,
+          color:
+          Colors.white,
+          size:
+          31,
         ),
       ),
     );
   }
 }
-
-// ============================================================
-// INFO ROW
-// ============================================================
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({
@@ -1195,7 +1283,9 @@ class _InfoRow extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     return Padding(
       padding:
       const EdgeInsets.symmetric(
@@ -1204,17 +1294,22 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
+            child:
+            Text(
               label,
-              style: const TextStyle(
+              style:
+              const TextStyle(
                 color:
-                Color(0xFF6B7280),
+                Color(
+                  0xFF6B7280,
+                ),
               ),
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style:
+            const TextStyle(
               fontWeight:
               FontWeight.w800,
             ),
@@ -1225,14 +1320,11 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-// ============================================================
-// ERROR MESSAGE
-// ============================================================
-
 String _mapErrorMessage(
     Object error,
     ) {
-  final value = error.toString();
+  final value =
+  error.toString();
 
   if (value.contains(
     'Location permission',

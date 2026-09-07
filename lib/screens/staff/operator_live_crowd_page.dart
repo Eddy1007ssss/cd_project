@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../../models/live_crowd_models.dart';
 import '../../repositories/live_crowd_repository.dart';
+import '../../widgets/navigation/navigation_logout.dart';
 import '../../widgets/navigation/navigation_scope.dart';
+import '../../widgets/navigation/staff_sidebar.dart';
 import '../../widgets/tourflow_widgets.dart';
 import 'operator_live_crowd_details_page.dart';
 
@@ -76,10 +78,6 @@ class _OperatorLiveCrowdPageState
     super.dispose();
   }
 
-  // ============================================================
-  // AUTO REFRESH
-  // ============================================================
-
   void _startTimer() {
     _timer?.cancel();
 
@@ -88,13 +86,17 @@ class _OperatorLiveCrowdPageState
     }
 
     _timer = Timer.periodic(
-      const Duration(seconds: 5),
+      const Duration(
+        seconds: 5,
+      ),
           (_) {
-        if (!mounted || !_foreground) {
+        if (!mounted ||
+            !_foreground) {
           return;
         }
 
-        if (ModalRoute.of(context)?.isCurrent != true) {
+        if (ModalRoute.of(context)?.isCurrent !=
+            true) {
           return;
         }
 
@@ -105,10 +107,6 @@ class _OperatorLiveCrowdPageState
     );
   }
 
-  // ============================================================
-  // LOAD DATA
-  // ============================================================
-
   Future<void> _load({
     bool silent = false,
   }) async {
@@ -116,13 +114,15 @@ class _OperatorLiveCrowdPageState
       return;
     }
 
-    setState(() {
-      _refreshing = true;
+    _refreshing = true;
 
-      if (!silent && _attractions.isEmpty) {
+    if (!silent &&
+        _attractions.isEmpty &&
+        mounted) {
+      setState(() {
         _loading = true;
-      }
-    });
+      });
+    }
 
     try {
       final result =
@@ -134,10 +134,16 @@ class _OperatorLiveCrowdPageState
       }
 
       setState(() {
-        _attractions = result;
-        _error = null;
+        _attractions =
+            result;
+
+        _error =
+        null;
+
+        _loading =
+        false;
       });
-    } catch (error) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
@@ -145,39 +151,50 @@ class _OperatorLiveCrowdPageState
       setState(() {
         _error =
         'Unable to load live crowd information.';
+
+        _loading =
+        false;
       });
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _refreshing = false;
-        });
-      }
+      _refreshing =
+      false;
     }
   }
 
-  // ============================================================
-  // CROWD COLOR
-  // ============================================================
+  Future<void> _pullRefresh() async {
+    await _load(
+      silent: true,
+    );
+  }
 
   Color _crowdColor(
       String crowdLevel,
       ) {
     switch (crowdLevel.toUpperCase()) {
       case 'FULL':
-        return const Color(0xFFB91C1C);
+        return const Color(
+          0xFFB91C1C,
+        );
 
       case 'HIGH':
-        return const Color(0xFFEA580C);
+        return const Color(
+          0xFFEA580C,
+        );
 
       case 'MODERATE':
-        return const Color(0xFFD97706);
+        return const Color(
+          0xFFD97706,
+        );
 
       case 'LOW':
-        return const Color(0xFF15803D);
+        return const Color(
+          0xFF15803D,
+        );
 
       default:
-        return const Color(0xFF667085);
+        return const Color(
+          0xFF667085,
+        );
     }
   }
 
@@ -187,163 +204,261 @@ class _OperatorLiveCrowdPageState
           (
           total,
           attraction,
-          ) =>
-      total + attraction.currentVisitors,
+          ) {
+        return total +
+            attraction.currentVisitors;
+      },
     );
   }
 
-  // ============================================================
-  // UI
-  // ============================================================
+  Future<void> _handleBack() async {
+    if (await Navigator.maybePop(
+      context,
+    )) {
+      return;
+    }
+  }
 
   @override
   Widget build(
       BuildContext context,
       ) {
-    return TourFlowPage(
-      title: 'Live Crowd',
-      role: 'TOURFLOW · OPERATOR',
-      navigationRole:
-      TourFlowNavigationRole.operator,
-      selectedNavigationIndex: 0,
-      actions: [
-        IconButton(
-          tooltip: 'Refresh',
-          onPressed: _refreshing
-              ? null
-              : () {
-            _load();
+    final navigationScope =
+    TourFlowNavigationScope.maybeOf(
+      context,
+    );
+
+    final selectedIndex =
+        navigationScope?.selectedIndex ??
+            0;
+
+    return Scaffold(
+      backgroundColor:
+      TourFlowColors.background,
+
+      drawer:
+      OperatorSidebar(
+        displayName:
+        'Alex Thompson',
+
+        email:
+        'alex.thompson@tourflow.com',
+
+        selectedIndex:
+        selectedIndex,
+
+        onItemSelected:
+        navigationScope
+            ?.onItemSelected ??
+                (_) {},
+
+        onLogout:
+            () async {
+          await signOutAndReturnToSignIn(
+            context,
+          );
+        },
+      ),
+
+      appBar:
+      AppBar(
+        automaticallyImplyLeading:
+        false,
+
+        leadingWidth:
+        96,
+
+        leading:
+        Builder(
+          builder:
+              (context) {
+            return Row(
+              children: [
+                IconButton(
+                  tooltip:
+                  'Back',
+
+                  onPressed:
+                  _handleBack,
+
+                  icon:
+                  const Icon(
+                    Icons
+                        .arrow_back_rounded,
+                  ),
+                ),
+
+                IconButton(
+                  tooltip:
+                  'Open menu',
+
+                  onPressed:
+                      () {
+                    Scaffold.of(
+                      context,
+                    ).openDrawer();
+                  },
+
+                  icon:
+                  const Icon(
+                    Icons
+                        .menu_rounded,
+                  ),
+                ),
+              ],
+            );
           },
-          icon: _refreshing
-              ? const SizedBox.square(
-            dimension: 18,
-            child:
-            CircularProgressIndicator(
-              strokeWidth: 2,
-            ),
-          )
-              : const Icon(
-            Icons.refresh_rounded,
+        ),
+
+        centerTitle:
+        false,
+
+        elevation:
+        1,
+
+        shadowColor:
+        const Color(
+          0x140F172A,
+        ),
+
+        backgroundColor:
+        TourFlowColors.surface,
+
+        surfaceTintColor:
+        Colors.transparent,
+
+        title:
+        const Text(
+          'Live Crowd',
+
+          style:
+          TextStyle(
+            color:
+            TourFlowColors.heading,
+
+            fontSize:
+            18,
+
+            fontWeight:
+            FontWeight.w700,
           ),
         ),
-      ],
-      child: _buildContent(),
+      ),
+
+      body:
+      RefreshIndicator(
+        onRefresh:
+        _pullRefresh,
+
+        child:
+        _buildContent(),
+      ),
     );
   }
 
   Widget _buildContent() {
     if (_loading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(
-          vertical: 60,
-        ),
-        child: Center(
-          child:
-          CircularProgressIndicator(),
-        ),
+      return ListView(
+        physics:
+        const AlwaysScrollableScrollPhysics(),
+
+        children:
+        const [
+          SizedBox(
+            height:
+            220,
+          ),
+
+          Center(
+            child:
+            CircularProgressIndicator(),
+          ),
+        ],
       );
     }
 
-    return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.stretch,
+    return ListView(
+      physics:
+      const AlwaysScrollableScrollPhysics(),
+
+      padding:
+      const EdgeInsets.fromLTRB(
+        16,
+        18,
+        16,
+        32,
+      ),
+
       children: [
-        // ======================================================
-        // HEADER
-        // ======================================================
-
-        ModuleCard(
-          color: TourFlowColors.lavender,
-          child: const Row(
-            children: [
-              Icon(
-                Icons.groups_rounded,
-                color:
-                TourFlowColors.primaryText,
-                size: 28,
-              ),
-
-              SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Live Crowd by Attraction',
-                      style: TextStyle(
-                        color:
-                        TourFlowColors.heading,
-                        fontSize: 18,
-                        fontWeight:
-                        FontWeight.w800,
-                      ),
-                    ),
-
-                    SizedBox(height: 5),
-
-                    Text(
-                      'Select an attraction to view its current crowd status.',
-                      style: TextStyle(
-                        color:
-                        TourFlowColors.muted,
-                        fontSize: 11,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // ======================================================
-        // ERROR
-        // ======================================================
-
         if (_error != null) ...[
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(
+            width:
+            double.infinity,
+
+            padding:
+            const EdgeInsets.all(
               13,
             ),
-            decoration: BoxDecoration(
-              color: const Color(
+
+            decoration:
+            BoxDecoration(
+              color:
+              const Color(
                 0xFFFFF4E5,
               ),
+
               borderRadius:
-              BorderRadius.circular(12),
+              BorderRadius.circular(
+                12,
+              ),
             ),
-            child: Row(
+
+            child:
+            Row(
               children: [
                 const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Color(
+                  Icons
+                      .warning_amber_rounded,
+
+                  color:
+                  Color(
                     0xFFD97706,
                   ),
                 ),
 
-                const SizedBox(width: 8),
+                const SizedBox(
+                  width:
+                  8,
+                ),
 
                 Expanded(
-                  child: Text(
+                  child:
+                  Text(
                     _error!,
-                    style: const TextStyle(
-                      color: Color(
+
+                    style:
+                    const TextStyle(
+                      color:
+                      Color(
                         0xFF8A5A00,
                       ),
-                      fontSize: 11,
+
+                      fontSize:
+                      11,
                     ),
                   ),
                 ),
 
                 TextButton(
-                  onPressed: () => _load(),
-                  child: const Text(
+                  onPressed:
+                  _refreshing
+                      ? null
+                      : () {
+                    _load();
+                  },
+
+                  child:
+                  const Text(
                     'Retry',
                   ),
                 ),
@@ -351,74 +466,102 @@ class _OperatorLiveCrowdPageState
             ),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(
+            height:
+            14,
+          ),
         ],
-
-        // ======================================================
-        // SUMMARY
-        // ======================================================
 
         Row(
           children: [
             Expanded(
-              child: _SummaryCard(
-                label: 'Attractions',
+              child:
+              _SummaryCard(
+                label:
+                'Attractions',
+
                 value:
                 '${_attractions.length}',
+
                 icon:
-                Icons.location_city_outlined,
+                Icons
+                    .location_city_outlined,
               ),
             ),
 
-            const SizedBox(width: 10),
+            const SizedBox(
+              width:
+              10,
+            ),
 
             Expanded(
-              child: _SummaryCard(
-                label: 'Current Visitors',
+              child:
+              _SummaryCard(
+                label:
+                'Current Visitors',
+
                 value:
                 '${_totalCurrentVisitors()}',
+
                 icon:
-                Icons.groups_outlined,
+                Icons
+                    .groups_outlined,
               ),
             ),
           ],
         ),
 
-        const SizedBox(height: 18),
+        const SizedBox(
+          height:
+          20,
+        ),
 
         const SectionTitle(
           'Select Attraction',
         ),
 
-        const SizedBox(height: 10),
-
-        // ======================================================
-        // EMPTY
-        // ======================================================
+        const SizedBox(
+          height:
+          10,
+        ),
 
         if (_attractions.isEmpty)
           const ModuleCard(
-            child: Padding(
+            child:
+            Padding(
               padding:
               EdgeInsets.symmetric(
-                vertical: 20,
+                vertical:
+                22,
               ),
-              child: Column(
+
+              child:
+              Column(
                 children: [
                   Icon(
-                    Icons.location_off_outlined,
-                    size: 36,
+                    Icons
+                        .location_off_outlined,
+
+                    size:
+                    36,
+
                     color:
                     TourFlowColors.muted,
                   ),
 
-                  SizedBox(height: 10),
+                  SizedBox(
+                    height:
+                    10,
+                  ),
 
                   Text(
                     'No approved attractions are available.',
+
                     textAlign:
                     TextAlign.center,
-                    style: TextStyle(
+
+                    style:
+                    TextStyle(
                       color:
                       TourFlowColors.muted,
                     ),
@@ -428,66 +571,131 @@ class _OperatorLiveCrowdPageState
             ),
           ),
 
-        // ======================================================
-        // LIST
-        // ======================================================
-
         for (final item
         in _attractions) ...[
           _LiveCrowdAttractionCard(
-            item: item,
+            item:
+            item,
+
             crowdColor:
             _crowdColor(
               item.crowdLevel,
             ),
-            onTap: () {
-              Navigator.pushNamed(
+
+            onTap:
+                () async {
+              await Navigator.pushNamed(
                 context,
+
                 OperatorLiveCrowdDetailsPage
                     .routeName,
-                arguments: item,
+
+                arguments:
+                item,
+              );
+
+              if (!mounted) {
+                return;
+              }
+
+              await _load(
+                silent:
+                true,
               );
             },
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(
+            height:
+            12,
+          ),
         ],
 
-        const SizedBox(height: 8),
+        const SizedBox(
+          height:
+          8,
+        ),
 
         const Row(
           mainAxisAlignment:
           MainAxisAlignment.center,
+
           children: [
             Icon(
-              Icons.sync_rounded,
-              size: 14,
+              Icons
+                  .swipe_down_alt_rounded,
+
+              size:
+              15,
+
               color:
               TourFlowColors.muted,
             ),
 
-            SizedBox(width: 5),
+            SizedBox(
+              width:
+              5,
+            ),
 
             Text(
-              'Live crowd data refreshes automatically.',
-              style: TextStyle(
+              'Pull down to refresh',
+
+              style:
+              TextStyle(
                 color:
                 TourFlowColors.muted,
-                fontSize: 10,
+
+                fontSize:
+                10,
               ),
             ),
           ],
         ),
 
-        const SizedBox(height: 10),
+        const SizedBox(
+          height:
+          5,
+        ),
+
+        const Row(
+          mainAxisAlignment:
+          MainAxisAlignment.center,
+
+          children: [
+            Icon(
+              Icons
+                  .sync_rounded,
+
+              size:
+              14,
+
+              color:
+              TourFlowColors.muted,
+            ),
+
+            SizedBox(
+              width:
+              5,
+            ),
+
+            Text(
+              'Live crowd updates automatically every 5 seconds.',
+
+              style:
+              TextStyle(
+                color:
+                TourFlowColors.muted,
+
+                fontSize:
+                10,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
-
-// ============================================================
-// SUMMARY CARD
-// ============================================================
 
 class _SummaryCard
     extends StatelessWidget {
@@ -506,38 +714,58 @@ class _SummaryCard
       BuildContext context,
       ) {
     return ModuleCard(
-      child: Column(
+      child:
+      Column(
         crossAxisAlignment:
         CrossAxisAlignment.start,
+
         children: [
           Icon(
             icon,
+
             color:
             TourFlowColors.primaryText,
-            size: 22,
+
+            size:
+            22,
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(
+            height:
+            10,
+          ),
 
           Text(
             value,
-            style: const TextStyle(
+
+            style:
+            const TextStyle(
               color:
               TourFlowColors.heading,
-              fontSize: 22,
+
+              fontSize:
+              22,
+
               fontWeight:
               FontWeight.w800,
             ),
           ),
 
-          const SizedBox(height: 3),
+          const SizedBox(
+            height:
+            3,
+          ),
 
           Text(
             label,
-            style: const TextStyle(
+
+            style:
+            const TextStyle(
               color:
               TourFlowColors.muted,
-              fontSize: 10,
+
+              fontSize:
+              10,
             ),
           ),
         ],
@@ -545,10 +773,6 @@ class _SummaryCard
     );
   }
 }
-
-// ============================================================
-// ATTRACTION CARD
-// ============================================================
 
 class _LiveCrowdAttractionCard
     extends StatelessWidget {
@@ -573,76 +797,112 @@ class _LiveCrowdAttractionCard
     );
 
     return ModuleCard(
-      padding: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onTap,
+      padding:
+      EdgeInsets.zero,
+
+      child:
+      InkWell(
+        onTap:
+        onTap,
+
         borderRadius:
-        BorderRadius.circular(16),
-        child: Padding(
+        BorderRadius.circular(
+          16,
+        ),
+
+        child:
+        Padding(
           padding:
-          const EdgeInsets.all(16),
-          child: Column(
+          const EdgeInsets.all(
+            16,
+          ),
+
+          child:
+          Column(
             crossAxisAlignment:
             CrossAxisAlignment.stretch,
+
             children: [
               Row(
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width:
+                    50,
+
+                    height:
+                    50,
+
                     decoration:
                     BoxDecoration(
-                      color: const Color(
+                      color:
+                      const Color(
                         0xFFFFF4E3,
                       ),
+
                       borderRadius:
                       BorderRadius.circular(
                         13,
                       ),
                     ),
-                    child: const Icon(
+
+                    child:
+                    const Icon(
                       Icons
                           .location_on_outlined,
+
                       color:
                       TourFlowColors
                           .primaryText,
                     ),
                   ),
 
-                  const SizedBox(width: 12),
+                  const SizedBox(
+                    width:
+                    12,
+                  ),
 
                   Expanded(
-                    child: Column(
+                    child:
+                    Column(
                       crossAxisAlignment:
                       CrossAxisAlignment
                           .start,
+
                       children: [
                         Text(
                           item.attractionName,
+
                           style:
                           const TextStyle(
                             color:
                             TourFlowColors
                                 .heading,
-                            fontSize: 14,
+
+                            fontSize:
+                            14,
+
                             fontWeight:
                             FontWeight.w800,
                           ),
                         ),
 
                         const SizedBox(
-                          height: 5,
+                          height:
+                          5,
                         ),
 
                         Text(
-                          '${item.currentVisitors} / '
-                              '${item.maximumCapacity} visitors',
+                          '${item.currentVisitors} / ${item.maximumCapacity} visitors',
+
                           style:
                           const TextStyle(
                             color:
                             TourFlowColors
                                 .body,
-                            fontSize: 11,
+
+                            fontSize:
+                            11,
+
                             fontWeight:
                             FontWeight.w700,
                           ),
@@ -652,39 +912,58 @@ class _LiveCrowdAttractionCard
                   ),
 
                   const Icon(
-                    Icons.chevron_right_rounded,
+                    Icons
+                        .chevron_right_rounded,
+
                     color:
                     TourFlowColors.muted,
                   ),
                 ],
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(
+                height:
+                14,
+              ),
 
               Row(
                 children: [
                   Container(
                     padding:
                     const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 5,
+                      horizontal:
+                      9,
+
+                      vertical:
+                      5,
                     ),
+
                     decoration:
                     BoxDecoration(
                       color:
                       crowdColor.withValues(
-                        alpha: 0.10,
+                        alpha:
+                        0.10,
                       ),
+
                       borderRadius:
                       BorderRadius.circular(
                         20,
                       ),
                     ),
-                    child: Text(
+
+                    child:
+                    Text(
                       item.crowdLevel,
-                      style: TextStyle(
-                        color: crowdColor,
-                        fontSize: 10,
+
+                      style:
+                      TextStyle(
+                        color:
+                        crowdColor,
+
+                        fontSize:
+                        10,
+
                         fontWeight:
                         FontWeight.w800,
                       ),
@@ -695,11 +974,15 @@ class _LiveCrowdAttractionCard
 
                   Text(
                     '${item.occupancyPercent}% occupancy',
+
                     style:
                     const TextStyle(
                       color:
                       TourFlowColors.muted,
-                      fontSize: 10,
+
+                      fontSize:
+                      10,
+
                       fontWeight:
                       FontWeight.w600,
                     ),
@@ -707,20 +990,33 @@ class _LiveCrowdAttractionCard
                 ],
               ),
 
-              const SizedBox(height: 9),
+              const SizedBox(
+                height:
+                9,
+              ),
 
               ClipRRect(
                 borderRadius:
-                BorderRadius.circular(20),
+                BorderRadius.circular(
+                  20,
+                ),
+
                 child:
                 LinearProgressIndicator(
-                  value: occupancy / 100,
-                  minHeight: 6,
+                  value:
+                  occupancy /
+                      100,
+
+                  minHeight:
+                  6,
+
                   backgroundColor:
                   const Color(
                     0xFFF2F4F7,
                   ),
-                  color: crowdColor,
+
+                  color:
+                  crowdColor,
                 ),
               ),
             ],

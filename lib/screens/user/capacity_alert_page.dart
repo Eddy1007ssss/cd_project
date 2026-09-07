@@ -29,17 +29,26 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
 
   String? _error;
 
+  // ============================================================
+  // INIT
+  // ============================================================
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
   }
 
+  // ============================================================
+  // LOAD BOOKING
+  // ============================================================
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
     if (_initialized) return;
+
     _initialized = true;
 
     final arguments =
@@ -56,6 +65,10 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
       _startTimer();
     });
   }
+
+  // ============================================================
+  // APP LIFECYCLE
+  // ============================================================
 
   @override
   void didChangeAppLifecycleState(
@@ -74,6 +87,10 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
       _timer?.cancel();
     }
   }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
 
   @override
   void dispose() {
@@ -184,8 +201,7 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
       return;
     }
 
-    // Extra protection:
-    // geofence bookings should never open QR page.
+    // Geofence / open attractions should never open QR.
     if (routeName == BookingQrPage.routeName &&
         !booking.slot.usesStaffScan) {
       return;
@@ -203,7 +219,7 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
   }
 
   // ============================================================
-  // IMAGE PLACEHOLDER
+  // PHOTO PLACEHOLDER
   // ============================================================
 
   Widget _photoPlaceholder() {
@@ -240,19 +256,15 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
   }
 
   // ============================================================
-  // CONTENT
+  // MAIN CONTENT
   // ============================================================
 
   Widget _buildContent(
       _CapacityData data,
       ) {
     final booking = _booking!;
-
-    final imageUrl =
-        data.coverImageUrl;
-
-    final color =
-        data.levelColor;
+    final imageUrl = data.coverImageUrl;
+    final color = data.levelColor;
 
     return Column(
       crossAxisAlignment:
@@ -285,13 +297,13 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
                   height: 210,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder:
-                      (
+                  errorBuilder: (
                       context,
                       error,
                       stackTrace,
-                      ) =>
-                      _photoPlaceholder(),
+                      ) {
+                    return _photoPlaceholder();
+                  },
                 ),
 
               Padding(
@@ -450,10 +462,8 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
         // ======================================================
 
         _InformationCard(
-          title:
-          'Current Visitors',
-          icon:
-          Icons.groups_outlined,
+          title: 'Current Visitors',
+          icon: Icons.groups_outlined,
           child: Column(
             crossAxisAlignment:
             CrossAxisAlignment.start,
@@ -542,22 +552,46 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
         ),
 
         // ======================================================
-        // WAITING TIME
+        // ENTRY RECOMMENDATION
+        //
+        // Replaces Estimated Waiting Time
         // ======================================================
 
-        const _InformationCard(
+        _InformationCard(
           title:
-          'Estimated Waiting Time',
+          'Entry Recommendation',
           icon:
-          Icons.schedule_outlined,
-          child: Text(
-            'Not available. Please check with attraction staff.',
-            style:
-            TextStyle(
-              height: 1.4,
-              fontWeight:
-              FontWeight.w600,
-            ),
+          Icons.directions_walk_outlined,
+          child: Row(
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
+            children: [
+              Icon(
+                data.entryRecommendationIcon,
+                color:
+                data.entryRecommendationColor,
+                size: 24,
+              ),
+
+              const SizedBox(
+                width: 10,
+              ),
+
+              Expanded(
+                child: Text(
+                  data.entryRecommendation,
+                  style:
+                  TextStyle(
+                    color:
+                    data.entryRecommendationColor,
+                    height: 1.4,
+                    fontSize: 16,
+                    fontWeight:
+                    FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 
@@ -596,7 +630,7 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
         // ======================================================
         // OPEN QR CODE
         //
-        // ONLY STAFF-SCAN ATTRACTIONS
+        // ONLY STAFF SCAN ATTRACTIONS
         // ======================================================
 
         if (booking.slot
@@ -636,9 +670,9 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
         ],
 
         // ======================================================
-        // VIEW GEOFENCE / ATTRACTION MAP
+        // VIEW GEOFENCE / MAP
         //
-        // BOTH GEOFENCE AND STAFF SCAN CAN VIEW MAP
+        // BOTH GEOFENCE AND STAFF SCAN
         // ======================================================
 
         OutlinedButton.icon(
@@ -669,25 +703,7 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
         ),
 
         const SizedBox(
-          height: 16,
-        ),
-
-        // ======================================================
-        // LAST UPDATED
-        // ======================================================
-
-        Text(
-          'Last updated: ${clockTime(data.updatedAt)}\n'
-              'Updates every 3 seconds while this page is open.',
-          textAlign:
-          TextAlign.center,
-          style:
-          const TextStyle(
-            color:
-            Colors.black54,
-            fontSize: 12,
-            height: 1.5,
-          ),
+          height: 20,
         ),
       ],
     );
@@ -709,36 +725,23 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
         0xFFFAF8FF,
       ),
 
+      // ========================================================
+      // APP BAR
+      //
+      // No Refresh button
+      // No Loading icon
+      // ========================================================
+
       appBar: AppBar(
         title:
         const Text(
           'Capacity Alert',
         ),
-        actions: [
-          IconButton(
-            tooltip:
-            'Refresh capacity',
-            onPressed:
-            _loading ||
-                _booking == null
-                ? null
-                : () {
-              _refresh();
-            },
-            icon: _loading
-                ? const SizedBox.square(
-              dimension: 20,
-              child:
-              CircularProgressIndicator(
-                strokeWidth: 2,
-              ),
-            )
-                : const Icon(
-              Icons.refresh_rounded,
-            ),
-          ),
-        ],
       ),
+
+      // ========================================================
+      // BODY
+      // ========================================================
 
       body: _booking == null
           ? const Center(
@@ -761,14 +764,22 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
         CircularProgressIndicator(),
       )
           : RefreshIndicator(
-        onRefresh: _refresh,
+        // =============================================
+        // PULL DOWN REFRESH
+        // =============================================
+
+        onRefresh:
+        _refresh,
+
         child: ListView(
           physics:
           const AlwaysScrollableScrollPhysics(),
+
           padding:
           const EdgeInsets.all(
             18,
           ),
+
           children: [
             Center(
               child:
@@ -781,6 +792,10 @@ class _CapacityAlertPageState extends State<CapacityAlertPage>
                   crossAxisAlignment:
                   CrossAxisAlignment.stretch,
                   children: [
+                    // =================================
+                    // ERROR
+                    // =================================
+
                     if (_error !=
                         null) ...[
                       Container(
@@ -961,6 +976,10 @@ class _CapacityData {
 
   final DateTime updatedAt;
 
+  // ============================================================
+  // AVAILABLE CAPACITY
+  // ============================================================
+
   int get availableCapacity =>
       (maximumCapacity - currentVisitors)
           .clamp(
@@ -968,6 +987,10 @@ class _CapacityData {
         maximumCapacity,
       )
           .toInt();
+
+  // ============================================================
+  // OCCUPANCY
+  // ============================================================
 
   double get occupancy =>
       maximumCapacity > 0
@@ -1001,7 +1024,7 @@ class _CapacityData {
   }
 
   // ============================================================
-  // CROWD COLOR
+  // CROWD LEVEL COLOR
   // ============================================================
 
   Color get levelColor {
@@ -1033,7 +1056,102 @@ class _CapacityData {
   }
 
   // ============================================================
-  // RECOMMENDATION
+  // ENTRY RECOMMENDATION
+  //
+  // LOW:
+  // Good time to visit
+  //
+  // MODERATE:
+  // Moderate crowd
+  //
+  // HIGH:
+  // Consider visiting later
+  //
+  // FULL:
+  // Please wait before entering
+  // ============================================================
+
+  String get entryRecommendation {
+    if (maximumCapacity <= 0) {
+      return 'Capacity information unavailable';
+    }
+
+    if (currentVisitors >=
+        maximumCapacity) {
+      return 'Please wait before entering';
+    }
+
+    if (occupancy >= 0.8) {
+      return 'Consider visiting later';
+    }
+
+    if (occupancy >= 0.5) {
+      return 'Moderate crowd';
+    }
+
+    return 'Good time to visit';
+  }
+
+  // ============================================================
+  // ENTRY RECOMMENDATION COLOR
+  // ============================================================
+
+  Color get entryRecommendationColor {
+    if (maximumCapacity <= 0) {
+      return Colors.grey;
+    }
+
+    if (currentVisitors >=
+        maximumCapacity) {
+      return const Color(
+        0xFFB91C1C,
+      );
+    }
+
+    if (occupancy >= 0.8) {
+      return const Color(
+        0xFFC2410C,
+      );
+    }
+
+    if (occupancy >= 0.5) {
+      return const Color(
+        0xFFB77900,
+      );
+    }
+
+    return const Color(
+      0xFF15803D,
+    );
+  }
+
+  // ============================================================
+  // ENTRY RECOMMENDATION ICON
+  // ============================================================
+
+  IconData get entryRecommendationIcon {
+    if (maximumCapacity <= 0) {
+      return Icons.help_outline_rounded;
+    }
+
+    if (currentVisitors >=
+        maximumCapacity) {
+      return Icons.block_rounded;
+    }
+
+    if (occupancy >= 0.8) {
+      return Icons.schedule_rounded;
+    }
+
+    if (occupancy >= 0.5) {
+      return Icons.groups_rounded;
+    }
+
+    return Icons.check_circle_outline_rounded;
+  }
+
+  // ============================================================
+  // DETAILED RECOMMENDATION
   // ============================================================
 
   String recommendation(
