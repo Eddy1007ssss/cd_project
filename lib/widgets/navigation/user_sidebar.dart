@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cd_project/l10n/tourflow_localization.dart';
 
 import 'user_bottom_navigation_bar.dart';
 import 'navigation_scope.dart';
@@ -74,6 +75,7 @@ class TourFlowSidebar extends StatelessWidget {
     this.onItemSelected,
     required this.onLogout,
     this.avatarUrl,
+    this.translateLabels = false,
     super.key,
   });
 
@@ -86,6 +88,7 @@ class TourFlowSidebar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int>? onItemSelected;
   final VoidCallback onLogout;
+  final bool translateLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +107,7 @@ class TourFlowSidebar extends StatelessWidget {
               displayName: displayName,
               email: email,
               avatarUrl: avatarUrl,
+              translateLabels: translateLabels,
             ),
             const Divider(height: 1, color: TourFlowNavigationColors.border),
             Expanded(
@@ -127,18 +131,31 @@ class TourFlowSidebar extends StatelessWidget {
                           ? TourFlowNavigationColors.activeForeground
                           : TourFlowNavigationColors.foreground,
                     ),
-                    title: Text(
-                      item.label,
-                      style: TextStyle(
-                        color: selected
-                            ? TourFlowNavigationColors.activeForeground
-                            : TourFlowNavigationColors.foreground,
-                        fontSize: 14,
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
+                    title: translateLabels
+                        ? TourFlowText(
+                            item.label,
+                            style: TextStyle(
+                              color: selected
+                                  ? TourFlowNavigationColors.activeForeground
+                                  : TourFlowNavigationColors.foreground,
+                              fontSize: 14,
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          )
+                        : Text(
+                            item.label,
+                            style: TextStyle(
+                              color: selected
+                                  ? TourFlowNavigationColors.activeForeground
+                                  : TourFlowNavigationColors.foreground,
+                              fontSize: 14,
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
                     onTap: () {
                       final navigationScope = TourFlowNavigationScope.maybeOf(
                         context,
@@ -176,13 +193,21 @@ class TourFlowSidebar extends StatelessWidget {
                   Icons.logout_rounded,
                   color: TourFlowNavigationColors.danger,
                 ),
-                title: const Text(
-                  'Log Out',
-                  style: TextStyle(
-                    color: TourFlowNavigationColors.danger,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                title: translateLabels
+                    ? const TourFlowText(
+                        'Log Out',
+                        style: TextStyle(
+                          color: TourFlowNavigationColors.danger,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    : const Text(
+                        'Log Out',
+                        style: TextStyle(
+                          color: TourFlowNavigationColors.danger,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                 onTap: () {
                   Navigator.of(context).pop();
                   onLogout();
@@ -203,6 +228,7 @@ class _SidebarHeader extends StatelessWidget {
     required this.displayName,
     required this.email,
     required this.avatarUrl,
+    required this.translateLabels,
   });
 
   final String title;
@@ -210,6 +236,7 @@ class _SidebarHeader extends StatelessWidget {
   final String displayName;
   final String email;
   final String? avatarUrl;
+  final bool translateLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -239,23 +266,42 @@ class _SidebarHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: TourFlowNavigationColors.foreground,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      roleLabel.toUpperCase(),
-                      style: const TextStyle(
-                        color: TourFlowNavigationColors.activeForeground,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                      ),
-                    ),
+                    translateLabels
+                        ? TourFlowText(
+                            title,
+                            style: const TextStyle(
+                              color: TourFlowNavigationColors.foreground,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          )
+                        : Text(
+                            title,
+                            style: const TextStyle(
+                              color: TourFlowNavigationColors.foreground,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                    translateLabels
+                        ? TourFlowText(
+                            roleLabel,
+                            style: const TextStyle(
+                              color: TourFlowNavigationColors.activeForeground,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1,
+                            ),
+                          )
+                        : Text(
+                            roleLabel.toUpperCase(),
+                            style: const TextStyle(
+                              color: TourFlowNavigationColors.activeForeground,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1,
+                            ),
+                          ),
                   ],
                 ),
               ),
@@ -271,7 +317,7 @@ class _SidebarHeader extends StatelessWidget {
                     ? null
                     : NetworkImage(avatarUrl!),
                 child: avatarUrl == null
-                    ? Text(
+                    ? TourFlowText(
                         _initials(displayName),
                         style: const TextStyle(
                           color: TourFlowNavigationColors.activeForeground,
@@ -285,7 +331,7 @@ class _SidebarHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TourFlowText(
                       displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -296,7 +342,7 @@ class _SidebarHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
+                    TourFlowText(
                       email,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -352,6 +398,7 @@ class UserSidebar extends StatelessWidget {
       selectedIndex: selectedIndex,
       onItemSelected: onItemSelected,
       onLogout: onLogout,
+      translateLabels: true,
     );
   }
 }

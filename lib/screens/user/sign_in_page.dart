@@ -6,7 +6,6 @@ import '../../models/user_profile.dart';
 import '../../repositories/auth_repository.dart';
 import '../../widgets/tourflow_widgets.dart';
 import '../../widgets/navigation/navigation_routes.dart';
-import '../staff/admin_user_management_page.dart';
 import '../staff/operator_dashboard_page.dart';
 import '../staff/operator_registration_page.dart';
 import '../staff/staff_qr_scanner_page.dart';
@@ -18,7 +17,7 @@ String landingRouteForRole(UserRole role) => switch (role) {
   UserRole.tourist => UserHomePage.routeName,
   UserRole.operator => OperatorDashboardPage.routeName,
   UserRole.staff => StaffQrScannerPage.routeName,
-  UserRole.administrator => AdminUserManagementPage.routeName,
+  UserRole.administrator => TourFlowRoutes.adminAnalyticsDashboard,
 };
 
 class SignInPage extends StatefulWidget {
@@ -97,7 +96,7 @@ class _SignInPageState extends State<SignInPage> {
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(SnackBar(content: TourFlowText(message)));
   }
 
   @override
@@ -110,7 +109,7 @@ class _SignInPageState extends State<SignInPage> {
         elevation: 1,
         shadowColor: const Color(0x140F172A),
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: const TourFlowText(
           'TourFlow',
           style: TextStyle(
             color: TourFlowColors.heading,
@@ -139,7 +138,7 @@ class _SignInPageState extends State<SignInPage> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text(
+              const TourFlowText(
                 'Welcome to TourFlow',
                 style: TextStyle(
                   color: TourFlowColors.heading,
@@ -148,7 +147,7 @@ class _SignInPageState extends State<SignInPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              const TourFlowText(
                 'Access your personalised dashboard and manage\nyour travel experience efficiently.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -172,7 +171,7 @@ class _SignInPageState extends State<SignInPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          const TourFlowText(
                             'Context-Aware Interface',
                             style: TextStyle(
                               color: TourFlowColors.heading,
@@ -180,7 +179,7 @@ class _SignInPageState extends State<SignInPage> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          TourFlowText(
                             'Available menus and navigation depend on your selected role and clearance level.',
                             style: TextStyle(
                               color: TourFlowColors.body.withValues(alpha: 0.8),
@@ -199,7 +198,7 @@ class _SignInPageState extends State<SignInPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const TourFlowText(
                       'Account Type',
                       style: TextStyle(
                         color: TourFlowColors.body,
@@ -215,22 +214,22 @@ class _SignInPageState extends State<SignInPage> {
                           ButtonSegment(
                             value: _DemoRole.tourist,
                             icon: Icon(Icons.person_outline),
-                            label: Text('Tourist'),
+                            label: TourFlowText('Tourist'),
                           ),
                           ButtonSegment(
                             value: _DemoRole.operator,
                             icon: Icon(Icons.business_outlined),
-                            label: Text('Operator'),
+                            label: TourFlowText('Operator'),
                           ),
                           ButtonSegment(
                             value: _DemoRole.staff,
                             icon: Icon(Icons.badge_outlined),
-                            label: Text('Staff'),
+                            label: TourFlowText('Staff'),
                           ),
                           ButtonSegment(
                             value: _DemoRole.administrator,
                             icon: Icon(Icons.admin_panel_settings_outlined),
-                            label: Text('Admin'),
+                            label: TourFlowText('Admin'),
                           ),
                         ],
                         selected: {_role},
@@ -246,9 +245,9 @@ class _SignInPageState extends State<SignInPage> {
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.email],
-                      decoration: const InputDecoration(
-                        labelText: 'Email Address',
-                        hintText: 'name@example.com',
+                      decoration: InputDecoration(
+                        labelText: context.tr('Email Address'),
+                        hintText: context.tr('name@example.com'),
                         prefixIcon: Icon(Icons.email_outlined),
                         border: OutlineInputBorder(),
                       ),
@@ -263,8 +262,8 @@ class _SignInPageState extends State<SignInPage> {
                         if (!_isSubmitting) _signIn();
                       },
                       decoration: InputDecoration(
-                        labelText: 'Password',
-                        hintText: 'Enter your password',
+                        labelText: context.tr('Password'),
+                        hintText: context.tr('Enter your password'),
                         prefixIcon: const Icon(Icons.lock_outline_rounded),
                         border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
@@ -283,7 +282,7 @@ class _SignInPageState extends State<SignInPage> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: _sendPasswordReset,
-                        child: const Text('Forgot Password?'),
+                        child: const TourFlowText('Forgot Password?'),
                       ),
                     ),
                     PrimaryButton(
@@ -295,7 +294,7 @@ class _SignInPageState extends State<SignInPage> {
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
+              const TourFlowText(
                 'NEW TO TOURFLOW?',
                 style: TextStyle(
                   color: TourFlowColors.muted,
@@ -334,7 +333,7 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                       SizedBox(width: 10),
                       Expanded(
-                        child: Text(
+                        child: TourFlowText(
                           'Staff and administrator accounts are provisioned by an administrator.',
                           style: TextStyle(fontSize: 11),
                         ),

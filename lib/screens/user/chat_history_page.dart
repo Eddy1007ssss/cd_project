@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../models/chat_models.dart';
+import '../../services/gemini_chat_service.dart';
 import '../../widgets/tourflow_widgets.dart';
+import 'chat_support_page.dart';
 import 'support_ticket_list_page.dart';
 
 class ChatHistoryPage extends StatefulWidget {
@@ -13,55 +16,134 @@ class ChatHistoryPage extends StatefulWidget {
 }
 
 class _ChatHistoryPageState extends State<ChatHistoryPage> {
-  String _query = '';
+  final GeminiChatService _chatService = GeminiChatService();
 
-  static const _conversations = [
-    _Conversation(
-      title: 'National Museum opening hours',
-      preview: 'The museum is open from 9:00 AM to 5:00 PM...',
-      date: 'Today, 10:24 AM',
-      language: 'English',
-      icon: Icons.account_balance_outlined,
-    ),
-    _Conversation(
-      title: 'Low-crowd attractions near me',
-      preview: 'Lumina Botanical Gardens currently has a Low crowd level...',
-      date: '30 Aug, 4:18 PM',
-      language: 'Bahasa Malaysia',
-      icon: Icons.groups_outlined,
-    ),
-    _Conversation(
-      title: 'Transport to Old Town Square',
-      preview: 'Take the MRT and exit at Pasar Seni Gate A...',
-      date: '27 Aug, 11:03 AM',
-      language: 'Mandarin',
-      icon: Icons.directions_transit_outlined,
-    ),
-  ];
+  List<ChatConversation> _conversations = const [];
+  String _displayName = 'Tourist';
+  String _email = '';
+  String _query = '';
+  String? _error;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final userContext = await _chatService.getCurrentUserContext();
+      final conversations = await _chatService.getConversations();
+      if (!mounted) return;
+      setState(() {
+        _displayName = userContext.displayName;
+        _email = userContext.email;
+        _conversations = conversations;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  Future<void> _openConversation(ChatConversation conversation) async {
+    await Navigator.pushNamed(
+      context,
+      ChatSupportPage.routeName,
+      arguments: conversation.id,
+    );
+    if (mounted) await _loadHistory();
+  }
+
+  Future<void> _deleteConversation(ChatConversation conversation) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const TourFlowText('Delete conversation?'),
+        content: TourFlowText(
+          '“${conversation.title}” and all of its messages will be permanently deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const TourFlowText('Keep'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: TourFlowColors.danger,
+            ),
+            child: const TourFlowText('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _chatService.deleteConversation(conversation.id);
+      if (!mounted) return;
+      setState(() {
+        _conversations = _conversations
+            .where((item) => item.id != conversation.id)
+            .toList();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: TourFlowText('Conversation deleted.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TourFlowText(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final visible = _conversations
-        .where(
-          (item) =>
-              item.title.toLowerCase().contains(_query.toLowerCase()) ||
-              item.preview.toLowerCase().contains(_query.toLowerCase()),
-        )
-        .toList();
+    final normalizedQuery = _query.trim().toLowerCase();
+    final visible = _conversations.where((item) {
+      return normalizedQuery.isEmpty ||
+          item.title.toLowerCase().contains(normalizedQuery) ||
+          item.lastMessagePreview.toLowerCase().contains(normalizedQuery) ||
+          item.language.toLowerCase().contains(normalizedQuery);
+    }).toList();
 
     return TourFlowPage(
       title: 'Chat History',
       role: 'TOURFLOW · TOURIST',
       selectedNavigationIndex: 3,
-      displayName: 'Alex Tan',
-      email: 'alex@example.com',
+      displayName: _displayName,
+      email: _email,
+      actions: [
+        IconButton(
+          tooltip: context.tr('Refresh'),
+          onPressed: _isLoading ? null : _loadHistory,
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
             onChanged: (value) => setState(() => _query = value),
             decoration: InputDecoration(
-              hintText: 'Search previous conversations',
+              hintText: context.tr('Search your conversations'),
               prefixIcon: const Icon(Icons.search_rounded),
               filled: true,
               fillColor: Colors.white,
@@ -80,8 +162,9 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
             children: [
               const Expanded(
                 child: SectionTitle(
-                  'Previous conversations',
-                  subtitle: 'Continue an earlier conversation with TourFlow.',
+                  'Your conversations',
+                  subtitle:
+                      'Only your signed-in account can read these messages.',
                 ),
               ),
               TextButton.icon(
@@ -90,24 +173,69 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                   SupportTicketListPage.routeName,
                 ),
                 icon: const Icon(Icons.support_agent_outlined, size: 18),
-                label: const Text('Tickets'),
+                label: const TourFlowText('Tickets'),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          if (visible.isEmpty)
+          if (_isLoading)
             const ModuleCard(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 28),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            )
+          else if (_error != null)
+            ModuleCard(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Column(
                   children: [
-                    Icon(
+                    const Icon(
+                      Icons.cloud_off_outlined,
+                      size: 42,
+                      color: TourFlowColors.muted,
+                    ),
+                    const SizedBox(height: 10),
+                    TourFlowText(_error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: _loadHistory,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const TourFlowText('Try again'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (visible.isEmpty)
+            ModuleCard(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                child: Column(
+                  children: [
+                    const Icon(
                       Icons.forum_outlined,
                       size: 44,
                       color: TourFlowColors.muted,
                     ),
-                    SizedBox(height: 10),
-                    Text('No matching conversations found.'),
+                    const SizedBox(height: 10),
+                    TourFlowText(
+                      normalizedQuery.isEmpty
+                          ? 'No saved conversations yet.'
+                          : 'No matching conversations found.',
+                    ),
+                    if (normalizedQuery.isEmpty) ...[
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: () => Navigator.pushNamed(
+                          context,
+                          ChatSupportPage.routeName,
+                        ),
+                        icon: const Icon(Icons.add_comment_outlined),
+                        label: const TourFlowText('Start a conversation'),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -119,28 +247,24 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                 child: ModuleCard(
                   padding: EdgeInsets.zero,
                   child: InkWell(
-                    onTap: () => Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/user/chat',
-                      (route) => false,
-                    ),
+                    onTap: () => _openConversation(conversation),
                     borderRadius: BorderRadius.circular(16),
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Row(
                         children: [
-                          CircleAvatar(
+                          const CircleAvatar(
                             radius: 23,
                             backgroundColor: TourFlowColors.lavender,
                             foregroundColor: TourFlowColors.primaryText,
-                            child: Icon(conversation.icon),
+                            child: Icon(Icons.chat_bubble_outline_rounded),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                TourFlowText(
                                   conversation.title,
                                   style: const TextStyle(
                                     color: TourFlowColors.heading,
@@ -148,8 +272,10 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
-                                  conversation.preview,
+                                TourFlowText(
+                                  conversation.lastMessagePreview.isEmpty
+                                      ? 'No messages yet.'
+                                      : conversation.lastMessagePreview,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -162,14 +288,14 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                                 Wrap(
                                   spacing: 10,
                                   children: [
-                                    Text(
-                                      conversation.date,
+                                    TourFlowText(
+                                      _formatDate(conversation.lastMessageAt),
                                       style: const TextStyle(
                                         color: TourFlowColors.muted,
                                         fontSize: 9,
                                       ),
                                     ),
-                                    Text(
+                                    TourFlowText(
                                       conversation.language,
                                       style: const TextStyle(
                                         color: TourFlowColors.primaryText,
@@ -182,9 +308,26 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
                               ],
                             ),
                           ),
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            color: TourFlowColors.primaryText,
+                          PopupMenuButton<String>(
+                            tooltip: context.tr('Conversation options'),
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                _deleteConversation(conversation);
+                              }
+                            },
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: TourFlowColors.danger,
+                                  ),
+                                  title: TourFlowText('Delete'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -197,20 +340,31 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
       ),
     );
   }
-}
 
-class _Conversation {
-  const _Conversation({
-    required this.title,
-    required this.preview,
-    required this.date,
-    required this.language,
-    required this.icon,
-  });
+  String _formatDate(DateTime value) {
+    final now = DateTime.now();
+    final time =
+        '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+    if (value.year == now.year &&
+        value.month == now.month &&
+        value.day == now.day) {
+      return 'Today, $time';
+    }
 
-  final String title;
-  final String preview;
-  final String date;
-  final String language;
-  final IconData icon;
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${value.day} ${months[value.month - 1]} ${value.year}, $time';
+  }
 }

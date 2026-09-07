@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cd_project/l10n/tourflow_localization.dart';
 
 abstract final class TourFlowNavigationColors {
   static const Color surface = Color(0xFFFFFFFF);
@@ -55,12 +56,14 @@ class TourFlowBottomNavigationBar extends StatelessWidget {
     required this.items,
     required this.selectedIndex,
     this.onItemSelected,
+    this.translateLabels = false,
     super.key,
   });
 
   final List<TourFlowNavigationItem> items;
   final int selectedIndex;
   final ValueChanged<int>? onItemSelected;
+  final bool translateLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +93,7 @@ class TourFlowBottomNavigationBar extends StatelessWidget {
                 child: _NavigationButton(
                   item: items[index],
                   isSelected: index == selectedIndex,
+                  translateLabel: translateLabels,
                   onTap: () {
                     onItemSelected?.call(index);
                   },
@@ -107,11 +111,13 @@ class _NavigationButton extends StatelessWidget {
   const _NavigationButton({
     required this.item,
     required this.isSelected,
+    required this.translateLabel,
     required this.onTap,
   });
 
   final TourFlowNavigationItem item;
   final bool isSelected;
+  final bool translateLabel;
   final VoidCallback onTap;
 
   @override
@@ -148,17 +154,30 @@ class _NavigationButton extends StatelessWidget {
                   color: color,
                 ),
                 const SizedBox(height: 1),
-                Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 10,
-                    height: 1.2,
-                    fontWeight: FontWeight.w600,
+                if (translateLabel)
+                  TourFlowText(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 10,
+                      height: 1.2,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                else
+                  Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 10,
+                      height: 1.2,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -184,6 +203,7 @@ class UserBottomNavigationBar extends StatelessWidget {
       items: userNavigationItems,
       selectedIndex: selectedIndex,
       onItemSelected: onItemSelected,
+      translateLabels: true,
     );
   }
 }

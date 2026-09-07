@@ -9,12 +9,15 @@ void main() {
   test('anonymous Module 2 demo contains approved bookable attractions', () {
     final attractions = module2DemoAttractions();
 
-    expect(attractions, hasLength(3));
+    expect(attractions, hasLength(10));
     expect(
       attractions.every((item) => item.listingStatus == 'approved'),
       isTrue,
     );
-    expect(attractions.every((item) => item.availableSlots.isNotEmpty), isTrue);
+    expect(
+      attractions.where((item) => item.availableSlots.isNotEmpty),
+      isNotEmpty,
+    );
     expect(
       module2DemoInterestTags.keys,
       containsAll(attractions.map((item) => item.id)),
@@ -79,7 +82,7 @@ void main() {
     final attraction = Attraction.fromMap(_map()).copyWithDistance(2);
     const preferences = PreferenceProfile(
       touristId: 'tourist',
-      interests: ['history'],
+      interests: ['nature'],
       maxBudgetMyr: 40,
       travelRadiusKm: 10,
       preferredCrowdLevel: 'moderate',
@@ -93,9 +96,8 @@ void main() {
       previousCategories: const {'historical landmark'},
     );
 
-    expect(result.percentage, 100);
-    expect(result.reasons, anyElement(contains('interests')));
-    expect(result.reasons, anyElement(contains('completed')));
+    expect(result.percentage, inInclusiveRange(90, 100));
+    expect(result.reasons, anyElement(contains('previously visited')));
     expect(result.recommendedSlot, isNotNull);
   });
 

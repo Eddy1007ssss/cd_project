@@ -1,25 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../models/support_ticket_models.dart';
+import '../../services/support_ticket_service.dart';
+import '../../widgets/fullscreen_network_image_viewer.dart';
 import '../../widgets/tourflow_widgets.dart';
 
 class SupportTicketDetailsArguments {
-  const SupportTicketDetailsArguments({
-    required this.id,
-    required this.subject,
-    required this.category,
-    required this.status,
-    required this.date,
-    required this.assignedTo,
-    required this.description,
-  });
+  const SupportTicketDetailsArguments({required this.ticketId});
 
-  final String id;
-  final String subject;
-  final String category;
-  final String status;
-  final String date;
-  final String assignedTo;
-  final String description;
+  final String ticketId;
 }
 
 class SupportTicketDetailsPage extends StatefulWidget {
@@ -33,174 +22,267 @@ class SupportTicketDetailsPage extends StatefulWidget {
 }
 
 class _SupportTicketDetailsPageState extends State<SupportTicketDetailsPage> {
-  final TextEditingController _replyController = TextEditingController();
-  bool _replySent = false;
+  final SupportTicketService _service = SupportTicketService();
+
+  SupportTicketDetailsData? _details;
+  String? _ticketId;
+  String? _error;
+  bool _loading = true;
 
   @override
-  void dispose() {
-    _replyController.dispose();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ticketId != null) return;
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is! SupportTicketDetailsArguments) {
+      setState(() {
+        _loading = false;
+        _error = 'Support ticket ID is missing.';
+      });
+      return;
+    }
+    _ticketId = arguments.ticketId;
+    _load();
+  }
+
+  Future<void> _load() async {
+    final id = _ticketId;
+    if (id == null) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final details = await _service.fetchTicketDetails(id);
+      if (!mounted) return;
+      setState(() {
+        _details = details;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = _message(error);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final routeArguments = ModalRoute.of(context)?.settings.arguments;
-    final ticket = routeArguments is SupportTicketDetailsArguments
-        ? routeArguments
-        : const SupportTicketDetailsArguments(
-            id: 'TF-SUP-1032',
-            subject: 'Crowd level did not update',
-            category: 'Technical Issue',
-            status: 'In Progress',
-            date: '30 Aug 2026, 3:15 PM',
-            assignedTo: 'Old Town Square Operator',
-            description:
-                'The attraction page continued showing Low crowd level during a very busy period.',
-          );
-
     return TourFlowPage(
       title: 'Ticket Details',
       role: 'TOURFLOW · TOURIST',
       selectedNavigationIndex: 3,
-      displayName: 'Alex Tan',
-      email: 'alex@example.com',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ModuleCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        ticket.id,
-                        style: const TextStyle(
-                          color: TourFlowColors.primaryText,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: .6,
-                        ),
+      actions: [
+        IconButton(
+          tooltip: context.tr('Refresh'),
+          onPressed: _loading ? null : _load,
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
+      child: _loading
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 60),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : _error != null
+          ? _ErrorView(message: _error!, onRetry: _load)
+          : _TicketDetailsBody(details: _details!),
+    );
+  }
+}
+
+class _TicketDetailsBody extends StatelessWidget {
+  const _TicketDetailsBody({required this.details});
+
+  final SupportTicketDetailsData details;
+
+  @override
+  Widget build(BuildContext context) {
+    final ticket = details.ticket;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ModuleCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TourFlowText(
+                      ticket.code,
+                      style: const TextStyle(
+                        color: TourFlowColors.primaryText,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: .6,
                       ),
                     ),
-                    _StatusChip(status: ticket.status),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  ticket.subject,
-                  style: const TextStyle(
-                    color: TourFlowColors.heading,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 6,
-                  children: [
-                    _Metadata(
-                      icon: Icons.category_outlined,
-                      text: ticket.category,
-                    ),
-                    _Metadata(icon: Icons.schedule_rounded, text: ticket.date),
-                  ],
-                ),
-                const Divider(height: 26),
-                const Text(
-                  'Your message',
-                  style: TextStyle(
-                    color: TourFlowColors.heading,
-                    fontWeight: FontWeight.w700,
+                  StatusChip(
+                    label: ticket.statusLabel.toUpperCase(),
+                    color: _statusColor(ticket.status),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TourFlowText(
+                ticket.subject,
+                style: const TextStyle(
+                  color: TourFlowColors.heading,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
                 ),
+              ),
+              const SizedBox(height: 10),
+              _Metadata(icon: Icons.attractions_outlined, text: ticket.attractionName),
+              const SizedBox(height: 7),
+              _Metadata(icon: Icons.category_outlined, text: ticket.categoryLabel),
+              if (ticket.bookingCode != null) ...[
                 const SizedBox(height: 7),
-                Text(
-                  ticket.description,
-                  style: const TextStyle(
-                    color: TourFlowColors.body,
-                    fontSize: 12,
-                    height: 1.5,
-                  ),
+                _Metadata(
+                  icon: Icons.confirmation_number_outlined,
+                  text: ticket.bookingCode!,
                 ),
               ],
-            ),
+              const SizedBox(height: 7),
+              _Metadata(
+                icon: Icons.schedule_rounded,
+                text: _dateTime(ticket.createdAt),
+              ),
+              const Divider(height: 26),
+              const TourFlowText(
+                'Complaint details',
+                style: TextStyle(
+                  color: TourFlowColors.heading,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 7),
+              TourFlowText(
+                ticket.description,
+                style: const TextStyle(
+                  color: TourFlowColors.body,
+                  fontSize: 12,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ),
+        ),
+        if (details.attachments.isNotEmpty) ...[
           const SizedBox(height: 16),
-          const SectionTitle('Ticket activity'),
-          const SizedBox(height: 12),
-          _TimelineItem(
-            title: 'Ticket submitted',
-            subtitle: ticket.date,
-            icon: Icons.send_outlined,
-            complete: true,
-          ),
-          _TimelineItem(
-            title: 'Assigned to ${ticket.assignedTo}',
-            subtitle: '30 Aug 2026, 3:28 PM',
-            icon: Icons.support_agent_rounded,
-            complete: true,
-          ),
-          const _TimelineItem(
-            title: 'Operator response',
-            subtitle:
-                'We are checking the crowd sensor and live dashboard connection. We will update you shortly.',
-            icon: Icons.forum_outlined,
-            complete: false,
-          ),
-          if (_replySent)
-            const _TimelineItem(
-              title: 'Your reply sent',
-              subtitle: 'Thank you. I will wait for the update.',
-              icon: Icons.reply_rounded,
-              complete: false,
-            ),
-          const SizedBox(height: 16),
-          ModuleCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Add a reply',
-                  style: TextStyle(
-                    color: TourFlowColors.heading,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 9),
-                TextField(
-                  controller: _replyController,
-                  minLines: 3,
-                  maxLines: 5,
-                  decoration: InputDecoration(
-                    hintText: 'Write additional information...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+          const SectionTitle('Attachments'),
+          const SizedBox(height: 10),
+          ...details.attachments.map(
+            (attachment) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: ModuleCard(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FullscreenNetworkImageViewer(
+                      imageUrl: attachment.signedUrl,
+                      fileName: attachment.fileName,
+                      heroTag: 'user-ticket-attachment-${attachment.id}',
                     ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      if (_replyController.text.trim().isEmpty) return;
-                      setState(() => _replySent = true);
-                      _replyController.clear();
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: TourFlowColors.primary,
-                      foregroundColor: TourFlowColors.primaryText,
+                    const SizedBox(height: 8),
+                    TourFlowText(
+                      attachment.fileName,
+                      style: const TextStyle(
+                        color: TourFlowColors.body,
+                        fontSize: 11,
+                      ),
                     ),
-                    icon: const Icon(Icons.reply_rounded),
-                    label: const Text('Send Reply'),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
+        const SizedBox(height: 16),
+        const SectionTitle(
+          'Complete processing history',
+          subtitle: 'Status changes and staff responses are shown in time order.',
+        ),
+        const SizedBox(height: 10),
+        if (details.events.isEmpty)
+          const ModuleCard(child: TourFlowText('No activity has been recorded yet.'))
+        else
+          ...details.events.map(
+            (event) => _TimelineEvent(event: event),
+          ),
+      ],
+    );
+  }
+}
+
+class _TimelineEvent extends StatelessWidget {
+  const _TimelineEvent({required this.event});
+
+  final SupportTicketEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, title) = switch (event.eventType) {
+      'created' => (Icons.add_task_rounded, 'Ticket submitted'),
+      'status_changed' => (
+        Icons.sync_alt_rounded,
+        'Status changed to ${supportTicketStatusLabel(event.toStatus)}',
+      ),
+      'attachment' => (Icons.attach_file_rounded, 'Attachment added'),
+      _ => (Icons.forum_outlined, '${event.actorName} replied'),
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: ModuleCard(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 19,
+              backgroundColor: TourFlowColors.lavender,
+              foregroundColor: TourFlowColors.primaryText,
+              child: Icon(icon, size: 19),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TourFlowText(
+                    title,
+                    style: const TextStyle(
+                      color: TourFlowColors.heading,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  TourFlowText(
+                    '${event.actorName} · ${_dateTime(event.createdAt)}',
+                    style: const TextStyle(
+                      color: TourFlowColors.muted,
+                      fontSize: 10,
+                    ),
+                  ),
+                  if (event.message?.isNotEmpty == true) ...[
+                    const SizedBox(height: 7),
+                    TourFlowText(
+                      event.message!,
+                      style: const TextStyle(
+                        color: TourFlowColors.body,
+                        fontSize: 12,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -213,109 +295,51 @@ class _Metadata extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 15, color: TourFlowColors.muted),
-        const SizedBox(width: 5),
-        Text(
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 16, color: TourFlowColors.muted),
+      const SizedBox(width: 6),
+      Expanded(
+        child: TourFlowText(
           text,
-          style: const TextStyle(color: TourFlowColors.muted, fontSize: 10),
+          style: const TextStyle(color: TourFlowColors.muted, fontSize: 11),
         ),
+      ),
+    ],
+  );
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => ModuleCard(
+    child: Column(
+      children: [
+        TourFlowText(message, textAlign: TextAlign.center),
+        const SizedBox(height: 10),
+        TextButton(onPressed: onRetry, child: const TourFlowText('Try Again')),
       ],
-    );
-  }
+    ),
+  );
 }
 
-class _TimelineItem extends StatelessWidget {
-  const _TimelineItem({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.complete,
-  });
+Color _statusColor(String status) => switch (status) {
+  'resolved' => TourFlowColors.success,
+  'in_progress' => const Color(0xFF1D4ED8),
+  _ => TourFlowColors.warning,
+};
 
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool complete;
+String _message(Object error) =>
+    error.toString().replaceFirst('Exception: ', '').trim();
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: ModuleCard(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 19,
-              backgroundColor: complete
-                  ? const Color(0xFFDCFCE7)
-                  : TourFlowColors.lavender,
-              foregroundColor: complete
-                  ? TourFlowColors.success
-                  : TourFlowColors.primaryText,
-              child: Icon(icon, size: 19),
-            ),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: TourFlowColors.heading,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: TourFlowColors.muted,
-                      fontSize: 11,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (background, foreground) = switch (status) {
-      'Resolved' => (const Color(0xFFDCFCE7), TourFlowColors.success),
-      'In Progress' => (const Color(0xFFDBEAFE), const Color(0xFF1D4ED8)),
-      _ => (const Color(0xFFFFE2A8), TourFlowColors.primaryText),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: foreground,
-          fontSize: 9,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
+String _dateTime(DateTime value) {
+  final day = value.day.toString().padLeft(2, '0');
+  final month = value.month.toString().padLeft(2, '0');
+  final hour = value.hour.toString().padLeft(2, '0');
+  final minute = value.minute.toString().padLeft(2, '0');
+  return '$day/$month/${value.year} $hour:$minute';
 }

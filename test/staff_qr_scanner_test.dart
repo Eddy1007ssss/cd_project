@@ -25,14 +25,17 @@ void main() {
     );
     await tester.ensureVisible(find.byKey(const Key('verify-booking')));
     await tester.tap(find.byKey(const Key('verify-booking')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(gateway.verifiedValue, 'TF-ABC');
     expect(find.byKey(const Key('verification-valid')), findsOneWidget);
     expect(find.byKey(const Key('confirm-check-in')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('confirm-check-in')));
-    await tester.pumpAndSettle();
+    final confirmButton = tester.widget<FilledButton>(
+      find.byKey(const Key('confirm-check-in')),
+    );
+    confirmButton.onPressed!();
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(gateway.confirmedBookingId, 'booking-1');
     expect(find.text('Check-In Successful'), findsOneWidget);
@@ -126,5 +129,15 @@ class _FakeStaffCheckInGateway implements StaffCheckInGateway {
   Future<StaffBookingVerification> confirmStaffCheckIn(String bookingId) async {
     confirmedBookingId = bookingId;
     return confirmation;
+  }
+
+  @override
+  Future<StaffBookingVerification> confirmStaffCheckOut(
+    String bookingId,
+  ) async {
+    return StaffBookingVerification(
+      status: StaffBookingStatus.checkedOut,
+      bookingId: bookingId,
+    );
   }
 }

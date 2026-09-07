@@ -1,203 +1,927 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
+import '../../widgets/navigation/navigation_logout.dart';
 import '../../widgets/navigation/navigation_routes.dart';
+import '../../widgets/navigation/user_sidebar.dart';
 import 'booking_details_page.dart';
 import 'itinerary_planner_page.dart';
 
 class BookingHistoryPage extends StatefulWidget {
   const BookingHistoryPage({super.key});
+
   static const routeName = TourFlowRoutes.userTrips;
+
   @override
-  State<BookingHistoryPage> createState() => _BookingHistoryPageState();
+  State<BookingHistoryPage> createState() =>
+      _BookingHistoryPageState();
 }
 
 class _BookingHistoryPageState extends State<BookingHistoryPage>
-    with SingleTickerProviderStateMixin {
-  final _repository = Module3Repository();
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  final Module3Repository _repository = Module3Repository();
+
   late final TabController _tabs;
-  late Future<List<TourBooking>> _bookings;
+
+  Timer? _refreshTimer;
+
+  List<TourBooking> _bookings = const [];
+
+  bool _isLoading = true;
+  bool _isRefreshing = false;
+  bool _hasLoaded = false;
+  bool _hasError = false;
+  bool _isForeground = true;
+
+  // ============================================================
+  // INIT
+  // ============================================================
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
-    _bookings = _repository.fetchBookings();
+
+    WidgetsBinding.instance.addObserver(this);
+
+    _tabs = TabController(
+      length: 3,
+      vsync: this,
+    );
+
+    _refresh();
+    _startAutoRefresh();
   }
+
+  // ============================================================
+  // APP LIFECYCLE
+  // ============================================================
+
+  @override
+  void didChangeAppLifecycleState(
+      AppLifecycleState state,
+      ) {
+    _isForeground =
+        state == AppLifecycleState.resumed;
+
+    if (_isForeground) {
+      if (ModalRoute.of(context)?.isCurrent == true) {
+        _refresh();
+      }
+
+      _startAutoRefresh();
+    } else {
+      _stopAutoRefresh();
+    }
+  }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
 
   @override
   void dispose() {
+    _stopAutoRefresh();
+
+    WidgetsBinding.instance.removeObserver(this);
+
     _tabs.dispose();
+
     super.dispose();
   }
 
-  Future<void> _refresh() async {
-    setState(() => _bookings = _repository.fetchBookings());
-    await _bookings;
+  // ============================================================
+  // AUTO REFRESH
+  // ============================================================
+
+  void _startAutoRefresh() {
+    _stopAutoRefresh();
+
+    if (!_isForeground) {
+      return;
+    }
+
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 3),
+          (_) {
+        if (!mounted || !_isForeground) {
+          return;
+        }
+
+        if (ModalRoute.of(context)?.isCurrent != true) {
+          return;
+        }
+
+        _refresh();
+      },
+    );
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('My Trips'),
-      bottom: TabBar(
-        controller: _tabs,
-        tabs: const [
-          Tab(text: 'Upcoming'),
-          Tab(text: 'Past'),
-          Tab(text: 'Cancelled'),
-        ],
-      ),
-    ),
-    body: FutureBuilder<List<TourBooking>>(
-      future: _bookings,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) return _LoadError(onRetry: _refresh);
-        final all = snapshot.data ?? const [];
-        final groups = [
-          all.where((b) => b.isUpcoming).toList(),
-          all
-              .where(
-                (b) =>
-                    b.status == BookingStatus.completed ||
-                    (b.status == BookingStatus.confirmed &&
-                        !b.slot.startsAt.isAfter(DateTime.now())),
-              )
-              .toList(),
-          all.where((b) => b.status == BookingStatus.cancelled).toList(),
-        ];
-        return TabBarView(
-          controller: _tabs,
-          children: groups
-              .map(
-                (items) => RefreshIndicator(
-                  onRefresh: _refresh,
-                  child: items.isEmpty
-                      ? ListView(
-                          children: const [
-                            SizedBox(height: 150),
-                            Icon(Icons.event_busy_outlined, size: 48),
-                            Center(child: Text('No bookings in this section.')),
-                          ],
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: items.length,
-                          itemBuilder: (_, index) => _BookingCard(
-                            booking: items[index],
-                            onChanged: _refresh,
-                          ),
-                        ),
-                ),
-              )
-              .toList(),
-        );
-      },
-    ),
-    floatingActionButton: FloatingActionButton.extended(
-      onPressed: () =>
-          Navigator.pushNamed(context, ItineraryPlannerPage.routeName),
-      icon: const Icon(Icons.route_outlined),
-      label: const Text('Plan itinerary'),
-    ),
-  );
-}
+  void _stopAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+  }
 
-class _BookingCard extends StatelessWidget {
-  const _BookingCard({required this.booking, required this.onChanged});
-  final TourBooking booking;
-  final Future<void> Function() onChanged;
+  // ============================================================
+  // REFRESH BOOKINGS
+  // ============================================================
+
+  Future<void> _refresh() async {
+    if (!mounted ||
+        !_isForeground ||
+        _isRefreshing) {
+      return;
+    }
+
+    setState(() {
+      _isRefreshing = true;
+
+      if (!_hasLoaded) {
+        _isLoading = true;
+      }
+    });
+
+    try {
+      final updatedBookings =
+      await _repository.fetchBookings();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _bookings = updatedBookings;
+        _hasLoaded = true;
+        _hasError = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _hasError = true;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
+
+  // ============================================================
+  // OPEN BOOKING DETAILS
+  // ============================================================
+
+  Future<void> _openBooking(
+      TourBooking booking,
+      ) async {
+    await Navigator.pushNamed(
+      context,
+      BookingDetailsPage.routeName,
+      arguments: booking,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _refresh();
+  }
+
+  // ============================================================
+  // OPEN ITINERARY
+  // ============================================================
+
+  Future<void> _openItinerary() async {
+    await Navigator.pushNamed(
+      context,
+      ItineraryPlannerPage.routeName,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _refresh();
+  }
+
+  // ============================================================
+  // BOOKING LIST
+  // ============================================================
+
+  Widget _buildBookingList(
+      List<TourBooking> items,
+      String emptyMessage,
+      String storageKey,
+      ) {
+    return RefreshIndicator(
+      onRefresh: _refresh,
+
+      child: items.isEmpty
+          ? ListView(
+        key: PageStorageKey<String>(
+          storageKey,
+        ),
+        physics:
+        const AlwaysScrollableScrollPhysics(),
+        padding:
+        const EdgeInsets.all(24),
+        children: [
+          const SizedBox(
+            height: 120,
+          ),
+
+          const Icon(
+            Icons.event_busy_outlined,
+            size: 48,
+            color: Colors.black45,
+          ),
+
+          const SizedBox(
+            height: 12,
+          ),
+
+          Text(
+            emptyMessage,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.black54,
+            ),
+          ),
+        ],
+      )
+          : ListView.builder(
+        key: PageStorageKey<String>(
+          storageKey,
+        ),
+        physics:
+        const AlwaysScrollableScrollPhysics(),
+        padding:
+        const EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          100,
+        ),
+        itemCount: items.length,
+        itemBuilder: (
+            context,
+            index,
+            ) {
+          final booking =
+          items[index];
+
+          return _BookingCard(
+            key: ValueKey(
+              booking.id,
+            ),
+            booking: booking,
+            onTap: () {
+              _openBooking(
+                booking,
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
-  Widget build(BuildContext context) => Card(
-    color: Colors.white,
-    margin: const EdgeInsets.only(bottom: 12),
-    child: InkWell(
-      onTap: () async {
-        await Navigator.pushNamed(
-          context,
-          BookingDetailsPage.routeName,
-          arguments: booking,
-        );
-        onChanged();
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: booking.slot.coverImageUrl == null
-                  ? Container(
-                      width: 76,
-                      height: 76,
-                      color: const Color(0xFFFFE2B5),
-                      child: const Icon(Icons.place_outlined),
-                    )
-                  : Image.network(
-                      booking.slot.coverImageUrl!,
-                      width: 76,
-                      height: 76,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const SizedBox(
-                        width: 76,
-                        height: 76,
-                        child: Icon(Icons.place_outlined),
-                      ),
-                    ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    booking.slot.attractionName,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  Text(
-                    '${shortDate(booking.slot.startsAt)} · ${slotTime(booking.slot)}',
-                  ),
-                  Text(
-                    '${booking.visitorCount} visitor(s) · ${booking.bookingCode}',
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    booking.status.name.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: booking.status == BookingStatus.cancelled
-                          ? Colors.red
-                          : Colors.green.shade700,
-                    ),
-                  ),
-                ],
+  Widget build(
+      BuildContext context,
+      ) {
+    final now = DateTime.now();
+
+    final active =
+    <TourBooking>[];
+
+    final past =
+    <TourBooking>[];
+
+    final cancelled =
+    <TourBooking>[];
+
+    // ==========================================================
+    // SORT BOOKINGS INTO TABS
+    // ==========================================================
+
+    for (final booking in _bookings) {
+      if (_isFinished(booking)) {
+        past.add(booking);
+      } else if (booking.isCheckedIn) {
+        active.add(booking);
+      } else if (booking.isCancelled) {
+        cancelled.add(booking);
+      } else if (booking.slot.endsAt.isBefore(now)) {
+        past.add(booking);
+      } else {
+        active.add(booking);
+      }
+    }
+
+    return Scaffold(
+      backgroundColor:
+      const Color(
+        0xFFFAF8FF,
+      ),
+
+      // ========================================================
+      // TOURIST SIDEBAR
+      // ========================================================
+
+      drawer: UserSidebar(
+        displayName: 'Alex Tan',
+        email: 'alex@example.com',
+
+        // My Trips & Bookings
+        selectedIndex: 2,
+
+        onLogout: () async {
+          await signOutAndReturnToSignIn(
+            context,
+          );
+        },
+      ),
+
+      // ========================================================
+      // APP BAR
+      // ========================================================
+
+      appBar: AppBar(
+        backgroundColor:
+        const Color(
+          0xFFFAF8FF,
+        ),
+
+        surfaceTintColor:
+        Colors.transparent,
+
+        elevation: 1,
+
+        shadowColor:
+        const Color(
+          0x140F172A,
+        ),
+
+        // ======================================================
+        // REMOVE DEFAULT BACK BUTTON
+        // ======================================================
+
+        automaticallyImplyLeading: false,
+
+        // ======================================================
+        // NEW SIDEBAR MENU ICON
+        // ======================================================
+
+        leading: Builder(
+          builder: (
+              context,
+              ) {
+            return IconButton(
+              tooltip: 'Menu',
+              icon: const Icon(
+                Icons.menu_rounded,
               ),
+              onPressed: () {
+                Scaffold.of(context)
+                    .openDrawer();
+              },
+            );
+          },
+        ),
+
+        // ======================================================
+        // MY TRIPS TITLE
+        // ======================================================
+
+        title: const Text(
+          'My Trips',
+          style: TextStyle(
+            color: Color(
+              0xFF131B2E,
             ),
-            const Icon(Icons.chevron_right),
+            fontSize: 20,
+            fontWeight:
+            FontWeight.w600,
+          ),
+        ),
+
+        centerTitle: false,
+
+        // ======================================================
+        // NO REFRESH ICON
+        // ======================================================
+
+        actions: const [],
+
+        // ======================================================
+        // ACTIVE / PAST / CANCELLED
+        // ======================================================
+
+        bottom: TabBar(
+          controller: _tabs,
+
+          labelColor:
+          const Color(
+            0xFF79571E,
+          ),
+
+          unselectedLabelColor:
+          const Color(
+            0xFF6B7280,
+          ),
+
+          indicatorColor:
+          const Color(
+            0xFF79571E,
+          ),
+
+          tabs: const [
+            Tab(
+              text: 'Active',
+            ),
+            Tab(
+              text: 'Past',
+            ),
+            Tab(
+              text: 'Cancelled',
+            ),
           ],
         ),
       ),
-    ),
-  );
+
+      // ========================================================
+      // BODY
+      // ========================================================
+
+      body: _isLoading
+          ? const Center(
+        child:
+        CircularProgressIndicator(),
+      )
+          : !_hasLoaded &&
+          _hasError
+          ? _LoadError(
+        onRetry: () {
+          _refresh();
+        },
+      )
+          : Column(
+        children: [
+          // ===========================================
+          // REFRESH ERROR MESSAGE
+          // ===========================================
+
+          if (_hasError)
+            Container(
+              width:
+              double.infinity,
+              padding:
+              const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
+              color:
+              const Color(
+                0xFFFFF3CD,
+              ),
+              child:
+              const Text(
+                'Unable to refresh bookings. '
+                    'The displayed status may be out of date.',
+                textAlign:
+                TextAlign.center,
+                style:
+                TextStyle(
+                  color:
+                  Color(
+                    0xFF92400E,
+                  ),
+                  fontSize: 12,
+                ),
+              ),
+            ),
+
+          // ===========================================
+          // TABS
+          // ===========================================
+
+          Expanded(
+            child:
+            TabBarView(
+              controller:
+              _tabs,
+              children: [
+                // ACTIVE
+
+                _buildBookingList(
+                  active,
+                  'No active bookings.',
+                  'active-bookings',
+                ),
+
+                // PAST
+
+                _buildBookingList(
+                  past,
+                  'No past bookings.',
+                  'past-bookings',
+                ),
+
+                // CANCELLED
+
+                _buildBookingList(
+                  cancelled,
+                  'No cancelled bookings.',
+                  'cancelled-bookings',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+
+      // ========================================================
+      // PLAN ITINERARY
+      // ========================================================
+
+      floatingActionButton:
+      FloatingActionButton.extended(
+        onPressed:
+        _openItinerary,
+        icon:
+        const Icon(
+          Icons.route_outlined,
+        ),
+        label:
+        const Text(
+          'Plan itinerary',
+        ),
+      ),
+    );
+  }
 }
 
-class _LoadError extends StatelessWidget {
-  const _LoadError({required this.onRetry});
-  final VoidCallback onRetry;
+// ============================================================
+// BOOKING CARD
+// ============================================================
+
+class _BookingCard extends StatelessWidget {
+  const _BookingCard({
+    required this.booking,
+    required this.onTap,
+    super.key,
+  });
+
+  final TourBooking booking;
+  final VoidCallback onTap;
+
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text('Could not load your bookings.'),
-        TextButton(onPressed: onRetry, child: const Text('Try again')),
-      ],
-    ),
+  Widget build(
+      BuildContext context,
+      ) {
+    final statusColor =
+    _bookingStatusColor(
+      booking,
+    );
+
+    final imageUrl =
+        booking.slot.coverImageUrl;
+
+    return Card(
+      color: Colors.white,
+
+      margin:
+      const EdgeInsets.only(
+        bottom: 12,
+      ),
+
+      clipBehavior:
+      Clip.antiAlias,
+
+      child: InkWell(
+        onTap: onTap,
+
+        child: Padding(
+          padding:
+          const EdgeInsets.all(
+            14,
+          ),
+
+          child: Row(
+            children: [
+              // =================================================
+              // IMAGE
+              // =================================================
+
+              ClipRRect(
+                borderRadius:
+                BorderRadius.circular(
+                  10,
+                ),
+                child:
+                imageUrl == null ||
+                    imageUrl.isEmpty
+                    ? const _AttractionPlaceholder()
+                    : Image.network(
+                  imageUrl,
+                  width: 76,
+                  height: 76,
+                  fit:
+                  BoxFit.cover,
+                  errorBuilder:
+                      (
+                      context,
+                      error,
+                      stackTrace,
+                      ) {
+                    return const _AttractionPlaceholder();
+                  },
+                ),
+              ),
+
+              const SizedBox(
+                width: 12,
+              ),
+
+              // =================================================
+              // DETAILS
+              // =================================================
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      booking.slot
+                          .attractionName,
+                      style:
+                      const TextStyle(
+                        fontWeight:
+                        FontWeight.w800,
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 4,
+                    ),
+
+                    Text(
+                      '${shortDate(booking.slot.startsAt)} '
+                          '· ${slotTime(booking.slot)}',
+                    ),
+
+                    const SizedBox(
+                      height: 4,
+                    ),
+
+                    Text(
+                      '${booking.visitorCount} visitor(s) '
+                          '· ${booking.bookingCode}',
+                      style:
+                      const TextStyle(
+                        fontSize: 11,
+                        color:
+                        Colors.black54,
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 8,
+                    ),
+
+                    // =============================================
+                    // STATUS
+                    // =============================================
+
+                    Container(
+                      padding:
+                      const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration:
+                      BoxDecoration(
+                        color:
+                        statusColor.withAlpha(
+                          20,
+                        ),
+                        borderRadius:
+                        BorderRadius.circular(
+                          6,
+                        ),
+                      ),
+                      child: Text(
+                        _bookingStatusLabel(
+                          booking,
+                        ),
+                        style:
+                        TextStyle(
+                          fontSize: 11,
+                          fontWeight:
+                          FontWeight.w800,
+                          color:
+                          statusColor,
+                        ),
+                      ),
+                    ),
+
+                    // =============================================
+                    // CHECKED IN
+                    // =============================================
+
+                    if (booking
+                        .isCheckedIn &&
+                        !_isFinished(
+                          booking,
+                        )) ...[
+                      const SizedBox(
+                        height: 6,
+                      ),
+
+                      const Text(
+                        'Your visit is in progress.',
+                        style:
+                        TextStyle(
+                          fontSize: 11,
+                          color:
+                          Color(
+                            0xFF15803D,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const Icon(
+                Icons.chevron_right,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// ATTRACTION IMAGE PLACEHOLDER
+// ============================================================
+
+class _AttractionPlaceholder extends StatelessWidget {
+  const _AttractionPlaceholder();
+
+  @override
+  Widget build(
+      BuildContext context,
+      ) {
+    return Container(
+      width: 76,
+      height: 76,
+
+      color:
+      const Color(
+        0xFFFFE2B5,
+      ),
+
+      child:
+      const Icon(
+        Icons.place_outlined,
+        color:
+        Color(
+          0xFF79571E,
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// LOAD ERROR
+// ============================================================
+
+class _LoadError extends StatelessWidget {
+  const _LoadError({
+    required this.onRetry,
+  });
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(
+      BuildContext context,
+      ) {
+    return Center(
+      child: Column(
+        mainAxisSize:
+        MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 44,
+            color:
+            Colors.black45,
+          ),
+
+          const SizedBox(
+            height: 12,
+          ),
+
+          const Text(
+            'Could not load your bookings.',
+          ),
+
+          const SizedBox(
+            height: 8,
+          ),
+
+          TextButton(
+            onPressed:
+            onRetry,
+            child:
+            const Text(
+              'Try again',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// FINISHED
+// ============================================================
+
+bool _isFinished(
+    TourBooking booking,
+    ) {
+  return booking.isCompleted ||
+      booking.isCheckedOut;
+}
+
+// ============================================================
+// STATUS LABEL
+// ============================================================
+
+String _bookingStatusLabel(
+    TourBooking booking,
+    ) {
+  if (_isFinished(booking)) {
+    return 'Completed';
+  }
+
+  if (booking.isCheckedIn) {
+    return 'Checked In';
+  }
+
+  if (booking.isCancelled) {
+    return 'Cancelled';
+  }
+
+  return 'Confirmed';
+}
+
+// ============================================================
+// STATUS COLOR
+// ============================================================
+
+Color _bookingStatusColor(
+    TourBooking booking,
+    ) {
+  if (_isFinished(booking)) {
+    return const Color(
+      0xFF2563EB,
+    );
+  }
+
+  if (booking.isCheckedIn) {
+    return const Color(
+      0xFF15803D,
+    );
+  }
+
+  if (booking.isCancelled) {
+    return const Color(
+      0xFFB91C1C,
+    );
+  }
+
+  return const Color(
+    0xFF92400E,
   );
 }

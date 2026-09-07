@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+export '../l10n/tourflow_localization.dart'
+    show TourFlowText, TourFlowTranslationContext;
+
 import 'navigation/navigation_logout.dart';
 import 'navigation/navigation_routes.dart';
 import 'navigation/navigation_scope.dart';
@@ -38,6 +41,7 @@ class TourFlowPage extends StatelessWidget {
     this.selectedNavigationIndex = 0,
     this.displayName = 'Alex Thompson',
     this.email = 'alex.thompson@tourflow.com',
+    this.showMenuButton = true,
     super.key,
   });
 
@@ -50,93 +54,144 @@ class TourFlowPage extends StatelessWidget {
   final int selectedNavigationIndex;
   final String displayName;
   final String email;
+  final bool showMenuButton;
 
   @override
   Widget build(BuildContext context) {
     final navigationScope = TourFlowNavigationScope.maybeOf(context);
+
     final effectiveIndex =
         navigationScope?.selectedIndex ?? selectedNavigationIndex;
+
     final showBackButton = pageLevel == TourFlowPageLevel.secondary;
+
+    final hasRole = role.trim().isNotEmpty;
+
+    double leadingWidth = 0;
+
+    if (showBackButton && showMenuButton) {
+      leadingWidth = 96;
+    } else if (showBackButton || showMenuButton) {
+      leadingWidth = 56;
+    }
 
     return Scaffold(
       backgroundColor: TourFlowColors.background,
+
       drawer: switch (navigationRole) {
         TourFlowNavigationRole.tourist => UserSidebar(
           displayName: displayName,
           email: email,
           selectedIndex: effectiveIndex,
-          onLogout: () async => signOutAndReturnToSignIn(context),
+          onLogout: () async {
+            await signOutAndReturnToSignIn(context);
+          },
         ),
+
         TourFlowNavigationRole.operator => OperatorSidebar(
           displayName: displayName,
           email: email,
           selectedIndex: effectiveIndex,
           onItemSelected: navigationScope?.onItemSelected ?? (_) {},
-          onLogout: () async => signOutAndReturnToSignIn(context),
+          onLogout: () async {
+            await signOutAndReturnToSignIn(context);
+          },
         ),
+
         TourFlowNavigationRole.staff => StaffSidebar(
           displayName: displayName,
           email: email,
           selectedIndex: effectiveIndex,
           onItemSelected: navigationScope?.onItemSelected ?? (_) {},
-          onLogout: () async => signOutAndReturnToSignIn(context),
+          onLogout: () async {
+            await signOutAndReturnToSignIn(context);
+          },
         ),
+
         TourFlowNavigationRole.administrator => AdminSidebar(
           displayName: displayName,
           email: email,
           selectedIndex: effectiveIndex,
           onItemSelected: navigationScope?.onItemSelected ?? (_) {},
-          onLogout: () async => signOutAndReturnToSignIn(context),
+          onLogout: () async {
+            await signOutAndReturnToSignIn(context);
+          },
         ),
       },
+
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        leadingWidth: showBackButton ? 96 : 56,
-        leading: Builder(
-          builder: (context) => Row(
-            children: [
-              if (showBackButton)
-                IconButton(
-                  tooltip: 'Back',
-                  onPressed: () => _handleBack(context),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-              IconButton(
-                tooltip: 'Open menu',
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                icon: const Icon(Icons.menu_rounded),
-              ),
-            ],
-          ),
-        ),
+        leadingWidth: leadingWidth,
+
+        leading: showBackButton || showMenuButton
+            ? Builder(
+                builder: (context) {
+                  return Row(
+                    children: [
+                      if (showBackButton)
+                        IconButton(
+                          tooltip: 'Back',
+                          onPressed: () {
+                            _handleBack(context);
+                          },
+                          icon: const Icon(Icons.arrow_back_rounded),
+                        ),
+
+                      if (showMenuButton)
+                        IconButton(
+                          tooltip: 'Open menu',
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                          icon: const Icon(Icons.menu_rounded),
+                        ),
+                    ],
+                  );
+                },
+              )
+            : null,
+
         centerTitle: false,
         elevation: 1,
         shadowColor: const Color(0x140F172A),
         backgroundColor: TourFlowColors.surface,
         surfaceTintColor: Colors.transparent,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: TourFlowColors.heading,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+
+        title: hasRole
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: TourFlowColors.heading,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    role,
+                    style: const TextStyle(
+                      color: TourFlowColors.primaryText,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              )
+            : Text(
+                title,
+                style: const TextStyle(
+                  color: TourFlowColors.heading,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            Text(
-              role,
-              style: const TextStyle(
-                color: TourFlowColors.primaryText,
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+
         actions: actions,
       ),
+
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -148,13 +203,20 @@ class TourFlowPage extends StatelessWidget {
   }
 
   Future<void> _handleBack(BuildContext context) async {
-    if (await Navigator.maybePop(context) || !context.mounted) return;
+    if (await Navigator.maybePop(context) || !context.mounted) {
+      return;
+    }
+
     final fallbackRoute = switch (navigationRole) {
       TourFlowNavigationRole.tourist => TourFlowRoutes.userHome,
+
       TourFlowNavigationRole.operator => TourFlowRoutes.operatorDashboard,
+
       TourFlowNavigationRole.staff => TourFlowRoutes.staffScan,
+
       TourFlowNavigationRole.administrator => TourFlowRoutes.adminDashboard,
     };
+
     Navigator.pushNamedAndRemoveUntil(context, fallbackRoute, (route) => false);
   }
 }

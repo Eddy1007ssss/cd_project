@@ -9,6 +9,11 @@ const List<TourFlowNavigationItem> adminNavigationItems = [
     selectedIcon: Icons.dashboard_rounded,
   ),
   TourFlowNavigationItem(
+    label: 'Users',
+    icon: Icons.manage_accounts_outlined,
+    selectedIcon: Icons.manage_accounts_rounded,
+  ),
+  TourFlowNavigationItem(
     label: 'Reviews',
     icon: Icons.fact_check_outlined,
     selectedIcon: Icons.fact_check_rounded,

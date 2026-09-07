@@ -21,7 +21,7 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
   @override
   Widget build(BuildContext context) {
     return TourFlowPage(
-      title: 'Admin',
+      title: 'User Management',
       role: 'TOURFLOW · ADMINISTRATOR',
       navigationRole: TourFlowNavigationRole.administrator,
       pageLevel: TourFlowPageLevel.topLevel,
@@ -32,12 +32,6 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionTitle(
-            'User Management',
-            subtitle:
-                'Review operator applications and manage platform account access.',
-          ),
-          const SizedBox(height: 16),
           const Row(
             children: [
               Expanded(
