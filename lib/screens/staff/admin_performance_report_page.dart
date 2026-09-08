@@ -14,24 +14,100 @@ class AdminPerformanceReportPage extends StatefulWidget {
   static const routeName = '/admin-performance-report';
 
   @override
-  State<AdminPerformanceReportPage> createState() => _AdminPerformanceReportPageState();
+  State<AdminPerformanceReportPage> createState() =>
+      _AdminPerformanceReportPageState();
 }
 
-class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage> {
+class _AdminPerformanceReportPageState
+    extends State<AdminPerformanceReportPage> {
   final _client = Supabase.instance.client;
-  late Future<_PerformanceReportData> _report;
+
+  Future<_PerformanceReportData>? _report;
+
+  DateTime? _startDate;
+  DateTime? _endDate;
+
+  bool _argumentsLoaded = false;
   bool _isExporting = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_argumentsLoaded) return;
+    _argumentsLoaded = true;
+
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+
+    if (arguments is Map) {
+      final startDate = arguments['startDate'];
+      final endDate = arguments['endDate'];
+
+      if (startDate is DateTime) {
+        _startDate = DateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+        );
+      }
+
+      if (endDate is DateTime) {
+        _endDate = DateTime(
+          endDate.year,
+          endDate.month,
+          endDate.day,
+        );
+      }
+    }
+
     _report = _loadReport();
   }
 
-  Future<_PerformanceReportData> _loadReport() async {
-    final feedbackRows = await _client.from('feedback').select('overall_rating');
+  String _dateTimeForQuery(DateTime date) {
+    return date.toUtc().toIso8601String();
+  }
 
-    final bookingRows = await _client
+  DateTime _startOfDay(DateTime date) {
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+    );
+  }
+
+  DateTime _endExclusive(DateTime date) {
+    return DateTime(
+      date.year,
+      date.month,
+      date.day + 1,
+    );
+  }
+
+  Future<_PerformanceReportData> _loadReport() async {
+    final selectedStart = _startDate;
+    final selectedEnd = _endDate;
+
+    var feedbackQuery = _client
+        .from('feedback')
+        .select('overall_rating, created_at');
+
+    if (selectedStart != null) {
+      feedbackQuery = feedbackQuery.gte(
+        'created_at',
+        _dateTimeForQuery(_startOfDay(selectedStart)),
+      );
+    }
+
+    if (selectedEnd != null) {
+      feedbackQuery = feedbackQuery.lt(
+        'created_at',
+        _dateTimeForQuery(_endExclusive(selectedEnd)),
+      );
+    }
+
+    final feedbackRows = await feedbackQuery;
+
+    var bookingQuery = _client
         .from('bookings')
         .select(
       'visitor_count, completed_at, '
@@ -41,103 +117,187 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
     )
         .eq('status', 'completed');
 
-    double averageRating = 0.0;
-
-    if (feedbackRows.isNotEmpty) {
-      final validRatings = feedbackRows
-          .map((row) => (row['overall_rating'] as num?)?.toDouble())
-          .whereType<double>()
-          .toList();
-
-      if (validRatings.isNotEmpty) {
-        averageRating = validRatings.reduce((a, b) => a + b) / validRatings.length;
-      }
+    if (selectedStart != null) {
+      bookingQuery = bookingQuery.gte(
+        'completed_at',
+        _dateTimeForQuery(_startOfDay(selectedStart)),
+      );
     }
 
-    final double visitorSatisfaction =
-    averageRating == 0 ? 0.0 : (averageRating / 5) * 100;
+    if (selectedEnd != null) {
+      bookingQuery = bookingQuery.lt(
+        'completed_at',
+        _dateTimeForQuery(_endExclusive(selectedEnd)),
+      );
+    }
+
+    final bookingRows = await bookingQuery;
+
+    double averageRating = 0.0;
+
+    final validRatings = feedbackRows
+        .map(
+          (row) =>
+          (row['overall_rating'] as num?)?.toDouble(),
+    )
+        .whereType<double>()
+        .toList();
+
+    if (validRatings.isNotEmpty) {
+      averageRating =
+          validRatings.reduce((a, b) => a + b) /
+              validRatings.length;
+    }
+
+    final visitorSatisfaction = averageRating == 0
+        ? 0.0
+        : (averageRating / 5) * 100;
 
     double totalRevenue = 0.0;
     int totalVisitors = 0;
 
-    final now = DateTime.now();
-    final currentMonthStart = DateTime(now.year, now.month, 1);
-    final currentMonthEnd = DateTime(now.year, now.month, now.day + 1);
-
-    final previousMonthStart = DateTime(now.year, now.month - 1, 1);
-    final previousMonthDays =
-        DateTime(previousMonthStart.year, previousMonthStart.month + 1, 0).day;
-
-    final comparisonDay =
-    now.day > previousMonthDays ? previousMonthDays : now.day;
-
-    final previousMonthEnd = DateTime(
-      previousMonthStart.year,
-      previousMonthStart.month,
-      comparisonDay + 1,
-    );
-
-    double currentRevenue = 0.0;
-    double previousRevenue = 0.0;
-
     for (final row in bookingRows) {
-      final visitors = (row['visitor_count'] as num?)?.toInt() ?? 0;
-      final slot = (row['slot'] as Map?)?.cast<String, dynamic>();
-      final attraction = (slot?['attraction'] as Map?)?.cast<String, dynamic>();
+      final visitors =
+          (row['visitor_count'] as num?)?.toInt() ?? 0;
+
+      final slot =
+      (row['slot'] as Map?)?.cast<String, dynamic>();
+
+      final attraction =
+      (slot?['attraction'] as Map?)
+          ?.cast<String, dynamic>();
 
       final entrancePrice =
-          (attraction?['entrance_price_myr'] as num?)?.toDouble() ?? 0.0;
-
-      final revenue = visitors * entrancePrice;
+          (attraction?['entrance_price_myr'] as num?)
+              ?.toDouble() ??
+              0.0;
 
       totalVisitors += visitors;
-      totalRevenue += revenue;
-
-      final completedAtValue = row['completed_at'];
-      if (completedAtValue == null) continue;
-
-      final completedAt =
-      DateTime.parse(completedAtValue.toString()).toLocal();
-
-      if (!completedAt.isBefore(currentMonthStart) &&
-          completedAt.isBefore(currentMonthEnd)) {
-        currentRevenue += revenue;
-      }
-
-      if (!completedAt.isBefore(previousMonthStart) &&
-          completedAt.isBefore(previousMonthEnd)) {
-        previousRevenue += revenue;
-      }
+      totalRevenue += visitors * entrancePrice;
     }
 
-    final double revenuePerVisitor =
-    totalVisitors == 0 ? 0.0 : totalRevenue / totalVisitors;
+    final revenuePerVisitor = totalVisitors == 0
+        ? 0.0
+        : totalRevenue / totalVisitors;
+
+    final previousRevenue =
+    await _loadPreviousPeriodRevenue();
 
     String revenueGrowth;
 
     if (previousRevenue == 0) {
-      revenueGrowth = currentRevenue > 0 ? 'New' : '0%';
+      revenueGrowth =
+      totalRevenue > 0 ? 'New' : '0%';
     } else {
       final growth =
-          ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+          ((totalRevenue - previousRevenue) /
+              previousRevenue) *
+              100;
 
       revenueGrowth =
-      '${growth >= 0 ? '+' : ''}${growth.toStringAsFixed(1)}%';
+      '${growth >= 0 ? '+' : ''}'
+          '${growth.toStringAsFixed(1)}%';
     }
 
     return _PerformanceReportData(
-      visitorSatisfaction: visitorSatisfaction,
+      visitorSatisfaction:
+      visitorSatisfaction,
       averageRating: averageRating,
-      revenuePerVisitor: revenuePerVisitor,
+      revenuePerVisitor:
+      revenuePerVisitor,
       revenueGrowth: revenueGrowth,
       totalVisitors: totalVisitors,
       totalRevenue: totalRevenue,
       totalFeedback: feedbackRows.length,
+      startDate: _startDate,
+      endDate: _endDate,
     );
+  }
+
+  Future<double> _loadPreviousPeriodRevenue() async {
+    if (_startDate == null || _endDate == null) {
+      return 0.0;
+    }
+
+    final currentStart =
+    _startOfDay(_startDate!);
+
+    final currentEndExclusive =
+    _endExclusive(_endDate!);
+
+    final duration =
+    currentEndExclusive.difference(
+      currentStart,
+    );
+
+    final previousEndExclusive =
+        currentStart;
+
+    final previousStart =
+    currentStart.subtract(duration);
+
+    final rows = await _client
+        .from('bookings')
+        .select(
+      'visitor_count, completed_at, '
+          'slot:attraction_slots('
+          'attraction:attractions(entrance_price_myr)'
+          ')',
+    )
+        .eq('status', 'completed')
+        .gte(
+      'completed_at',
+      _dateTimeForQuery(previousStart),
+    )
+        .lt(
+      'completed_at',
+      _dateTimeForQuery(previousEndExclusive),
+    );
+
+    double revenue = 0.0;
+
+    for (final row in rows) {
+      final visitors =
+          (row['visitor_count'] as num?)?.toInt() ?? 0;
+
+      final slot =
+      (row['slot'] as Map?)?.cast<String, dynamic>();
+
+      final attraction =
+      (slot?['attraction'] as Map?)
+          ?.cast<String, dynamic>();
+
+      final entrancePrice =
+          (attraction?['entrance_price_myr'] as num?)
+              ?.toDouble() ??
+              0.0;
+
+      revenue += visitors * entrancePrice;
+    }
+
+    return revenue;
   }
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  String _reportPeriod(
+      _PerformanceReportData data,
+      ) {
+    if (data.startDate == null ||
+        data.endDate == null) {
+      return 'All Available Data';
+    }
+
+    if (data.startDate!.year == data.endDate!.year &&
+        data.startDate!.month == data.endDate!.month &&
+        data.startDate!.day == data.endDate!.day) {
+      return _formatDate(data.startDate!);
+    }
+
+    return '${_formatDate(data.startDate!)} - '
+        '${_formatDate(data.endDate!)}';
   }
 
   String _formatNumber(int value) {
@@ -148,7 +308,8 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
       final remaining = text.length - i;
       buffer.write(text[i]);
 
-      if (remaining > 1 && remaining % 3 == 1) {
+      if (remaining > 1 &&
+          remaining % 3 == 1) {
         buffer.write(',');
       }
     }
@@ -156,7 +317,9 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
     return buffer.toString();
   }
 
-  Future<Uint8List> _buildPdf(_PerformanceReportData data) async {
+  Future<Uint8List> _buildPdf(
+      _PerformanceReportData data,
+      ) async {
     final pdf = pw.Document();
     final generatedAt = DateTime.now();
 
@@ -166,30 +329,40 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
         margin: const pw.EdgeInsets.all(36),
         header: (context) {
           return pw.Container(
-            padding: const pw.EdgeInsets.only(bottom: 12),
-            decoration: const pw.BoxDecoration(
+            padding:
+            const pw.EdgeInsets.only(
+              bottom: 12,
+            ),
+            decoration:
+            const pw.BoxDecoration(
               border: pw.Border(
                 bottom: pw.BorderSide(
-                  color: PdfColors.grey300,
+                  color:
+                  PdfColors.grey300,
                   width: 1,
                 ),
               ),
             ),
             child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              mainAxisAlignment:
+              pw.MainAxisAlignment
+                  .spaceBetween,
               children: [
                 pw.Text(
                   'TourFlow',
                   style: pw.TextStyle(
                     fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
+                    fontWeight:
+                    pw.FontWeight.bold,
                   ),
                 ),
                 pw.Text(
                   'ADMINISTRATOR',
-                  style: const pw.TextStyle(
+                  style:
+                  const pw.TextStyle(
                     fontSize: 9,
-                    color: PdfColors.grey600,
+                    color:
+                    PdfColors.grey600,
                   ),
                 ),
               ],
@@ -198,30 +371,42 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
         },
         footer: (context) {
           return pw.Container(
-            padding: const pw.EdgeInsets.only(top: 10),
-            decoration: const pw.BoxDecoration(
+            padding:
+            const pw.EdgeInsets.only(
+              top: 10,
+            ),
+            decoration:
+            const pw.BoxDecoration(
               border: pw.Border(
                 top: pw.BorderSide(
-                  color: PdfColors.grey300,
+                  color:
+                  PdfColors.grey300,
                   width: 1,
                 ),
               ),
             ),
             child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              mainAxisAlignment:
+              pw.MainAxisAlignment
+                  .spaceBetween,
               children: [
                 pw.Text(
                   'TourFlow Performance Report',
-                  style: const pw.TextStyle(
+                  style:
+                  const pw.TextStyle(
                     fontSize: 8,
-                    color: PdfColors.grey600,
+                    color:
+                    PdfColors.grey600,
                   ),
                 ),
                 pw.Text(
-                  'Page ${context.pageNumber} of ${context.pagesCount}',
-                  style: const pw.TextStyle(
+                  'Page ${context.pageNumber} of '
+                      '${context.pagesCount}',
+                  style:
+                  const pw.TextStyle(
                     fontSize: 8,
-                    color: PdfColors.grey600,
+                    color:
+                    PdfColors.grey600,
                   ),
                 ),
               ],
@@ -230,42 +415,65 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
         },
         build: (context) => [
           pw.SizedBox(height: 20),
+
           pw.Text(
             'Performance Report',
             style: pw.TextStyle(
               fontSize: 24,
-              fontWeight: pw.FontWeight.bold,
+              fontWeight:
+              pw.FontWeight.bold,
             ),
           ),
+
           pw.SizedBox(height: 5),
+
           pw.Text(
             'Visitor, rating and revenue performance',
-            style: const pw.TextStyle(
+            style:
+            const pw.TextStyle(
               fontSize: 11,
               color: PdfColors.grey600,
             ),
           ),
+
           pw.SizedBox(height: 6),
+
           pw.Text(
-            'Generated: ${_formatDate(generatedAt)}',
-            style: const pw.TextStyle(
+            'Reporting Period: ${_reportPeriod(data)}',
+            style:
+            const pw.TextStyle(
               fontSize: 9,
               color: PdfColors.grey600,
             ),
           ),
+
+          pw.SizedBox(height: 3),
+
+          pw.Text(
+            'Generated: ${_formatDate(generatedAt)}',
+            style:
+            const pw.TextStyle(
+              fontSize: 9,
+              color: PdfColors.grey600,
+            ),
+          ),
+
           pw.SizedBox(height: 24),
 
           pw.Text(
             'Performance Metrics',
             style: pw.TextStyle(
               fontSize: 15,
-              fontWeight: pw.FontWeight.bold,
+              fontWeight:
+              pw.FontWeight.bold,
             ),
           ),
+
           pw.SizedBox(height: 10),
 
           pw.Table(
-            border: pw.TableBorder.all(
+            border:
+            pw.TableBorder.all(
               color: PdfColors.grey300,
               width: 0.8,
             ),
@@ -274,7 +482,10 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
               1: pw.FlexColumnWidth(1),
             },
             children: [
-              _pdfTableHeader('Metric', 'Value'),
+              _pdfTableHeader(
+                'Metric',
+                'Value',
+              ),
               _pdfTableRow(
                 'Visitor Satisfaction',
                 '${data.visitorSatisfaction.toStringAsFixed(0)}%',
@@ -302,13 +513,16 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
             'Key Metrics',
             style: pw.TextStyle(
               fontSize: 15,
-              fontWeight: pw.FontWeight.bold,
+              fontWeight:
+              pw.FontWeight.bold,
             ),
           ),
+
           pw.SizedBox(height: 10),
 
           pw.Table(
-            border: pw.TableBorder.all(
+            border:
+            pw.TableBorder.all(
               color: PdfColors.grey300,
               width: 0.8,
             ),
@@ -317,10 +531,19 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
               1: pw.FlexColumnWidth(1),
             },
             children: [
-              _pdfTableHeader('Item', 'Value'),
+              _pdfTableHeader(
+                'Item',
+                'Value',
+              ),
+              _pdfTableRow(
+                'Reporting Period',
+                _reportPeriod(data),
+              ),
               _pdfTableRow(
                 'Total Visitors',
-                _formatNumber(data.totalVisitors),
+                _formatNumber(
+                  data.totalVisitors,
+                ),
               ),
               _pdfTableRow(
                 'Total Revenue',
@@ -337,35 +560,56 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
 
           pw.Container(
             width: double.infinity,
-            padding: const pw.EdgeInsets.all(12),
-            decoration: pw.BoxDecoration(
+            padding:
+            const pw.EdgeInsets.all(
+              12,
+            ),
+            decoration:
+            pw.BoxDecoration(
               color: PdfColors.grey100,
-              borderRadius: pw.BorderRadius.circular(6),
+              borderRadius:
+              pw.BorderRadius.circular(
+                6,
+              ),
             ),
             child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              crossAxisAlignment:
+              pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
                   'Calculation Notes',
                   style: pw.TextStyle(
                     fontSize: 11,
-                    fontWeight: pw.FontWeight.bold,
+                    fontWeight:
+                    pw.FontWeight.bold,
                   ),
                 ),
+
                 pw.SizedBox(height: 6),
+
                 pw.Text(
-                  'Revenue is derived from completed bookings using visitor count multiplied by attraction entrance price.',
-                  style: const pw.TextStyle(
+                  'Revenue is derived from completed bookings '
+                      'within the selected reporting period using '
+                      'visitor count multiplied by attraction entrance price.',
+                  style:
+                  const pw.TextStyle(
                     fontSize: 9,
-                    color: PdfColors.grey700,
+                    color:
+                    PdfColors.grey700,
                   ),
                 ),
+
                 pw.SizedBox(height: 4),
+
                 pw.Text(
-                  'Revenue growth compares the current month-to-date with the same period of the previous month.',
-                  style: const pw.TextStyle(
+                  'Revenue growth compares the selected reporting '
+                      'period with the immediately preceding period '
+                      'of the same duration.',
+                  style:
+                  const pw.TextStyle(
                     fontSize: 9,
-                    color: PdfColors.grey700,
+                    color:
+                    PdfColors.grey700,
                   ),
                 ),
               ],
@@ -378,30 +622,43 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
     return pdf.save();
   }
 
-  pw.TableRow _pdfTableHeader(String left, String right) {
+  pw.TableRow _pdfTableHeader(
+      String left,
+      String right,
+      ) {
     return pw.TableRow(
-      decoration: const pw.BoxDecoration(
+      decoration:
+      const pw.BoxDecoration(
         color: PdfColors.grey200,
       ),
       children: [
         pw.Padding(
-          padding: const pw.EdgeInsets.all(8),
+          padding:
+          const pw.EdgeInsets.all(
+            8,
+          ),
           child: pw.Text(
             left,
             style: pw.TextStyle(
               fontSize: 10,
-              fontWeight: pw.FontWeight.bold,
+              fontWeight:
+              pw.FontWeight.bold,
             ),
           ),
         ),
         pw.Padding(
-          padding: const pw.EdgeInsets.all(8),
+          padding:
+          const pw.EdgeInsets.all(
+            8,
+          ),
           child: pw.Text(
             right,
-            textAlign: pw.TextAlign.right,
+            textAlign:
+            pw.TextAlign.right,
             style: pw.TextStyle(
               fontSize: 10,
-              fontWeight: pw.FontWeight.bold,
+              fontWeight:
+              pw.FontWeight.bold,
             ),
           ),
         ),
@@ -409,26 +666,38 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
     );
   }
 
-  pw.TableRow _pdfTableRow(String label, String value) {
+  pw.TableRow _pdfTableRow(
+      String label,
+      String value,
+      ) {
     return pw.TableRow(
       children: [
         pw.Padding(
-          padding: const pw.EdgeInsets.all(8),
+          padding:
+          const pw.EdgeInsets.all(
+            8,
+          ),
           child: pw.Text(
             label,
-            style: const pw.TextStyle(
+            style:
+            const pw.TextStyle(
               fontSize: 9,
             ),
           ),
         ),
         pw.Padding(
-          padding: const pw.EdgeInsets.all(8),
+          padding:
+          const pw.EdgeInsets.all(
+            8,
+          ),
           child: pw.Text(
             value,
-            textAlign: pw.TextAlign.right,
+            textAlign:
+            pw.TextAlign.right,
             style: pw.TextStyle(
               fontSize: 9,
-              fontWeight: pw.FontWeight.bold,
+              fontWeight:
+              pw.FontWeight.bold,
             ),
           ),
         ),
@@ -436,7 +705,9 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
     );
   }
 
-  Future<void> _exportPdf(_PerformanceReportData data) async {
+  Future<void> _exportPdf(
+      _PerformanceReportData data,
+      ) async {
     if (_isExporting) return;
 
     setState(() {
@@ -444,16 +715,19 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
     });
 
     try {
-      final bytes = await _buildPdf(data);
+      final bytes =
+      await _buildPdf(data);
 
       await Printing.sharePdf(
         bytes: bytes,
-        filename: 'tourflow_performance_report.pdf',
+        filename:
+        'tourflow_performance_report.pdf',
       );
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
           content: Text(
             'Unable to export PDF: $error',
@@ -469,21 +743,50 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
     }
   }
 
+  void _retry() {
+    setState(() {
+      _report = _loadReport();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final report = _report;
+
     return TourFlowPage(
       title: 'Performance Report',
-      role: 'TOURFLOW · ADMINISTRATOR',
-      navigationRole: TourFlowNavigationRole.administrator,
+      role:
+      'TOURFLOW · ADMINISTRATOR',
+      navigationRole:
+      TourFlowNavigationRole
+          .administrator,
       selectedNavigationIndex: 0,
-      child: FutureBuilder<_PerformanceReportData>(
-        future: _report,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
+      child: report == null
+          ? const Padding(
+        padding:
+        EdgeInsets.symmetric(
+          vertical: 60,
+        ),
+        child: Center(
+          child:
+          CircularProgressIndicator(),
+        ),
+      )
+          : FutureBuilder<
+          _PerformanceReportData>(
+        future: report,
+        builder:
+            (context, snapshot) {
+          if (snapshot.connectionState !=
+              ConnectionState.done) {
             return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 60),
+              padding:
+              EdgeInsets.symmetric(
+                vertical: 60,
+              ),
               child: Center(
-                child: CircularProgressIndicator(),
+                child:
+                CircularProgressIndicator(),
               ),
             );
           }
@@ -493,67 +796,104 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
               child: Column(
                 children: [
                   const Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.redAccent,
+                    Icons
+                        .error_outline_rounded,
+                    color:
+                    Colors.redAccent,
                     size: 30,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(
+                    height: 10,
+                  ),
                   const Text(
                     'Unable to generate performance report.',
                     style: TextStyle(
-                      color: TourFlowColors.heading,
+                      color:
+                      TourFlowColors
+                          .heading,
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontWeight:
+                      FontWeight
+                          .w700,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(
+                    height: 12,
+                  ),
                   OutlinedButton(
-                    onPressed: () {
-                      setState(() {
-                        _report = _loadReport();
-                      });
-                    },
-                    child: const Text('Try Again'),
+                    onPressed: _retry,
+                    child: const Text(
+                      'Try Again',
+                    ),
                   ),
                 ],
               ),
             );
           }
 
-          final data = snapshot.data!;
+          final data =
+          snapshot.data!;
 
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+            CrossAxisAlignment
+                .start,
             children: [
               Row(
                 children: [
                   Container(
                     width: 4,
                     height: 24,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF7357C8),
-                      borderRadius: BorderRadius.circular(10),
+                    decoration:
+                    BoxDecoration(
+                      color:
+                      const Color(
+                        0xFF7357C8,
+                      ),
+                      borderRadius:
+                      BorderRadius
+                          .circular(
+                        10,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 9),
+
+                  const SizedBox(
+                    width: 9,
+                  ),
+
                   const Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                      CrossAxisAlignment
+                          .start,
                       children: [
                         Text(
                           'Performance Overview',
-                          style: TextStyle(
-                            color: TourFlowColors.heading,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
+                          style:
+                          TextStyle(
+                            color:
+                            TourFlowColors
+                                .heading,
+                            fontSize:
+                            15,
+                            fontWeight:
+                            FontWeight
+                                .w800,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        SizedBox(
+                          height: 2,
+                        ),
                         Text(
                           'Visitor, rating and revenue performance summary',
-                          style: TextStyle(
-                            color: TourFlowColors.muted,
-                            fontSize: 9,
+                          style:
+                          TextStyle(
+                            color:
+                            TourFlowColors
+                                .muted,
+                            fontSize:
+                            9,
                           ),
                         ),
                       ],
@@ -562,24 +902,38 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               Row(
                 children: [
                   Expanded(
-                    child: _MetricCard(
-                      icon: Icons.sentiment_satisfied_alt_outlined,
-                      label: 'Visitor Satisfaction',
+                    child:
+                    _MetricCard(
+                      icon: Icons
+                          .sentiment_satisfied_alt_outlined,
+                      label:
+                      'Visitor Satisfaction',
                       value:
                       '${data.visitorSatisfaction.toStringAsFixed(0)}%',
                     ),
                   ),
-                  const SizedBox(width: 10),
+
+                  const SizedBox(
+                    width: 10,
+                  ),
+
                   Expanded(
-                    child: _MetricCard(
-                      icon: Icons.star_outline_rounded,
-                      label: 'Average Rating',
-                      value: data.averageRating == 0
+                    child:
+                    _MetricCard(
+                      icon: Icons
+                          .star_outline_rounded,
+                      label:
+                      'Average Rating',
+                      value:
+                      data.averageRating ==
+                          0
                           ? '-'
                           : '${data.averageRating.toStringAsFixed(1)} / 5',
                     ),
@@ -587,147 +941,275 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
                 ],
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
               Row(
                 children: [
                   Expanded(
-                    child: _MetricCard(
-                      icon: Icons.payments_outlined,
-                      label: 'Revenue / Visitor',
+                    child:
+                    _MetricCard(
+                      icon: Icons
+                          .payments_outlined,
+                      label:
+                      'Revenue / Visitor',
                       value:
                       'RM ${data.revenuePerVisitor.toStringAsFixed(2)}',
                     ),
                   ),
-                  const SizedBox(width: 10),
+
+                  const SizedBox(
+                    width: 10,
+                  ),
+
                   Expanded(
-                    child: _MetricCard(
-                      icon: Icons.trending_up_rounded,
-                      label: 'Revenue Growth',
-                      value: data.revenueGrowth,
+                    child:
+                    _MetricCard(
+                      icon: Icons
+                          .trending_up_rounded,
+                      label:
+                      'Revenue Growth',
+                      value: data
+                          .revenueGrowth,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(
+                height: 18,
+              ),
 
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xFFE1E5EA),
+                width:
+                double.infinity,
+                padding:
+                const EdgeInsets
+                    .all(15),
+                decoration:
+                BoxDecoration(
+                  color:
+                  Colors.white,
+                  borderRadius:
+                  BorderRadius
+                      .circular(14),
+                  border:
+                  Border.all(
+                    color:
+                    const Color(
+                      0xFFE1E5EA,
+                    ),
                   ),
-                  boxShadow: const [
+                  boxShadow:
+                  const [
                     BoxShadow(
-                      color: Color(0x08000000),
+                      color: Color(
+                        0x08000000,
+                      ),
                       blurRadius: 8,
-                      offset: Offset(0, 3),
+                      offset:
+                      Offset(
+                        0,
+                        3,
+                      ),
                     ),
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment
+                      .start,
                   children: [
                     const Row(
                       children: [
                         SizedBox(
                           width: 34,
                           height: 34,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Color(0xFFF1EDFA),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(9),
+                          child:
+                          DecoratedBox(
+                            decoration:
+                            BoxDecoration(
+                              color:
+                              Color(
+                                0xFFF1EDFA,
+                              ),
+                              borderRadius:
+                              BorderRadius
+                                  .all(
+                                Radius
+                                    .circular(
+                                  9,
+                                ),
                               ),
                             ),
-                            child: Icon(
-                              Icons.analytics_outlined,
-                              color: Color(0xFF7357C8),
-                              size: 18,
+                            child:
+                            Icon(
+                              Icons
+                                  .analytics_outlined,
+                              color:
+                              Color(
+                                0xFF7357C8,
+                              ),
+                              size:
+                              18,
                             ),
                           ),
                         ),
-                        SizedBox(width: 10),
+
+                        SizedBox(
+                          width: 10,
+                        ),
+
                         Text(
                           'Key Metrics',
-                          style: TextStyle(
-                            color: TourFlowColors.heading,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
+                          style:
+                          TextStyle(
+                            color:
+                            TourFlowColors
+                                .heading,
+                            fontSize:
+                            15,
+                            fontWeight:
+                            FontWeight
+                                .w800,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(
+                      height: 16,
+                    ),
 
                     _SummaryRow(
-                      icon: Icons.groups_outlined,
-                      label: 'Total Visitors',
-                      value: _formatNumber(data.totalVisitors),
+                      icon: Icons
+                          .date_range_outlined,
+                      label:
+                      'Reporting Period',
+                      value:
+                      _reportPeriod(
+                        data,
+                      ),
                     ),
 
                     const Divider(
                       height: 24,
-                      color: Color(0xFFEDF0F3),
+                      color:
+                      Color(
+                        0xFFEDF0F3,
+                      ),
                     ),
 
                     _SummaryRow(
-                      icon: Icons.account_balance_wallet_outlined,
-                      label: 'Total Revenue',
+                      icon: Icons
+                          .groups_outlined,
+                      label:
+                      'Total Visitors',
+                      value:
+                      _formatNumber(
+                        data.totalVisitors,
+                      ),
+                    ),
+
+                    const Divider(
+                      height: 24,
+                      color:
+                      Color(
+                        0xFFEDF0F3,
+                      ),
+                    ),
+
+                    _SummaryRow(
+                      icon: Icons
+                          .account_balance_wallet_outlined,
+                      label:
+                      'Total Revenue',
                       value:
                       'RM ${data.totalRevenue.toStringAsFixed(2)}',
                     ),
 
                     const Divider(
                       height: 24,
-                      color: Color(0xFFEDF0F3),
+                      color:
+                      Color(
+                        0xFFEDF0F3,
+                      ),
                     ),
 
                     _SummaryRow(
-                      icon: Icons.rate_review_outlined,
-                      label: 'Feedback Records',
-                      value: '${data.totalFeedback}',
+                      icon: Icons
+                          .rate_review_outlined,
+                      label:
+                      'Feedback Records',
+                      value:
+                      '${data.totalFeedback}',
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
+                width:
+                double.infinity,
+                padding:
+                const EdgeInsets
+                    .symmetric(
                   horizontal: 13,
                   vertical: 11,
                 ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFAF8FC),
-                  borderRadius: BorderRadius.circular(11),
-                  border: Border.all(
-                    color: const Color(0xFFE6DDF2),
+                decoration:
+                BoxDecoration(
+                  color:
+                  const Color(
+                    0xFFFAF8FC,
+                  ),
+                  borderRadius:
+                  BorderRadius
+                      .circular(
+                    11,
+                  ),
+                  border:
+                  Border.all(
+                    color:
+                    const Color(
+                      0xFFE6DDF2,
+                    ),
                   ),
                 ),
                 child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                  CrossAxisAlignment
+                      .start,
                   children: [
                     Icon(
-                      Icons.info_outline_rounded,
-                      color: Color(0xFF7357C8),
+                      Icons
+                          .info_outline_rounded,
+                      color:
+                      Color(
+                        0xFF7357C8,
+                      ),
                       size: 17,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(
+                      width: 8,
+                    ),
                     Expanded(
                       child: Text(
-                        'Revenue is derived from completed bookings using visitor count × attraction entrance price. Revenue growth compares the current month-to-date with the same period of the previous month.',
-                        style: TextStyle(
-                          color: TourFlowColors.body,
-                          fontSize: 8.8,
-                          height: 1.4,
+                        'Revenue is derived from completed bookings within the selected reporting period using visitor count × attraction entrance price. Revenue growth compares the selected period with the immediately preceding period of the same duration.',
+                        style:
+                        TextStyle(
+                          color:
+                          TourFlowColors
+                              .body,
+                          fontSize:
+                          8.8,
+                          height:
+                          1.4,
                         ),
                       ),
                     ),
@@ -735,54 +1217,98 @@ class _AdminPerformanceReportPageState extends State<AdminPerformanceReportPage>
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               SizedBox(
-                width: double.infinity,
+                width:
+                double.infinity,
                 height: 46,
-                child: ElevatedButton.icon(
+                child:
+                ElevatedButton
+                    .icon(
                   onPressed:
-                  _isExporting ? null : () => _exportPdf(data),
-                  icon: _isExporting
+                  _isExporting
+                      ? null
+                      : () =>
+                      _exportPdf(
+                        data,
+                      ),
+                  icon:
+                  _isExporting
                       ? const SizedBox(
-                    width: 17,
-                    height: 17,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                    width:
+                    17,
+                    height:
+                    17,
+                    child:
+                    CircularProgressIndicator(
+                      strokeWidth:
+                      2,
                     ),
                   )
                       : const Icon(
-                    Icons.picture_as_pdf_outlined,
-                    size: 20,
+                    Icons
+                        .picture_as_pdf_outlined,
+                    size:
+                    20,
                   ),
                   label: Text(
                     _isExporting
                         ? 'Generating PDF...'
                         : 'Export PDF',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
+                    style:
+                    const TextStyle(
+                      fontSize:
+                      13,
+                      fontWeight:
+                      FontWeight
+                          .w800,
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF1EDFA),
-                    foregroundColor: const Color(0xFF6546B2),
-                    disabledBackgroundColor:
-                    const Color(0xFFF3F1F6),
-                    disabledForegroundColor:
-                    const Color(0xFF9E97AA),
-                    elevation: 0,
-                    side: const BorderSide(
-                      color: Color(0xFFD8CCEB),
+                  style:
+                  ElevatedButton
+                      .styleFrom(
+                    backgroundColor:
+                    const Color(
+                      0xFFF1EDFA,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                    foregroundColor:
+                    const Color(
+                      0xFF6546B2,
+                    ),
+                    disabledBackgroundColor:
+                    const Color(
+                      0xFFF3F1F6,
+                    ),
+                    disabledForegroundColor:
+                    const Color(
+                      0xFF9E97AA,
+                    ),
+                    elevation: 0,
+                    side:
+                    const BorderSide(
+                      color:
+                      Color(
+                        0xFFD8CCEB,
+                      ),
+                    ),
+                    shape:
+                    RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius
+                          .circular(
+                        10,
+                      ),
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(
+                height: 8,
+              ),
             ],
           );
         },
@@ -809,9 +1335,11 @@ class _MetricCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(13),
+        borderRadius:
+        BorderRadius.circular(13),
         border: Border.all(
-          color: const Color(0xFFE1E5EA),
+          color:
+          const Color(0xFFE1E5EA),
         ),
         boxShadow: const [
           BoxShadow(
@@ -822,18 +1350,29 @@ class _MetricCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
         children: [
           Container(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1EDFA),
-              borderRadius: BorderRadius.circular(9),
+            decoration:
+            BoxDecoration(
+              color:
+              const Color(
+                0xFFF1EDFA,
+              ),
+              borderRadius:
+              BorderRadius.circular(
+                9,
+              ),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF7357C8),
+              color:
+              const Color(
+                0xFF7357C8,
+              ),
               size: 17,
             ),
           ),
@@ -844,13 +1383,18 @@ class _MetricCard extends StatelessWidget {
             width: double.infinity,
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
+              alignment:
+              Alignment.centerLeft,
               child: Text(
                 value,
-                style: const TextStyle(
-                  color: TourFlowColors.heading,
+                style:
+                const TextStyle(
+                  color:
+                  TourFlowColors
+                      .heading,
                   fontSize: 17,
-                  fontWeight: FontWeight.w800,
+                  fontWeight:
+                  FontWeight.w800,
                 ),
               ),
             ),
@@ -861,9 +1405,11 @@ class _MetricCard extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: TourFlowColors.muted,
+              color:
+              TourFlowColors.muted,
               fontSize: 8.5,
-              fontWeight: FontWeight.w500,
+              fontWeight:
+              FontWeight.w500,
             ),
           ),
         ],
@@ -890,13 +1436,23 @@ class _SummaryRow extends StatelessWidget {
         Container(
           width: 31,
           height: 31,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F3F9),
-            borderRadius: BorderRadius.circular(8),
+          decoration:
+          BoxDecoration(
+            color:
+            const Color(
+              0xFFF5F3F9,
+            ),
+            borderRadius:
+            BorderRadius.circular(
+              8,
+            ),
           ),
           child: Icon(
             icon,
-            color: const Color(0xFF796E91),
+            color:
+            const Color(
+              0xFF796E91,
+            ),
             size: 16,
           ),
         ),
@@ -907,9 +1463,11 @@ class _SummaryRow extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              color: TourFlowColors.body,
+              color:
+              TourFlowColors.body,
               fontSize: 11,
-              fontWeight: FontWeight.w600,
+              fontWeight:
+              FontWeight.w600,
             ),
           ),
         ),
@@ -921,9 +1479,11 @@ class _SummaryRow extends StatelessWidget {
             value,
             textAlign: TextAlign.right,
             style: const TextStyle(
-              color: TourFlowColors.heading,
+              color:
+              TourFlowColors.heading,
               fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontWeight:
+              FontWeight.w800,
             ),
           ),
         ),
@@ -941,6 +1501,8 @@ class _PerformanceReportData {
     required this.totalVisitors,
     required this.totalRevenue,
     required this.totalFeedback,
+    required this.startDate,
+    required this.endDate,
   });
 
   final double visitorSatisfaction;
@@ -950,4 +1512,6 @@ class _PerformanceReportData {
   final int totalVisitors;
   final double totalRevenue;
   final int totalFeedback;
+  final DateTime? startDate;
+  final DateTime? endDate;
 }
