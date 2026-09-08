@@ -9,15 +9,23 @@ ChatBookingOperation _bookingOperation(Object? value) {
 }
 
 class ChatBookingAttractionOption {
-  const ChatBookingAttractionOption({required this.id, required this.name});
+  const ChatBookingAttractionOption({
+    required this.id,
+    required this.name,
+    required this.isBookable,
+  });
 
   final String id;
   final String name;
+  final bool isBookable;
 
   factory ChatBookingAttractionOption.fromMap(Map<String, dynamic> map) =>
       ChatBookingAttractionOption(
         id: map['id']?.toString() ?? '',
         name: map['name']?.toString() ?? 'Attraction',
+        // Keep compatibility with an older Edge Function response while the
+        // updated function is being deployed.
+        isBookable: map['isBookable'] != false,
       );
 }
 
@@ -118,6 +126,12 @@ class ChatBookingDraft {
   final List<ChatBookingOption> bookingOptions;
 
   bool get readyForConfirmation => missingFields.isEmpty;
+
+  bool get canGoBack => switch (operation) {
+    ChatBookingOperation.create => attractionId != null,
+    ChatBookingOperation.reschedule || ChatBookingOperation.cancel =>
+      bookingId != null,
+  };
 
   factory ChatBookingDraft.fromMap(Map<String, dynamic> map) {
     return ChatBookingDraft(
