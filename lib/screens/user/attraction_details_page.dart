@@ -17,8 +17,12 @@ class AttractionDetailsPage extends StatefulWidget {
       _AttractionDetailsPageState();
 }
 
-class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
+class _AttractionDetailsPageState
+    extends State<AttractionDetailsPage> {
   final _service = AttractionService();
+
+  final _transportService =
+  const _TransportSuggestionService();
 
   Future<
       ({
@@ -33,7 +37,8 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final value = ModalRoute.of(context)?.settings.arguments;
+    final value =
+        ModalRoute.of(context)?.settings.arguments;
 
     final id = value is String
         ? value
@@ -47,9 +52,9 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
     }
   }
 
-  // ============================================================
-  // LOAD ATTRACTION + ALTERNATIVES
-  // ============================================================
+  // ==============================================================
+  // LOAD DETAILS
+  // ==============================================================
 
   Future<
       ({
@@ -57,9 +62,11 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
       List<String> issues,
       List<RecommendationResult> alternatives,
       })> _loadDetails(String id) async {
-    final origin = await LocationService().currentLocation();
+    final origin =
+    await LocationService().currentLocation();
 
-    final attraction = await _service.getAttractionById(
+    final attraction =
+    await _service.getAttractionById(
       id,
       origin: origin,
     );
@@ -68,7 +75,8 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
       return (
       attraction: null,
       issues: <String>[],
-      alternatives: <RecommendationResult>[],
+      alternatives:
+      <RecommendationResult>[],
       );
     }
 
@@ -81,13 +89,14 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
     return (
     attraction: attraction,
     issues: alternativeResult.issues,
-    alternatives: alternativeResult.alternatives,
+    alternatives:
+    alternativeResult.alternatives,
     );
   }
 
-  // ============================================================
+  // ==============================================================
   // BOOKING
-  // ============================================================
+  // ==============================================================
 
   void _book(
       Attraction attraction, {
@@ -100,15 +109,17 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
         'attractionId': attraction.id,
         'attractionName': attraction.name,
         'category': attraction.category,
-        'locationName': attraction.locationName,
-        if (slot != null) 'preselectedSlotId': slot.id,
+        'locationName':
+        attraction.locationName,
+        if (slot != null)
+          'preselectedSlotId': slot.id,
       },
     );
   }
 
-  // ============================================================
+  // ==============================================================
   // OPEN ALTERNATIVE
-  // ============================================================
+  // ==============================================================
 
   void _openAlternative(
       RecommendationResult result,
@@ -120,9 +131,9 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
     );
   }
 
-  // ============================================================
+  // ==============================================================
   // PAGE
-  // ============================================================
+  // ==============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -146,32 +157,37 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
           ({
           Attraction? attraction,
           List<String> issues,
-          List<RecommendationResult> alternatives,
+          List<RecommendationResult>
+          alternatives,
           })>(
         future: _details,
         builder: (context, snapshot) {
-          // ======================================================
+          // ========================================================
           // LOADING
-          // ======================================================
+          // ========================================================
 
           if (snapshot.connectionState ==
               ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child:
+              CircularProgressIndicator(),
             );
           }
 
-          // ======================================================
+          // ========================================================
           // ERROR
-          // ======================================================
+          // ========================================================
 
           if (snapshot.hasError) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding:
+                const EdgeInsets.all(24),
                 child: Text(
-                  'Could not load attraction: ${snapshot.error}',
-                  textAlign: TextAlign.center,
+                  'Could not load attraction: '
+                      '${snapshot.error}',
+                  textAlign:
+                  TextAlign.center,
                 ),
               ),
             );
@@ -179,9 +195,13 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
 
           final data = snapshot.data!;
 
-          final attraction = data.attraction;
+          final attraction =
+              data.attraction;
+
           final issues = data.issues;
-          final alternatives = data.alternatives;
+
+          final alternatives =
+              data.alternatives;
 
           if (attraction == null) {
             return const Center(
@@ -192,28 +212,39 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
           }
 
           final images = <String>[
-            if (attraction.coverImageUrl != null)
+            if (attraction.coverImageUrl !=
+                null)
               attraction.coverImageUrl!,
             ...attraction.images.map(
-                  (image) => _service.publicImageUrl(
-                image.path,
-              ),
+                  (image) =>
+                  _service.publicImageUrl(
+                    image.path,
+                  ),
             ),
           ];
 
+          final transportSuggestions =
+          _transportService
+              .suggestionsForDistance(
+            attraction.distanceKm,
+          );
+
           return ListView(
-            padding: const EdgeInsets.only(
+            padding:
+            const EdgeInsets.only(
               bottom: 28,
             ),
             children: [
-              // ==================================================
-              // ATTRACTION IMAGES
-              // ==================================================
+              // ====================================================
+              // ATTRACTION IMAGE
+              // ====================================================
 
               if (images.isEmpty)
                 Container(
                   height: 220,
-                  color: const Color(0xFFFFE2B5),
+                  color: const Color(
+                    0xFFFFE2B5,
+                  ),
                   child: const Icon(
                     Icons.place_outlined,
                     size: 70,
@@ -224,15 +255,20 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
                   height: 230,
                   child: PageView.builder(
                     itemCount: images.length,
-                    itemBuilder: (context, index) {
+                    itemBuilder:
+                        (context, index) {
                       return Image.network(
                         images[index],
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) {
+                        errorBuilder:
+                            (_, _, _) {
                           return const ColoredBox(
-                            color: Color(0xFFFFE2B5),
+                            color: Color(
+                              0xFFFFE2B5,
+                            ),
                             child: Icon(
-                              Icons.broken_image_outlined,
+                              Icons
+                                  .broken_image_outlined,
                             ),
                           );
                         },
@@ -241,60 +277,76 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
                   ),
                 ),
 
-              // ==================================================
-              // MAIN CONTENT
-              // ==================================================
+              // ====================================================
+              // CONTENT
+              // ====================================================
 
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding:
+                const EdgeInsets.all(
+                  16,
+                ),
                 child: Column(
                   crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  CrossAxisAlignment
+                      .start,
                   children: [
-                    // ============================================
-                    // ATTRACTION NAME
-                    // ============================================
+                    // =================================================
+                    // NAME
+                    // =================================================
 
                     Text(
                       attraction.name,
-                      style: const TextStyle(
+                      style:
+                      const TextStyle(
                         fontSize: 25,
-                        fontWeight: FontWeight.w800,
+                        fontWeight:
+                        FontWeight.w800,
                       ),
                     ),
 
-                    const SizedBox(height: 3),
+                    const SizedBox(
+                      height: 3,
+                    ),
 
                     Text(
                       '${attraction.category} · '
                           '${attraction.locationName}',
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(
+                      height: 10,
+                    ),
 
-                    // ============================================
-                    // QUICK INFORMATION
-                    // ============================================
+                    // =================================================
+                    // QUICK INFO
+                    // =================================================
 
                     Wrap(
                       spacing: 8,
                       runSpacing: 6,
                       children: [
                         Chip(
-                          avatar: const Icon(
-                            Icons.payments_outlined,
+                          avatar:
+                          const Icon(
+                            Icons
+                                .payments_outlined,
                             size: 17,
                           ),
                           label: Text(
-                            attraction.entrancePriceMyr == 0
+                            attraction
+                                .entrancePriceMyr ==
+                                0
                                 ? 'Free entry'
                                 : 'RM ${attraction.entrancePriceMyr.toStringAsFixed(2)}',
                           ),
                         ),
 
                         Chip(
-                          avatar: const Icon(
-                            Icons.groups_outlined,
+                          avatar:
+                          const Icon(
+                            Icons
+                                .groups_outlined,
                             size: 17,
                           ),
                           label: Text(
@@ -304,72 +356,88 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
                         ),
 
                         Chip(
-                          avatar: const Icon(
-                            Icons.location_on_outlined,
+                          avatar:
+                          const Icon(
+                            Icons
+                                .location_on_outlined,
                             size: 17,
                           ),
                           label: Text(
-                            attraction.distanceKm == null
+                            attraction
+                                .distanceKm ==
+                                null
                                 ? 'Distance unavailable'
-                                : '${attraction.distanceKm!.toStringAsFixed(1)} '
-                                'km away',
+                                : '${attraction.distanceKm!.toStringAsFixed(1)} km away',
                           ),
                         ),
 
                         Chip(
-                          avatar: const Icon(
-                            Icons.place_outlined,
+                          avatar:
+                          const Icon(
+                            Icons
+                                .place_outlined,
                             size: 17,
                           ),
                           label: Text(
-                            attraction.attractionType,
+                            attraction
+                                .attractionType,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(
+                      height: 16,
+                    ),
 
-                    // ============================================
+                    // =================================================
                     // SUITABILITY WARNING
-                    // ============================================
+                    // =================================================
 
                     if (issues.isNotEmpty) ...[
                       _SuitabilityWarning(
                         issues: issues,
                       ),
 
-                      const SizedBox(height: 18),
-
-                      // ==========================================
-                      // SUGGESTED ALTERNATIVES
-                      // NOW DIRECTLY BELOW WARNING
-                      // ==========================================
-
-                      _SuggestedAlternativesSection(
-                        alternatives: alternatives,
-                        onTap: _openAlternative,
+                      const SizedBox(
+                        height: 18,
                       ),
 
-                      const SizedBox(height: 22),
+                      // ===============================================
+                      // ALTERNATIVES
+                      // ===============================================
+
+                      _SuggestedAlternativesSection(
+                        alternatives:
+                        alternatives,
+                        onTap:
+                        _openAlternative,
+                      ),
+
+                      const SizedBox(
+                        height: 22,
+                      ),
                     ],
 
-                    // ============================================
+                    // =================================================
                     // DESCRIPTION
-                    // ============================================
+                    // =================================================
 
                     Text(
                       attraction.description,
-                      style: const TextStyle(
+                      style:
+                      const TextStyle(
                         height: 1.45,
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(
+                      height: 18,
+                    ),
 
-                    // ============================================
+                    // =================================================
                     // ADDRESS
-                    // ============================================
+                    // =================================================
 
                     _Section(
                       title: 'Address',
@@ -378,13 +446,26 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
                       ),
                     ),
 
-                    // ============================================
+                    // =================================================
+                    // TRANSPORT SUGGESTIONS
+                    // =================================================
+
+                    _TransportSuggestionsSection(
+                      distanceKm:
+                      attraction.distanceKm,
+                      suggestions:
+                      transportSuggestions,
+                    ),
+
+                    // =================================================
                     // FACILITIES
-                    // ============================================
+                    // =================================================
 
                     _Section(
                       title: 'Facilities',
-                      child: attraction.facilities.isEmpty
+                      child: attraction
+                          .facilities
+                          .isEmpty
                           ? const Text(
                         'No facilities listed.',
                       )
@@ -392,15 +473,20 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
                         spacing: 7,
                         runSpacing: 5,
                         children:
-                        attraction.facilities
+                        attraction
+                            .facilities
                             .map(
                               (facility) {
                             return Chip(
-                              avatar: const Icon(
-                                Icons.check,
-                                size: 16,
+                              avatar:
+                              const Icon(
+                                Icons
+                                    .check,
+                                size:
+                                16,
                               ),
-                              label: Text(
+                              label:
+                              Text(
                                 facility,
                               ),
                             );
@@ -409,116 +495,138 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
                       ),
                     ),
 
-                    // ============================================
+                    // =================================================
                     // OPERATING HOURS
-                    // ============================================
+                    // =================================================
 
                     _Section(
-                      title: 'Operating hours',
+                      title:
+                      'Operating hours',
                       child: _HoursList(
-                        hours:
-                        attraction.operatingHours,
+                        hours: attraction
+                            .operatingHours,
                       ),
                     ),
 
-                    // ============================================
-                    // VISITOR GUIDELINES
-                    // ============================================
+                    // =================================================
+                    // GUIDELINES
+                    // =================================================
 
                     _Section(
-                      title: 'Visitor guidelines',
+                      title:
+                      'Visitor guidelines',
                       child: Text(
-                        attraction.visitorGuidelines ??
+                        attraction
+                            .visitorGuidelines ??
                             'No additional guidelines.',
                       ),
                     ),
 
-                    // ============================================
+                    // =================================================
                     // RULES
-                    // ============================================
+                    // =================================================
 
                     _Section(
                       title: 'Rules',
                       child: Text(
-                        attraction.attractionRules ??
+                        attraction
+                            .attractionRules ??
                             'No additional rules.',
                       ),
                     ),
 
-                    // ============================================
-                    // AVAILABLE SLOTS TITLE
-                    // ============================================
+                    // =================================================
+                    // AVAILABLE SLOTS
+                    // =================================================
 
                     Row(
                       mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                      MainAxisAlignment
+                          .spaceBetween,
                       children: [
                         const Text(
                           'Available slots',
-                          style: TextStyle(
+                          style:
+                          TextStyle(
                             fontSize: 18,
                             fontWeight:
-                            FontWeight.w800,
+                            FontWeight
+                                .w800,
                           ),
                         ),
 
                         TextButton(
                           onPressed: () {
-                            _book(attraction);
+                            _book(
+                              attraction,
+                            );
                           },
-                          child: const Text(
+                          child:
+                          const Text(
                             'See all',
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 6),
+                    const SizedBox(
+                      height: 6,
+                    ),
 
-                    // ============================================
-                    // SLOT LIST
-                    // ============================================
-
-                    if (attraction.availableSlots.isEmpty)
+                    if (attraction
+                        .availableSlots
+                        .isEmpty)
                       const Card(
                         child: Padding(
                           padding:
-                          EdgeInsets.all(14),
+                          EdgeInsets
+                              .all(
+                            14,
+                          ),
                           child: Text(
                             'No future open slots are available.',
                           ),
                         ),
                       )
                     else
-                      ...attraction.availableSlots
+                      ...attraction
+                          .availableSlots
                           .take(4)
                           .map(
                             (slot) {
                           return Card(
-                            color: Colors.white,
-                            child: ListTile(
-                              leading: const Icon(
-                                Icons.schedule,
+                            color:
+                            Colors.white,
+                            child:
+                            ListTile(
+                              leading:
+                              const Icon(
+                                Icons
+                                    .schedule,
                               ),
                               title: Text(
                                 '${_date(slot.startsAt)} · '
                                     '${_time(slot.startsAt)} – '
                                     '${_time(slot.endsAt)}',
                               ),
-                              subtitle: Text(
+                              subtitle:
+                              Text(
                                 '${slot.remainingCapacity} of '
                                     '${slot.maximumCapacity} spaces remaining · '
                                     '${_crowd(slot)} estimate',
                               ),
                               trailing:
                               TextButton(
-                                onPressed: () {
+                                onPressed:
+                                    () {
                                   _book(
                                     attraction,
-                                    slot: slot,
+                                    slot:
+                                    slot,
                                   );
                                 },
-                                child: const Text(
+                                child:
+                                const Text(
                                   'Choose',
                                 ),
                               ),
@@ -527,47 +635,60 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
                         },
                       ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(
+                      height: 12,
+                    ),
 
-                    // ============================================
-                    // CHOOSE VISIT SLOT BUTTON
-                    // ============================================
+                    // =================================================
+                    // BOOK BUTTON
+                    // =================================================
 
                     SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
+                      width:
+                      double.infinity,
+                      child:
+                      FilledButton.icon(
                         onPressed: attraction
-                            .availableSlots.isEmpty
+                            .availableSlots
+                            .isEmpty
                             ? null
                             : () {
-                          _book(attraction);
+                          _book(
+                            attraction,
+                          );
                         },
-                        icon: const Icon(
+                        icon:
+                        const Icon(
                           Icons
                               .confirmation_num_outlined,
                         ),
-                        label: const Text(
+                        label:
+                        const Text(
                           'Choose a Visit Slot',
                         ),
                         style:
-                        FilledButton.styleFrom(
+                        FilledButton
+                            .styleFrom(
                           backgroundColor:
                           const Color(
                             0xFF79571E,
                           ),
                           padding:
-                          const EdgeInsets.all(
+                          const EdgeInsets
+                              .all(
                             15,
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(
+                      height: 18,
+                    ),
 
-                    // ============================================
-                    // GENERAL SMART RECOMMENDATIONS
-                    // ============================================
+                    // =================================================
+                    // SMART RECOMMENDATIONS
+                    // =================================================
 
                     TextButton.icon(
                       onPressed: () {
@@ -578,7 +699,8 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
                         );
                       },
                       icon: const Icon(
-                        Icons.auto_awesome_outlined,
+                        Icons
+                            .auto_awesome_outlined,
                       ),
                       label: const Text(
                         'View All Smart Recommendations',
@@ -595,11 +717,12 @@ class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
   }
 }
 
-// ================================================================
+// =================================================================
 // SUITABILITY WARNING
-// ================================================================
+// =================================================================
 
-class _SuitabilityWarning extends StatelessWidget {
+class _SuitabilityWarning
+    extends StatelessWidget {
   const _SuitabilityWarning({
     required this.issues,
   });
@@ -610,13 +733,18 @@ class _SuitabilityWarning extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding:
+      const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
+        color: const Color(
+          0xFFFFF3E0,
+        ),
         borderRadius:
         BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFFFCC80),
+          color: const Color(
+            0xFFFFCC80,
+          ),
         ),
       ),
       child: Column(
@@ -626,7 +754,8 @@ class _SuitabilityWarning extends StatelessWidget {
           const Row(
             children: [
               Icon(
-                Icons.warning_amber_rounded,
+                Icons
+                    .warning_amber_rounded,
                 color: Colors.orange,
               ),
               SizedBox(width: 8),
@@ -653,18 +782,25 @@ class _SuitabilityWarning extends StatelessWidget {
                 ),
                 child: Row(
                   crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  CrossAxisAlignment
+                      .start,
                   children: [
                     const Icon(
                       Icons.error_outline,
                       size: 17,
-                      color: Colors.orange,
+                      color:
+                      Colors.orange,
                     ),
-                    const SizedBox(width: 7),
+
+                    const SizedBox(
+                      width: 7,
+                    ),
+
                     Expanded(
                       child: Text(
                         issue,
-                        style: const TextStyle(
+                        style:
+                        const TextStyle(
                           fontSize: 12,
                         ),
                       ),
@@ -680,9 +816,9 @@ class _SuitabilityWarning extends StatelessWidget {
   }
 }
 
-// ================================================================
-// SUGGESTED ALTERNATIVES SECTION
-// ================================================================
+// =================================================================
+// SUGGESTED ALTERNATIVES
+// =================================================================
 
 class _SuggestedAlternativesSection
     extends StatelessWidget {
@@ -694,8 +830,8 @@ class _SuggestedAlternativesSection
   final List<RecommendationResult>
   alternatives;
 
-  final ValueChanged<RecommendationResult>
-  onTap;
+  final ValueChanged<
+      RecommendationResult> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -707,7 +843,8 @@ class _SuggestedAlternativesSection
           children: [
             Icon(
               Icons.swap_horiz_rounded,
-              color: Color(0xFF79571E),
+              color:
+              Color(0xFF79571E),
             ),
             SizedBox(width: 8),
             Expanded(
@@ -730,7 +867,9 @@ class _SuggestedAlternativesSection
               'your current preferences.',
           style: TextStyle(
             fontSize: 12,
-            color: Color(0xFF64748B),
+            color: Color(
+              0xFF64748B,
+            ),
           ),
         ),
 
@@ -738,22 +877,30 @@ class _SuggestedAlternativesSection
 
         if (alternatives.isEmpty)
           const Card(
-            color: Color(0xFFFFF7EB),
+            color: Color(
+              0xFFFFF7EB,
+            ),
             child: Padding(
-              padding: EdgeInsets.all(16),
+              padding:
+              EdgeInsets.all(16),
               child: Column(
                 children: [
                   Icon(
-                    Icons.search_off_outlined,
+                    Icons
+                        .search_off_outlined,
                     size: 34,
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(
+                    height: 8,
+                  ),
                   Text(
                     'No similar alternative attraction is currently available.',
                     textAlign:
                     TextAlign.center,
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(
+                    height: 4,
+                  ),
                   Text(
                     'Try changing your date, budget, distance '
                         'or discovery preferences.',
@@ -788,9 +935,9 @@ class _SuggestedAlternativesSection
   }
 }
 
-// ================================================================
+// =================================================================
 // ALTERNATIVE CARD
-// ================================================================
+// =================================================================
 
 class _AlternativeCard
     extends StatelessWidget {
@@ -818,18 +965,18 @@ class _AlternativeCard
       child: InkWell(
         onTap: onTap,
         borderRadius:
-        BorderRadius.circular(12),
+        BorderRadius.circular(
+          12,
+        ),
         child: Padding(
           padding:
-          const EdgeInsets.all(14),
+          const EdgeInsets.all(
+            14,
+          ),
           child: Column(
             crossAxisAlignment:
             CrossAxisAlignment.start,
             children: [
-              // ==================================================
-              // RANK + NAME + SCORE
-              // ==================================================
-
               Row(
                 children: [
                   Container(
@@ -843,7 +990,8 @@ class _AlternativeCard
                         0xFFF2F3FF,
                       ),
                       borderRadius:
-                      BorderRadius.circular(
+                      BorderRadius
+                          .circular(
                         10,
                       ),
                     ),
@@ -852,12 +1000,15 @@ class _AlternativeCard
                       style:
                       const TextStyle(
                         fontWeight:
-                        FontWeight.w800,
+                        FontWeight
+                            .w800,
                       ),
                     ),
                   ),
 
-                  const SizedBox(width: 10),
+                  const SizedBox(
+                    width: 10,
+                  ),
 
                   Expanded(
                     child: Column(
@@ -870,7 +1021,8 @@ class _AlternativeCard
                           style:
                           const TextStyle(
                             fontWeight:
-                            FontWeight.w800,
+                            FontWeight
+                                .w800,
                             fontSize: 16,
                           ),
                         ),
@@ -897,18 +1049,17 @@ class _AlternativeCard
                       const TextStyle(
                         fontSize: 11,
                         fontWeight:
-                        FontWeight.w800,
+                        FontWeight
+                            .w800,
                       ),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 10),
-
-              // ==================================================
-              // BASIC INFORMATION
-              // ==================================================
+              const SizedBox(
+                height: 10,
+              ),
 
               Wrap(
                 spacing: 7,
@@ -924,7 +1075,8 @@ class _AlternativeCard
                         : 'RM${attraction.entrancePriceMyr.toStringAsFixed(0)}',
                   ),
 
-                  if (attraction.distanceKm !=
+                  if (attraction
+                      .distanceKm !=
                       null)
                     _MiniInfo(
                       icon: Icons
@@ -934,25 +1086,26 @@ class _AlternativeCard
                     ),
 
                   _MiniInfo(
-                    icon:
-                    Icons.groups_outlined,
+                    icon: Icons
+                        .groups_outlined,
                     label:
                     '${attraction.estimatedCrowdLevel} crowd',
                   ),
                 ],
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
-              // ==================================================
-              // REASONS
-              // ==================================================
-
-              ...result.reasons.take(3).map(
+              ...result.reasons
+                  .take(3)
+                  .map(
                     (reason) {
                   return Padding(
                     padding:
-                    const EdgeInsets.only(
+                    const EdgeInsets
+                        .only(
                       bottom: 4,
                     ),
                     child: Row(
@@ -964,17 +1117,21 @@ class _AlternativeCard
                           Icons
                               .check_circle_outline,
                           size: 16,
-                          color: Colors.green,
+                          color:
+                          Colors.green,
                         ),
+
                         const SizedBox(
                           width: 6,
                         ),
+
                         Expanded(
                           child: Text(
                             reason,
                             style:
                             const TextStyle(
-                              fontSize: 11,
+                              fontSize:
+                              11,
                             ),
                           ),
                         ),
@@ -984,10 +1141,13 @@ class _AlternativeCard
                 },
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(
+                height: 8,
+              ),
 
               SizedBox(
-                width: double.infinity,
+                width:
+                double.infinity,
                 child:
                 OutlinedButton.icon(
                   onPressed: onTap,
@@ -1007,11 +1167,605 @@ class _AlternativeCard
   }
 }
 
-// ================================================================
-// SMALL INFO CHIP
-// ================================================================
+// =================================================================
+// TRANSPORT SUGGESTIONS
+// =================================================================
 
-class _MiniInfo extends StatelessWidget {
+class _TransportSuggestionsSection
+    extends StatelessWidget {
+  const _TransportSuggestionsSection({
+    required this.distanceKm,
+    required this.suggestions,
+  });
+
+  final double? distanceKm;
+
+  final List<_TransportSuggestion>
+  suggestions;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding:
+      const EdgeInsets.only(
+        bottom: 18,
+      ),
+      child: Column(
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons
+                    .directions_outlined,
+                color:
+                Color(0xFF79571E),
+              ),
+
+              SizedBox(width: 8),
+
+              Text(
+                'Getting There',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight:
+                  FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 5),
+
+          Text(
+            distanceKm == null
+                ? 'Transport suggestions are unavailable because the distance could not be calculated.'
+                : 'Suggested transport options for approximately '
+                '${distanceKm!.toStringAsFixed(1)} km.',
+            style: const TextStyle(
+              fontSize: 12,
+              color:
+              Color(0xFF64748B),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          if (suggestions.isEmpty)
+            const Card(
+              child: Padding(
+                padding:
+                EdgeInsets.all(14),
+                child: Text(
+                  'Transport suggestions are currently unavailable.',
+                ),
+              ),
+            )
+          else
+            ...suggestions.map(
+                  (suggestion) =>
+                  _TransportCard(
+                    suggestion:
+                    suggestion,
+                  ),
+            ),
+
+          if (suggestions.isNotEmpty)
+            const Padding(
+              padding:
+              EdgeInsets.only(
+                top: 5,
+              ),
+              child: Row(
+                crossAxisAlignment:
+                CrossAxisAlignment
+                    .start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 15,
+                    color:
+                    Color(
+                      0xFF64748B,
+                    ),
+                  ),
+
+                  SizedBox(width: 6),
+
+                  Expanded(
+                    child: Text(
+                      'Travel times and fares are estimates only. '
+                          'Actual traffic, routes, availability and prices may vary.',
+                      style:
+                      TextStyle(
+                        fontSize: 10,
+                        color:
+                        Color(
+                          0xFF64748B,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// =================================================================
+// TRANSPORT CARD
+// =================================================================
+
+class _TransportCard
+    extends StatelessWidget {
+  const _TransportCard({
+    required this.suggestion,
+  });
+
+  final _TransportSuggestion
+  suggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: suggestion.recommended
+          ? const Color(
+        0xFFFFF5E6,
+      )
+          : Colors.white,
+      child: Padding(
+        padding:
+        const EdgeInsets.all(
+          12,
+        ),
+        child: Row(
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              backgroundColor:
+              suggestion.recommended
+                  ? const Color(
+                0xFFFFD08B,
+              )
+                  : const Color(
+                0xFFF1F5F9,
+              ),
+              child: Icon(
+                _transportIcon(
+                  suggestion.mode,
+                ),
+                color:
+                const Color(
+                  0xFF79571E,
+                ),
+              ),
+            ),
+
+            const SizedBox(
+              width: 12,
+            ),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment:
+                CrossAxisAlignment
+                    .start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          suggestion.title,
+                          style:
+                          const TextStyle(
+                            fontWeight:
+                            FontWeight
+                                .w800,
+                          ),
+                        ),
+                      ),
+
+                      if (suggestion
+                          .recommended)
+                        Container(
+                          padding:
+                          const EdgeInsets
+                              .symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration:
+                          BoxDecoration(
+                            color:
+                            const Color(
+                              0xFFFFD08B,
+                            ),
+                            borderRadius:
+                            BorderRadius
+                                .circular(
+                              20,
+                            ),
+                          ),
+                          child:
+                          const Text(
+                            'Recommended',
+                            style:
+                            TextStyle(
+                              fontSize: 9,
+                              fontWeight:
+                              FontWeight
+                                  .w800,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(
+                    height: 6,
+                  ),
+
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 5,
+                    children: [
+                      _TransportInfo(
+                        icon:
+                        Icons.schedule,
+                        text: suggestion
+                            .timeLabel,
+                      ),
+
+                      _TransportInfo(
+                        icon: Icons
+                            .payments_outlined,
+                        text: suggestion
+                            .fareLabel,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(
+                    height: 6,
+                  ),
+
+                  Text(
+                    suggestion.description,
+                    style:
+                    const TextStyle(
+                      fontSize: 11,
+                      color:
+                      Color(
+                        0xFF64748B,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =================================================================
+// TRANSPORT INFO
+// =================================================================
+
+class _TransportInfo
+    extends StatelessWidget {
+  const _TransportInfo({
+    required this.icon,
+    required this.text,
+  });
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize:
+      MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 14,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight:
+            FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// =================================================================
+// TRANSPORT MODEL
+// =================================================================
+
+enum _TransportMode {
+  walking,
+  carEhailing,
+  publicTransport,
+}
+
+class _TransportSuggestion {
+  const _TransportSuggestion({
+    required this.mode,
+    required this.title,
+    required this.estimatedMinutesMin,
+    required this.estimatedMinutesMax,
+    required this.description,
+    this.fareMinMyr,
+    this.fareMaxMyr,
+    this.recommended = false,
+  });
+
+  final _TransportMode mode;
+
+  final String title;
+
+  final int estimatedMinutesMin;
+
+  final int estimatedMinutesMax;
+
+  final double? fareMinMyr;
+
+  final double? fareMaxMyr;
+
+  final String description;
+
+  final bool recommended;
+
+  String get timeLabel {
+    if (estimatedMinutesMin ==
+        estimatedMinutesMax) {
+      return '~$estimatedMinutesMin min';
+    }
+
+    return '$estimatedMinutesMin–'
+        '$estimatedMinutesMax min';
+  }
+
+  String get fareLabel {
+    if (fareMinMyr == null ||
+        fareMaxMyr == null) {
+      return 'Free';
+    }
+
+    return 'RM ${fareMinMyr!.toStringAsFixed(0)}–'
+        '${fareMaxMyr!.toStringAsFixed(0)}';
+  }
+}
+
+// =================================================================
+// TRANSPORT SERVICE
+// =================================================================
+
+class _TransportSuggestionService {
+  const _TransportSuggestionService();
+
+  List<_TransportSuggestion>
+  suggestionsForDistance(
+      double? distanceKm,
+      ) {
+    if (distanceKm == null ||
+        distanceKm.isNaN ||
+        distanceKm < 0) {
+      return const [];
+    }
+
+    final suggestions =
+    <_TransportSuggestion>[];
+
+    // =============================================================
+    // WALKING
+    // =============================================================
+
+    if (distanceKm <= 5) {
+      var minMinutes =
+      (distanceKm / 4.8 * 60)
+          .ceil();
+
+      if (minMinutes < 1) {
+        minMinutes = 1;
+      }
+
+      var maxMinutes =
+      (minMinutes * 1.20)
+          .ceil();
+
+      if (maxMinutes <
+          minMinutes + 5) {
+        maxMinutes =
+            minMinutes + 5;
+      }
+
+      suggestions.add(
+        _TransportSuggestion(
+          mode:
+          _TransportMode.walking,
+          title: 'Walking',
+          estimatedMinutesMin:
+          minMinutes,
+          estimatedMinutesMax:
+          maxMinutes,
+          description:
+          distanceKm <= 1.5
+              ? 'A convenient option for this short distance.'
+              : 'Suitable if you prefer walking and the route is comfortable.',
+          recommended:
+          distanceKm <= 1.5,
+        ),
+      );
+    }
+
+    // =============================================================
+    // CAR / E-HAILING
+    // =============================================================
+
+    final carBase =
+    (distanceKm / 28 * 60)
+        .ceil();
+
+    var carMin =
+        carBase + 5;
+
+    if (carMin < 5) {
+      carMin = 5;
+    }
+
+    var carMax =
+        (carBase * 1.35).ceil() +
+            10;
+
+    if (carMax < carMin + 5) {
+      carMax = carMin + 5;
+    }
+
+    var fareMin =
+        4 + (distanceKm * 1.2);
+
+    if (fareMin < 6) {
+      fareMin = 6;
+    }
+
+    var fareMax =
+        7 + (distanceKm * 2);
+
+    if (fareMax <
+        fareMin + 3) {
+      fareMax = fareMin + 3;
+    }
+
+    suggestions.add(
+      _TransportSuggestion(
+        mode:
+        _TransportMode.carEhailing,
+        title: 'Car / E-hailing',
+        estimatedMinutesMin:
+        carMin,
+        estimatedMinutesMax:
+        carMax,
+        fareMinMyr:
+        fareMin.toDouble(),
+        fareMaxMyr:
+        fareMax.toDouble(),
+        description:
+        'A practical direct travel option, especially for medium or longer distances.',
+        recommended:
+        distanceKm > 1.5,
+      ),
+    );
+
+    // =============================================================
+    // PUBLIC TRANSPORT
+    // =============================================================
+
+    final publicBase =
+    (distanceKm / 18 * 60)
+        .ceil();
+
+    var publicMin =
+        publicBase + 15;
+
+    if (publicMin < 15) {
+      publicMin = 15;
+    }
+
+    final publicMax =
+        publicMin + 20;
+
+    var publicFareMax =
+        3 + (distanceKm * 0.3);
+
+    if (publicFareMax < 4) {
+      publicFareMax = 4;
+    }
+
+    if (publicFareMax > 12) {
+      publicFareMax = 12;
+    }
+
+    suggestions.add(
+      _TransportSuggestion(
+        mode: _TransportMode
+            .publicTransport,
+        title:
+        'Public Transport',
+        estimatedMinutesMin:
+        publicMin,
+        estimatedMinutesMax:
+        publicMax,
+        fareMinMyr: 2,
+        fareMaxMyr:
+        publicFareMax,
+        description:
+        'A budget-friendly choice when suitable public transport routes are available.',
+      ),
+    );
+
+    suggestions.sort(
+          (a, b) {
+        if (a.recommended &&
+            !b.recommended) {
+          return -1;
+        }
+
+        if (!a.recommended &&
+            b.recommended) {
+          return 1;
+        }
+
+        return a
+            .estimatedMinutesMin
+            .compareTo(
+          b.estimatedMinutesMin,
+        );
+      },
+    );
+
+    return suggestions;
+  }
+}
+
+IconData _transportIcon(
+    _TransportMode mode,
+    ) {
+  switch (mode) {
+    case _TransportMode.walking:
+      return Icons.directions_walk;
+
+    case _TransportMode.carEhailing:
+      return Icons
+          .local_taxi_outlined;
+
+    case _TransportMode.publicTransport:
+      return Icons
+          .directions_bus_outlined;
+  }
+}
+
+// =================================================================
+// MINI INFO
+// =================================================================
+
+class _MiniInfo
+    extends StatelessWidget {
   const _MiniInfo({
     required this.icon,
     required this.label,
@@ -1024,14 +1778,18 @@ class _MiniInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding:
-      const EdgeInsets.symmetric(
+      const EdgeInsets
+          .symmetric(
         horizontal: 8,
         vertical: 5,
       ),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color:
+        Colors.grey.shade100,
         borderRadius:
-        BorderRadius.circular(18),
+        BorderRadius.circular(
+          18,
+        ),
       ),
       child: Row(
         mainAxisSize:
@@ -1041,10 +1799,13 @@ class _MiniInfo extends StatelessWidget {
             icon,
             size: 14,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(
+            width: 4,
+          ),
           Text(
             label,
-            style: const TextStyle(
+            style:
+            const TextStyle(
               fontSize: 10,
               fontWeight:
               FontWeight.w600,
@@ -1056,11 +1817,12 @@ class _MiniInfo extends StatelessWidget {
   }
 }
 
-// ================================================================
+// =================================================================
 // SECTION
-// ================================================================
+// =================================================================
 
-class _Section extends StatelessWidget {
+class _Section
+    extends StatelessWidget {
   const _Section({
     required this.title,
     required this.child,
@@ -1082,13 +1844,16 @@ class _Section extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style:
+            const TextStyle(
               fontSize: 17,
               fontWeight:
               FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 7),
+          const SizedBox(
+            height: 7,
+          ),
           child,
         ],
       ),
@@ -1096,17 +1861,18 @@ class _Section extends StatelessWidget {
   }
 }
 
-// ================================================================
-// OPERATING HOURS
-// ================================================================
+// =================================================================
+// HOURS
+// =================================================================
 
-class _HoursList extends StatelessWidget {
+class _HoursList
+    extends StatelessWidget {
   const _HoursList({
     required this.hours,
   });
 
-  final List<AttractionOperatingHours>
-  hours;
+  final List<
+      AttractionOperatingHours> hours;
 
   static const days = [
     'Sunday',
@@ -1139,7 +1905,8 @@ class _HoursList extends StatelessWidget {
                 SizedBox(
                   width: 100,
                   child: Text(
-                    days[item.dayOfWeek],
+                    days[
+                    item.dayOfWeek],
                   ),
                 ),
                 Text(
@@ -1166,12 +1933,14 @@ class _HoursList extends StatelessWidget {
   }
 }
 
-// ================================================================
+// =================================================================
 // HELPERS
-// ================================================================
+// =================================================================
 
 String _date(DateTime value) {
-  return '${value.day}/${value.month}/${value.year}';
+  return '${value.day}/'
+      '${value.month}/'
+      '${value.year}';
 }
 
 String _time(DateTime value) {
