@@ -1,20 +1,6 @@
-import 'dart:typed_data';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/support_ticket_models.dart';
-
-class ComplaintPhoto {
-  const ComplaintPhoto({
-    required this.bytes,
-    required this.fileName,
-    required this.mimeType,
-  });
-
-  final Uint8List bytes;
-  final String fileName;
-  final String mimeType;
-}
 
 class SupportTicketService {
   SupportTicketService({SupabaseClient? client})
@@ -24,7 +10,7 @@ class SupportTicketService {
   static const _ticketColumns =
       'id, ticket_code, requester_name, attraction_name, booking_code, '
       'category, subject, description, priority, status, submission_language, '
-      'assigned_to, created_at, updated_at, resolved_at';
+      'assigned_to, issue_type, handler_type, created_at, updated_at, resolved_at';
 
   final SupabaseClient _client;
 
@@ -34,123 +20,59 @@ class SupportTicketService {
     return id;
   }
 
-  Future<TicketCreationResult> createFromComplaint({
-    required ComplaintDraft draft,
+  Future<TicketCreationResult> createFromDraft({
+    required SupportTicketDraft draft,
     required String conversationId,
-    ComplaintPhoto? photo,
   }) {
-    final attractionId = draft.attractionId;
-    final description = draft.description;
     final category = draft.category;
-    if (!draft.readyForConfirmation ||
-        attractionId == null ||
-        description == null ||
-        category == null) {
-      throw const FormatException('The complaint information is incomplete.');
-    }
-    if (draft.requiresPhoto && photo == null) {
-      throw const FormatException(
-        'Choose a photo, or restart the complaint and select No Photo.',
-      );
+    final issueType = draft.issueType;
+    if (!draft.readyForConfirmation || category == null || issueType == null) {
+      throw const FormatException('The support information is incomplete.');
     }
 
     return createTicket(
-      attractionId: attractionId,
+      attractionId: draft.attractionId,
       bookingId: draft.bookingId,
       category: category,
+      issueType: issueType,
       subject: draft.generatedSubject,
-      description: description,
+      description: draft.generatedDescription,
       sourceConversationId: conversationId,
-      photo: photo,
     );
   }
 
   Future<TicketCreationResult> createTicket({
-    required String attractionId,
     required String category,
+    required String issueType,
     required String subject,
     required String description,
+    String? attractionId,
     String? bookingId,
     String? sourceConversationId,
-    ComplaintPhoto? photo,
   }) async {
     _userId;
     final result = await _client.rpc(
       'create_support_ticket',
       params: {
-        'p_attraction_id': attractionId,
-        'p_booking_id': bookingId,
         'p_category': category,
+        'p_issue_type': issueType,
         'p_subject': subject.trim(),
         'p_description': description.trim(),
+        'p_booking_id': bookingId,
+        'p_attraction_id': attractionId,
         'p_source_conversation_id': sourceConversationId,
       },
     );
     final row = _rpcRow(result);
     final ticketId = row['id'] as String;
 
-    String? attachmentWarning;
-    if (photo != null) {
-      try {
-        await _uploadPhoto(ticketId, photo);
-      } catch (error) {
-        attachmentWarning =
-            'The ticket was created, but the photo could not be uploaded: '
-            '${_message(error)}';
-      }
-    }
-
     return TicketCreationResult(
       id: ticketId,
       code: row['ticket_code'] as String,
       status: row['status'] as String? ?? 'pending',
-      confirmationMessage:
-          row['confirmation_message'] as String? ?? 'Complaint submitted.',
-      attachmentWarning: attachmentWarning,
+      confirmationMessage: row['confirmation_message'] as String? ??
+          'Support ticket submitted.',
     );
-  }
-
-  Future<void> _uploadPhoto(String ticketId, ComplaintPhoto photo) async {
-    if (photo.bytes.isEmpty || photo.bytes.length > 5 * 1024 * 1024) {
-      throw const FormatException('The image must be 5 MB or smaller.');
-    }
-    if (!const {
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-    }.contains(photo.mimeType)) {
-      throw const FormatException(
-        'Only JPEG, PNG, or WebP images are allowed.',
-      );
-    }
-
-    final safeName = photo.fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final path =
-        '$_userId/$ticketId/${DateTime.now().microsecondsSinceEpoch}_$safeName';
-
-    await _client.storage
-        .from(_bucket)
-        .uploadBinary(
-          path,
-          photo.bytes,
-          fileOptions: FileOptions(contentType: photo.mimeType, upsert: false),
-        );
-
-    try {
-      await _client.rpc(
-        'add_support_ticket_attachment',
-        params: {
-          'p_ticket_id': ticketId,
-          'p_storage_path': path,
-          'p_file_name': photo.fileName,
-          'p_mime_type': photo.mimeType,
-          'p_size_bytes': photo.bytes.length,
-        },
-      );
-    } catch (_) {
-      await _client.storage.from(_bucket).remove([path]);
-      rethrow;
-    }
   }
 
   Future<List<SupportAttractionOption>> fetchApprovedAttractions() async {
@@ -180,8 +102,11 @@ class SupportTicketService {
         .limit(30);
     return rows
         .map(
-          (row) => SupportBookingOption.fromMap(Map<String, dynamic>.from(row)),
+          (row) => SupportBookingOption.tryFromMap(
+            Map<String, dynamic>.from(row),
+          ),
         )
+        .whereType<SupportBookingOption>()
         .toList();
   }
 
@@ -190,18 +115,19 @@ class SupportTicketService {
         .from('support_tickets')
         .select(_ticketColumns)
         .eq('user_id', _userId)
-        .isFilter('legacy_issue_report_id', null)
+        .eq('case_type', 'support')
         .order('created_at', ascending: false);
     return _ticketList(rows);
   }
 
-  Future<List<SupportTicket>> fetchManagedTickets() async {
+  Future<List<SupportTicket>> fetchManagedTickets({required bool isAdmin}) async {
     _userId;
-    final rows = await _client
+    var query = _client
         .from('support_tickets')
         .select(_ticketColumns)
-        .isFilter('legacy_issue_report_id', null)
-        .order('created_at', ascending: false);
+        .eq('case_type', 'support');
+    if (!isAdmin) query = query.eq('handler_type', 'operator');
+    final rows = await query.order('created_at', ascending: false);
     return _ticketList(rows);
   }
 
@@ -211,7 +137,7 @@ class SupportTicketService {
         .from('support_tickets')
         .select(_ticketColumns)
         .eq('id', ticketId)
-        .isFilter('legacy_issue_report_id', null)
+        .eq('case_type', 'support')
         .single();
     final relatedRows = await Future.wait([
       _client
@@ -270,6 +196,34 @@ class SupportTicketService {
       params: {'p_ticket_id': ticketId, 'p_message': message.trim()},
     );
     return result?.toString() ?? 'in_progress';
+  }
+
+  Future<void> replyAsTourist(String ticketId, String message) async {
+    await _client.rpc(
+      'reply_to_my_support_ticket',
+      params: {'p_ticket_id': ticketId, 'p_message': message.trim()},
+    );
+  }
+
+  Future<void> closeMyTicket(String ticketId) async {
+    await _client.rpc(
+      'close_my_support_ticket',
+      params: {'p_ticket_id': ticketId},
+    );
+  }
+
+  Future<void> reopenMyTicket(String ticketId) async {
+    await _client.rpc(
+      'reopen_my_support_ticket',
+      params: {'p_ticket_id': ticketId},
+    );
+  }
+
+  Future<void> transferTicket(String ticketId, String handlerType) async {
+    await _client.rpc(
+      'transfer_support_ticket',
+      params: {'p_ticket_id': ticketId, 'p_handler_type': handlerType},
+    );
   }
 
   Future<void> updateTicketStatus(String ticketId, String status) async {

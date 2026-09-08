@@ -315,8 +315,8 @@ class AttractionService {
       final rows = await _client
           .from('bookings')
           .select(
-        'slot:attraction_slots(starts_at, ends_at, '
-            'attraction:attractions(id, name, latitude, longitude))',
+        'slot:attraction_slots!inner(starts_at, ends_at, '
+            'attraction:attractions!inner(id, name, latitude, longitude))',
       )
           .eq(
         'tourist_id',
@@ -330,15 +330,22 @@ class AttractionService {
       final anchors = <BookingLocationAnchor>[];
 
       for (final row in rows) {
-        final slot =
-        (row['slot'] as Map).cast<String, dynamic>();
+        final rawSlot = row['slot'];
+        if (rawSlot is! Map) continue;
+        final slot = rawSlot.cast<String, dynamic>();
 
-        final startsAt = DateTime.parse(
-          slot['starts_at'] as String,
-        ).toLocal();
+        final startsAt = DateTime.tryParse(
+          slot['starts_at']?.toString() ?? '',
+        )?.toLocal();
+        final endsAt = DateTime.tryParse(
+          slot['ends_at']?.toString() ?? '',
+        )?.toLocal();
 
-        final attraction =
-        (slot['attraction'] as Map).cast<String, dynamic>();
+        final rawAttraction = slot['attraction'];
+        if (rawAttraction is! Map) continue;
+        final attraction = rawAttraction.cast<String, dynamic>();
+        final attractionId = attraction['id']?.toString().trim() ?? '';
+        final attractionName = attraction['name']?.toString().trim() ?? '';
 
         final latitude =
         (attraction['latitude'] as num?)?.toDouble();
@@ -346,23 +353,25 @@ class AttractionService {
         final longitude =
         (attraction['longitude'] as num?)?.toDouble();
 
-        if (startsAt.isAfter(DateTime.now()) &&
+        if (startsAt != null &&
+            endsAt != null &&
+            attractionId.isNotEmpty &&
+            attractionName.isNotEmpty &&
+            startsAt.isAfter(DateTime.now()) &&
             latitude != null &&
             longitude != null) {
           anchors.add(
             BookingLocationAnchor(
               attractionId:
-              attraction['id'] as String,
+              attractionId,
               attractionName:
-              attraction['name'] as String,
-              endsAt: DateTime.parse(
-                slot['ends_at'] as String,
-              ).toLocal(),
+              attractionName,
+              endsAt: endsAt,
               location: LocationPoint(
                 latitude: latitude,
                 longitude: longitude,
                 label:
-                attraction['name'] as String,
+                attractionName,
               ),
             ),
           );
@@ -559,8 +568,8 @@ class AttractionService {
       final rows = await _client
           .from('bookings')
           .select(
-        'slot:attraction_slots('
-            'attraction:attractions(category))',
+        'slot:attraction_slots!inner('
+            'attraction:attractions!inner(category))',
       )
           .eq(
         'tourist_id',
@@ -571,18 +580,18 @@ class AttractionService {
         'completed',
       );
 
-      return rows.map(
-            (row) {
-          final slot =
-          (row['slot'] as Map).cast<String, dynamic>();
-
-          final attraction =
-          (slot['attraction'] as Map).cast<String, dynamic>();
-
-          return (attraction['category'] as String)
-              .toLowerCase();
-        },
-      ).toSet();
+      final categories = <String>{};
+      for (final row in rows) {
+        final rawSlot = row['slot'];
+        if (rawSlot is! Map) continue;
+        final rawAttraction = rawSlot['attraction'];
+        if (rawAttraction is! Map) continue;
+        final category = rawAttraction['category']?.toString().trim();
+        if (category != null && category.isNotEmpty) {
+          categories.add(category.toLowerCase());
+        }
+      }
+      return categories;
     } catch (_) {
       return const {};
     }

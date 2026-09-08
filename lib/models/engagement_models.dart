@@ -38,16 +38,43 @@ class VisitOption {
   final DateTime startsAt;
 
   factory VisitOption.fromMap(Map<String, dynamic> map) {
-    final slot = (map['slot'] as Map).cast<String, dynamic>();
-    final attraction = (slot['attraction'] as Map).cast<String, dynamic>();
+    final option = VisitOption.tryFromMap(map);
+    if (option == null) {
+      throw const FormatException(
+        'The visit is missing its booking, time slot, or attraction details.',
+      );
+    }
+    return option;
+  }
+
+  static VisitOption? tryFromMap(Map<String, dynamic> map) {
+    final rawSlot = map['slot'];
+    if (rawSlot is! Map) return null;
+    final slot = rawSlot.cast<String, dynamic>();
+    final rawAttraction = slot['attraction'];
+    if (rawAttraction is! Map) return null;
+    final attraction = rawAttraction.cast<String, dynamic>();
+
+    final bookingId = map['id']?.toString().trim() ?? '';
+    final bookingCode = map['booking_code']?.toString().trim() ?? '';
+    final attractionId = attraction['id']?.toString().trim() ?? '';
+    final attractionName = attraction['name']?.toString().trim() ?? '';
+    final startsAt = DateTime.tryParse(slot['starts_at']?.toString() ?? '');
+    if (bookingId.isEmpty ||
+        bookingCode.isEmpty ||
+        attractionId.isEmpty ||
+        attractionName.isEmpty ||
+        startsAt == null) {
+      return null;
+    }
 
     return VisitOption(
-      bookingId: map['id'] as String,
-      bookingCode: map['booking_code'] as String,
-      attractionId: attraction['id'] as String,
-      attractionName: attraction['name'] as String,
-      attractionAddress: attraction['address'] as String? ?? '',
-      startsAt: DateTime.parse(slot['starts_at'] as String).toLocal(),
+      bookingId: bookingId,
+      bookingCode: bookingCode,
+      attractionId: attractionId,
+      attractionName: attractionName,
+      attractionAddress: attraction['address']?.toString() ?? '',
+      startsAt: startsAt.toLocal(),
     );
   }
 }
@@ -155,6 +182,8 @@ class IssueReport {
     this.attractionName,
     this.resolutionNote,
     this.evidencePath,
+    this.submissionLanguage,
+    this.requesterName,
   });
 
   final String id;
@@ -170,6 +199,8 @@ class IssueReport {
   final String? resolutionNote;
 
   final String? evidencePath;
+  final String? submissionLanguage;
+  final String? requesterName;
 
   factory IssueReport.fromMap(Map<String, dynamic> map) => IssueReport(
     id: map['id'] as String,
@@ -183,6 +214,8 @@ class IssueReport {
     attractionName: (map['attraction'] as Map?)?['name'] as String?,
     resolutionNote: map['resolution_note'] as String?,
     evidencePath: map['evidence_path'] as String?,
+    submissionLanguage: map['submission_language'] as String?,
+    requesterName: map['requester_name'] as String?,
   );
 }
 

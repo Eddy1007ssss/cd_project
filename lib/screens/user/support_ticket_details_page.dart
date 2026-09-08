@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/support_ticket_models.dart';
@@ -23,11 +25,21 @@ class SupportTicketDetailsPage extends StatefulWidget {
 
 class _SupportTicketDetailsPageState extends State<SupportTicketDetailsPage> {
   final SupportTicketService _service = SupportTicketService();
+  final TextEditingController _replyController = TextEditingController();
 
   SupportTicketDetailsData? _details;
   String? _ticketId;
   String? _error;
   bool _loading = true;
+  bool _sending = false;
+  Timer? _refreshTimer;
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _replyController.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -43,13 +55,21 @@ class _SupportTicketDetailsPageState extends State<SupportTicketDetailsPage> {
     }
     _ticketId = arguments.ticketId;
     _load();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) {
+        if (mounted && !_sending && ModalRoute.of(context)?.isCurrent == true) {
+          _load(showLoader: false);
+        }
+      },
+    );
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool showLoader = true}) async {
     final id = _ticketId;
     if (id == null) return;
     setState(() {
-      _loading = true;
+      if (showLoader) _loading = true;
       _error = null;
     });
     try {
@@ -110,6 +130,62 @@ class _SupportTicketDetailsPageState extends State<SupportTicketDetailsPage> {
     }
   }
 
+  Future<void> _sendReply() async {
+    final id = _ticketId;
+    final message = _replyController.text.trim();
+    if (id == null || message.length < 2 || _sending) return;
+    setState(() => _sending = true);
+    try {
+      await _service.replyAsTourist(id, message);
+      _replyController.clear();
+      await _load();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: TourFlowText(_message(error))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _closeTicket() async {
+    final id = _ticketId;
+    if (id == null || _sending) return;
+    setState(() => _sending = true);
+    try {
+      await _service.closeMyTicket(id);
+      await _load();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: TourFlowText(_message(error))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _reopenTicket() async {
+    final id = _ticketId;
+    if (id == null || _sending) return;
+    setState(() => _sending = true);
+    try {
+      await _service.reopenMyTicket(id);
+      await _load();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: TourFlowText(_message(error))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return TourFlowPage(
@@ -136,15 +212,34 @@ class _SupportTicketDetailsPageState extends State<SupportTicketDetailsPage> {
             )
           : _error != null
           ? _ErrorView(message: _error!, onRetry: _load)
-          : _TicketDetailsBody(details: _details!),
+          : _TicketDetailsBody(
+              details: _details!,
+              replyController: _replyController,
+              sending: _sending,
+              onSend: _sendReply,
+              onClose: _closeTicket,
+              onReopen: _reopenTicket,
+            ),
     );
   }
 }
 
 class _TicketDetailsBody extends StatelessWidget {
-  const _TicketDetailsBody({required this.details});
+  const _TicketDetailsBody({
+    required this.details,
+    required this.replyController,
+    required this.sending,
+    required this.onSend,
+    required this.onClose,
+    required this.onReopen,
+  });
 
   final SupportTicketDetailsData details;
+  final TextEditingController replyController;
+  final bool sending;
+  final VoidCallback onSend;
+  final VoidCallback onClose;
+  final VoidCallback onReopen;
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +302,7 @@ class _TicketDetailsBody extends StatelessWidget {
               ),
               const Divider(height: 26),
               const TourFlowText(
-                'Complaint details',
+                'Support request details',
                 style: TextStyle(
                   color: TourFlowColors.heading,
                   fontWeight: FontWeight.w700,
@@ -256,6 +351,64 @@ class _TicketDetailsBody extends StatelessWidget {
             ),
           ),
         ],
+        if (ticket.status != 'closed') ...[
+          const SizedBox(height: 16),
+          const SectionTitle(
+            'Chat with support',
+            subtitle: 'Replies are added to this ticket in time order.',
+          ),
+          const SizedBox(height: 10),
+          ModuleCard(
+            child: Column(
+              children: [
+                TextField(
+                  controller: replyController,
+                  enabled: !sending,
+                  minLines: 2,
+                  maxLines: 5,
+                  maxLength: 4000,
+                  decoration: const InputDecoration(
+                    hintText: 'Write a follow-up message…',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: sending ? null : onClose,
+                      icon: const Icon(Icons.close_rounded),
+                      label: const TourFlowText('Close Ticket'),
+                    ),
+                    const Spacer(),
+                    FilledButton.icon(
+                      onPressed: sending ? null : onSend,
+                      icon: const Icon(Icons.send_rounded),
+                      label: const TourFlowText('Send'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          const SizedBox(height: 16),
+          ModuleCard(
+            child: Row(
+              children: [
+                const Expanded(
+                  child: TourFlowText(
+                    'This ticket is closed. Reopen it to continue the chat.',
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: sending ? null : onReopen,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const TourFlowText('Reopen'),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         const SectionTitle(
           'Complete processing history',
@@ -288,6 +441,7 @@ class _TimelineEvent extends StatelessWidget {
         'Status changed to ${supportTicketStatusLabel(event.toStatus)}',
       ),
       'attachment' => (Icons.attach_file_rounded, 'Attachment added'),
+      'routing_changed' => (Icons.route_rounded, 'Support routing changed'),
       _ => (Icons.forum_outlined, '${event.actorName} replied'),
     };
     return Padding(
@@ -385,6 +539,7 @@ class _ErrorView extends StatelessWidget {
 Color _statusColor(String status) => switch (status) {
   'resolved' => TourFlowColors.success,
   'in_progress' => const Color(0xFF1D4ED8),
+  'closed' => TourFlowColors.muted,
   _ => TourFlowColors.warning,
 };
 

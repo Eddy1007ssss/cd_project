@@ -132,6 +132,76 @@ class ComplaintDraftConversation {
   }
 }
 
+class SupportTicketDraft {
+  const SupportTicketDraft({
+    required this.category,
+    required this.issueType,
+    required this.issueLabel,
+    required this.bookingId,
+    required this.bookingCode,
+    required this.attractionId,
+    required this.attractionName,
+    required this.bookingNotApplicable,
+    required this.additionalDetails,
+    required this.additionalDetailsComplete,
+    required this.missingFields,
+    required this.bookingOptions,
+  });
+
+  final String? category;
+  final String? issueType;
+  final String? issueLabel;
+  final String? bookingId;
+  final String? bookingCode;
+  final String? attractionId;
+  final String? attractionName;
+  final bool bookingNotApplicable;
+  final String? additionalDetails;
+  final bool additionalDetailsComplete;
+  final List<String> missingFields;
+  final List<ComplaintBookingOption> bookingOptions;
+
+  bool get readyForConfirmation => missingFields.isEmpty;
+  bool get canGoBack => category != null;
+  bool get needsBooking => category == 'booking' || category == 'qr_check_in';
+  String get categoryLabel => supportTicketCategoryLabel(category);
+  String get generatedSubject => issueLabel?.trim().isNotEmpty == true
+      ? issueLabel!.trim()
+      : '$categoryLabel support request';
+  String get generatedDescription {
+    final details = additionalDetails?.trim();
+    if (details == null || details.isEmpty) return generatedSubject;
+    return '$generatedSubject\n\n$details';
+  }
+
+  factory SupportTicketDraft.fromMap(Map<String, dynamic> map) {
+    final options = map['bookingOptions'];
+    return SupportTicketDraft(
+      category: _nullableString(map['category']),
+      issueType: _nullableString(map['issueType']),
+      issueLabel: _nullableString(map['issueLabel']),
+      bookingId: _nullableString(map['bookingId']),
+      bookingCode: _nullableString(map['bookingCode']),
+      attractionId: _nullableString(map['attractionId']),
+      attractionName: _nullableString(map['attractionName']),
+      bookingNotApplicable: map['bookingNotApplicable'] == true,
+      additionalDetails: _nullableString(map['additionalDetails']),
+      additionalDetailsComplete: map['additionalDetailsComplete'] == true,
+      missingFields: (map['missingFields'] as List? ?? const [])
+          .map((item) => item.toString())
+          .toList(),
+      bookingOptions: (options as List? ?? const [])
+          .whereType<Map>()
+          .map(
+            (item) => ComplaintBookingOption.fromMap(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
 class SupportAttractionOption {
   const SupportAttractionOption({required this.id, required this.name});
 
@@ -161,14 +231,42 @@ class SupportBookingOption {
   final DateTime startsAt;
 
   factory SupportBookingOption.fromMap(Map<String, dynamic> map) {
-    final slot = Map<String, dynamic>.from(map['slot'] as Map);
-    final attraction = Map<String, dynamic>.from(slot['attraction'] as Map);
+    final option = SupportBookingOption.tryFromMap(map);
+    if (option == null) {
+      throw const FormatException(
+        'The booking is missing its time slot or attraction details.',
+      );
+    }
+    return option;
+  }
+
+  static SupportBookingOption? tryFromMap(Map<String, dynamic> map) {
+    final rawSlot = map['slot'];
+    if (rawSlot is! Map) return null;
+    final slot = Map<String, dynamic>.from(rawSlot);
+    final rawAttraction = slot['attraction'];
+    if (rawAttraction is! Map) return null;
+    final attraction = Map<String, dynamic>.from(rawAttraction);
+
+    final id = map['id']?.toString().trim() ?? '';
+    final code = map['booking_code']?.toString().trim() ?? '';
+    final attractionId = attraction['id']?.toString().trim() ?? '';
+    final attractionName = attraction['name']?.toString().trim() ?? '';
+    final startsAt = DateTime.tryParse(slot['starts_at']?.toString() ?? '');
+    if (id.isEmpty ||
+        code.isEmpty ||
+        attractionId.isEmpty ||
+        attractionName.isEmpty ||
+        startsAt == null) {
+      return null;
+    }
+
     return SupportBookingOption(
-      id: map['id'] as String,
-      code: map['booking_code'] as String,
-      attractionId: attraction['id'] as String,
-      attractionName: attraction['name'] as String,
-      startsAt: DateTime.parse(slot['starts_at'] as String).toLocal(),
+      id: id,
+      code: code,
+      attractionId: attractionId,
+      attractionName: attractionName,
+      startsAt: startsAt.toLocal(),
     );
   }
 }
@@ -190,6 +288,8 @@ class SupportTicket {
     this.bookingCode,
     this.assignedTo,
     this.resolvedAt,
+    this.issueType,
+    this.handlerType = 'admin',
   });
 
   final String id;
@@ -204,6 +304,8 @@ class SupportTicket {
   final String status;
   final String? submissionLanguage;
   final String? assignedTo;
+  final String? issueType;
+  final String handlerType;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? resolvedAt;
@@ -218,7 +320,7 @@ class SupportTicket {
     id: map['id'] as String,
     code: map['ticket_code'] as String,
     requesterName: map['requester_name'] as String? ?? 'Tourist',
-    attractionName: map['attraction_name'] as String? ?? 'Attraction',
+    attractionName: map['attraction_name'] as String? ?? 'TourFlow App',
     bookingCode: _nullableString(map['booking_code']),
     category: map['category'] as String? ?? 'other',
     subject: map['subject'] as String? ?? 'Support request',
@@ -227,6 +329,8 @@ class SupportTicket {
     status: map['status'] as String? ?? 'pending',
     submissionLanguage: _nullableString(map['submission_language']),
     assignedTo: _nullableString(map['assigned_to']),
+    issueType: _nullableString(map['issue_type']),
+    handlerType: map['handler_type'] as String? ?? 'admin',
     createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
     updatedAt: DateTime.parse(map['updated_at'] as String).toLocal(),
     resolvedAt: _optionalDateTime(map['resolved_at']),
@@ -322,6 +426,11 @@ class TicketDeletionResult {
 }
 
 String supportTicketCategoryLabel(String? value) => switch (value) {
+  'booking' => 'Booking',
+  'account_profile' => 'Account & Profile',
+  'payment_refund' => 'Payment & Refund',
+  'qr_check_in' => 'QR & Check-in',
+  'technical' => 'Technical Problem',
   'overcrowding' => 'Overcrowding',
   'facility_damage' => 'Facility Damage',
   'safety' => 'Safety Concern',
@@ -332,6 +441,7 @@ String supportTicketCategoryLabel(String? value) => switch (value) {
 String supportTicketStatusLabel(String? value) => switch (value) {
   'in_progress' => 'In Progress',
   'resolved' => 'Resolved',
+  'closed' => 'Closed',
   _ => 'Pending',
 };
 

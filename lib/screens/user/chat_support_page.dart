@@ -9,8 +9,10 @@ import '../../models/module3_models.dart';
 import '../../models/support_ticket_models.dart';
 import '../../repositories/module3_repository.dart';
 import '../../services/gemini_chat_service.dart';
+import '../../services/chat_issue_report_service.dart';
 import '../../services/support_ticket_service.dart';
 import '../../widgets/chat_booking_cards.dart';
+import '../../widgets/support_ticket_chat_cards.dart';
 import '../../widgets/navigation/user_sidebar.dart';
 import '../../widgets/navigation/navigation_logout.dart';
 import '../../widgets/navigation/navigation_routes.dart';
@@ -19,6 +21,7 @@ import 'attraction_discovery_page.dart';
 import 'chat_history_page.dart';
 import 'language_settings_page.dart';
 import 'support_ticket_list_page.dart';
+import 'report_status_page.dart';
 
 class ChatSupportPage extends StatefulWidget {
   const ChatSupportPage({this.conversationId, super.key});
@@ -36,6 +39,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
   final ScrollController _scrollController = ScrollController();
   final GeminiChatService _chatService = GeminiChatService();
   final SupportTicketService _ticketService = SupportTicketService();
+  final ChatIssueReportService _reportService = ChatIssueReportService();
   final Module3Repository _bookingRepository = Module3Repository();
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -47,7 +51,8 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
   String _language = 'English';
   ComplaintDraft? _complaintDraft;
   ChatBookingDraft? _bookingDraft;
-  ComplaintPhoto? _complaintPhoto;
+  SupportTicketDraft? _supportTicketDraft;
+  ChatImageAttachment? _complaintPhoto;
   List<SupportAttractionOption> _complaintAttractions = const [];
   List<SupportBookingOption> _complaintBookings = const [];
   bool _isLoading = true;
@@ -56,6 +61,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
   bool _isLoadingComplaintOptions = false;
   bool _isSubmittingComplaint = false;
   bool _isSubmittingBookingAction = false;
+  bool _isSubmittingSupportTicket = false;
   String? _loadError;
   String? _complaintOptionsError;
 
@@ -97,6 +103,9 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
       final bookingDraft = _conversationId == null
           ? null
           : await _chatService.getBookingDraft(_conversationId!);
+      final supportTicketDraft = _conversationId == null
+          ? null
+          : await _chatService.getSupportTicketDraft(_conversationId!);
 
       if (!mounted) return;
       setState(() {
@@ -105,6 +114,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         _language = userContext.languageName;
         _complaintDraft = complaintDraft;
         _bookingDraft = bookingDraft;
+        _supportTicketDraft = supportTicketDraft;
         _complaintPhoto = null;
         _messages
           ..clear()
@@ -142,10 +152,14 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
     });
 
     try {
-      final attractionsFuture = _ticketService.fetchApprovedAttractions();
-      final bookingsFuture = _ticketService.fetchMyBookings();
-      final attractions = await attractionsFuture;
-      final bookings = await bookingsFuture;
+      final attractions = await _ticketService.fetchApprovedAttractions();
+      List<SupportBookingOption> bookings = const [];
+      try {
+        bookings = await _ticketService.fetchMyBookings();
+      } catch (_) {
+        // A missing/hidden booking relation must not block the attraction list.
+        // The tourist can still continue with "No related booking".
+      }
       if (!mounted || _complaintDraft == null) return;
       setState(() {
         _complaintAttractions = attractions;
@@ -164,6 +178,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         _isChoosingComplaintDraft ||
         _isSubmittingComplaint ||
         _isSubmittingBookingAction ||
+        _isSubmittingSupportTicket ||
         _isLoading) {
       return;
     }
@@ -184,6 +199,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
     if (_isSending ||
         _isSubmittingComplaint ||
         _isSubmittingBookingAction ||
+        _isSubmittingSupportTicket ||
         _isLoading) {
       return false;
     }
@@ -220,6 +236,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         _conversationId = response.conversationId;
         _complaintDraft = response.complaintDraft;
         _bookingDraft = null;
+        _supportTicketDraft = null;
         if (response.complaintDraft?.requiresPhoto != true) {
           _complaintPhoto = null;
         }
@@ -293,7 +310,12 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
     String? value,
     bool showError = true,
   }) async {
-    if (_isSending || _isSubmittingComplaint || _isLoading) return false;
+    if (_isSending ||
+        _isSubmittingComplaint ||
+        _isSubmittingSupportTicket ||
+        _isLoading) {
+      return false;
+    }
 
     var succeeded = false;
     setState(() {
@@ -323,6 +345,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         _complaintAttractions = const [];
         _complaintBookings = const [];
         _bookingDraft = response.bookingDraft;
+        _supportTicketDraft = null;
         _messages.add(
           _ChatMessage(
             text: response.reply,
@@ -494,11 +517,13 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         _isChoosingComplaintDraft ||
         _isSubmittingComplaint ||
         _isSubmittingBookingAction ||
+        _isSubmittingSupportTicket ||
         _isLoading) {
       return;
     }
 
     final startsComplaint = _isComplaintStartRequest(value);
+    final startsSupport = _isSupportStartRequest(value);
     final bookingIntent = _bookingActionIntent(value);
     if (_shouldOfferComplaintDraftChoice(value)) {
       final shouldSend = await _chooseComplaintDraftOrNew();
@@ -507,6 +532,10 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
 
     if (startsComplaint) {
       await _applyComplaintAction(type: 'start', displayText: value);
+      return;
+    }
+    if (startsSupport) {
+      await _beginGuidedSupport(value);
       return;
     }
     if (bookingIntent != null) {
@@ -536,6 +565,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         _conversationId = response.conversationId;
         _complaintDraft = response.complaintDraft;
         _bookingDraft = response.bookingDraft;
+        _supportTicketDraft = response.supportTicketDraft;
         if (response.complaintDraft?.requiresPhoto != true) {
           _complaintPhoto = null;
         }
@@ -831,7 +861,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
       }
       if (!mounted) return;
       setState(() {
-        _complaintPhoto = ComplaintPhoto(
+        _complaintPhoto = ChatImageAttachment(
           bytes: Uint8List.fromList(bytes),
           fileName: selected.name,
           mimeType: mimeType,
@@ -868,7 +898,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
 
     setState(() => _isSubmittingComplaint = true);
     try {
-      final result = await _ticketService.createFromComplaint(
+      final result = await _reportService.createFromComplaint(
         draft: draft,
         conversationId: conversationId,
         photo: _complaintPhoto,
@@ -889,9 +919,6 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
         );
       });
       _scrollToBottom();
-      if (result.attachmentWarning != null) {
-        _showMessage(result.attachmentWarning!);
-      }
       final viewTickets = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
@@ -909,19 +936,153 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const TourFlowText('View Tickets'),
+              child: const TourFlowText('View Reports'),
             ),
           ],
         ),
       );
       if (viewTickets == true && mounted) {
-        await Navigator.pushNamed(context, SupportTicketListPage.routeName);
+        await Navigator.pushNamed(context, ReportStatusPage.routeName);
       }
     } catch (error) {
       if (mounted) _showMessage(_friendlyError(error));
     } finally {
       if (mounted) setState(() => _isSubmittingComplaint = false);
     }
+  }
+
+  Future<void> _beginGuidedSupport([String? displayText]) async {
+    if (_isSending || _isSubmittingSupportTicket || _isLoading) return;
+    final copy = SupportTicketGuideCopy(_language);
+    await _applySupportAction(
+      type: 'start',
+      displayText: displayText ?? copy.start,
+    );
+  }
+
+  Future<bool> _applySupportAction({
+    required String type,
+    required String displayText,
+    String? value,
+  }) async {
+    if (_isSending || _isSubmittingSupportTicket || _isLoading) return false;
+    setState(() {
+      _messages.add(
+        _ChatMessage(text: displayText, isUser: true, time: _currentTime()),
+      );
+      _isSending = true;
+    });
+    _scrollToBottom();
+    try {
+      final action = <String, dynamic>{'type': type};
+      if (value != null) action['value'] = value;
+      final response = await _chatService.sendMessage(
+        message: displayText,
+        language: _language,
+        conversationId: _conversationId,
+        supportTicketAction: action,
+      );
+      if (!mounted) return false;
+      setState(() {
+        _conversationId = response.conversationId;
+        _supportTicketDraft = response.supportTicketDraft;
+        _complaintDraft = null;
+        _bookingDraft = null;
+        _messages.add(_ChatMessage(
+          text: response.reply,
+          isUser: false,
+          time: _currentTime(),
+        ));
+      });
+      return true;
+    } catch (error) {
+      if (mounted) _showMessage(_friendlyError(error));
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() => _isSending = false);
+        _scrollToBottom();
+      }
+    }
+  }
+
+  Future<void> _enterSupportText({required bool customIssue}) async {
+    final copy = SupportTicketGuideCopy(_language);
+    final text = await _showComplaintTextDialog(
+      title: customIssue ? copy.otherIssueTitle : copy.detailsTitle,
+      hint: copy.inputHint,
+      minimumLength: customIssue ? 5 : 3,
+      minimumLengthMessage: customIssue
+          ? 'Please enter at least 5 characters.'
+          : 'Please enter at least 3 characters.',
+    );
+    if (text == null || !mounted) return;
+    await _applySupportAction(
+      type: customIssue ? 'set_custom_issue' : 'set_additional_details',
+      value: text,
+      displayText: text,
+    );
+  }
+
+  Future<void> _submitSupportTicket() async {
+    final draft = _supportTicketDraft;
+    final conversationId = _conversationId;
+    if (draft == null || conversationId == null || _isSubmittingSupportTicket) {
+      return;
+    }
+    setState(() => _isSubmittingSupportTicket = true);
+    try {
+      final result = await _ticketService.createFromDraft(
+        draft: draft,
+        conversationId: conversationId,
+      );
+      if (!mounted) return;
+      final copy = SupportTicketGuideCopy(_language);
+      setState(() {
+        _supportTicketDraft = null;
+        _messages.add(_ChatMessage(
+          text: copy.submitted(result.code),
+          isUser: false,
+          time: _currentTime(),
+        ));
+      });
+      _scrollToBottom();
+      final view = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          icon: const Icon(Icons.support_agent_rounded, size: 42),
+          title: TourFlowText(copy.submit),
+          content: TourFlowText(copy.submitted(result.code)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: TourFlowText(copy.close),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: TourFlowText(copy.viewTickets),
+            ),
+          ],
+        ),
+      );
+      if (view == true && mounted) {
+        await Navigator.pushNamed(context, SupportTicketListPage.routeName);
+      }
+    } catch (error) {
+      if (mounted) _showMessage(_friendlyError(error));
+    } finally {
+      if (mounted) setState(() => _isSubmittingSupportTicket = false);
+    }
+  }
+
+  bool _isSupportStartRequest(String message) {
+    return RegExp(
+      r'(support\s*ticket|contact\s+(?:support|admin|operator)|talk\s+to\s+(?:support|staff)|'
+      r'客服工单|联系客服|联系管理员|联系工作人员|tiket\s+sokongan|'
+      r'サポートチケット|サポートに連絡|지원\s*티켓|고객\s*지원)',
+      caseSensitive: false,
+      unicode: true,
+    ).hasMatch(message.trim());
   }
 
   void _showMessage(String message) {
@@ -967,13 +1128,15 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
     if (_isSending ||
         _isChoosingComplaintDraft ||
         _isSubmittingComplaint ||
-        _isSubmittingBookingAction) {
+        _isSubmittingBookingAction ||
+        _isSubmittingSupportTicket) {
       return;
     }
     setState(() {
       _conversationId = null;
       _complaintDraft = null;
       _bookingDraft = null;
+      _supportTicketDraft = null;
       _complaintPhoto = null;
       _complaintAttractions = const [];
       _complaintBookings = const [];
@@ -1036,6 +1199,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
   Widget build(BuildContext context) {
     final complaintCopy = _ComplaintGuideCopy(_language);
     final bookingCopy = ChatBookingCopy(_language);
+    final supportCopy = SupportTicketGuideCopy(_language);
     return Scaffold(
       backgroundColor: TourFlowColors.background,
       drawer: UserSidebar(
@@ -1073,7 +1237,8 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                 _isSending ||
                     _isChoosingComplaintDraft ||
                     _isSubmittingComplaint ||
-                    _isSubmittingBookingAction
+                    _isSubmittingBookingAction ||
+                    _isSubmittingSupportTicket
                 ? null
                 : _startNewConversation,
             icon: const Icon(Icons.add_comment_outlined),
@@ -1245,6 +1410,75 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                         ),
                         const SizedBox(height: 12),
                       ],
+                      if (_supportTicketDraft != null &&
+                          !_supportTicketDraft!.readyForConfirmation) ...[
+                        SupportTicketGuideCard(
+                          draft: _supportTicketDraft!,
+                          copy: supportCopy,
+                          isBusy: _isSending || _isSubmittingSupportTicket,
+                          onSelectCategory: (option) => _applySupportAction(
+                            type: 'select_category',
+                            value: option.value,
+                            displayText: option.label,
+                          ),
+                          onSelectIssue: (option) {
+                            if (_supportTicketDraft?.category == 'other') {
+                              _enterSupportText(customIssue: true);
+                              return;
+                            }
+                            _applySupportAction(
+                              type: 'select_issue',
+                              value: option.value,
+                              displayText: option.label,
+                            );
+                          },
+                          onSelectBooking: (option) => _applySupportAction(
+                            type: 'select_booking',
+                            value: option.id,
+                            displayText: option.code,
+                          ),
+                          onNoBooking: () => _applySupportAction(
+                            type: 'no_booking',
+                            displayText: supportCopy.noBooking,
+                          ),
+                          onAddDetails: () =>
+                              _enterSupportText(customIssue: false),
+                          onSkipDetails: () => _applySupportAction(
+                            type: 'skip_additional_details',
+                            displayText: supportCopy.skipDetails,
+                          ),
+                          onBack: () => _applySupportAction(
+                            type: 'back',
+                            displayText: supportCopy.back,
+                          ),
+                          onRestart: () => _applySupportAction(
+                            type: 'start',
+                            displayText: supportCopy.restart,
+                          ),
+                          onCancel: () => _applySupportAction(
+                            type: 'cancel',
+                            displayText: supportCopy.cancel,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      if (_supportTicketDraft?.readyForConfirmation == true) ...[
+                        SupportTicketConfirmationCard(
+                          draft: _supportTicketDraft!,
+                          copy: supportCopy,
+                          isSubmitting: _isSubmittingSupportTicket,
+                          onSubmit: _submitSupportTicket,
+                          onBack: () => _applySupportAction(
+                            type: 'back',
+                            displayText: supportCopy.back,
+                          ),
+                          onCancel: () => _applySupportAction(
+                            type: 'cancel',
+                            displayText: supportCopy.cancel,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       if (_bookingDraft != null &&
                           !_bookingDraft!.readyForConfirmation) ...[
                         ChatBookingGuideCard(
@@ -1315,11 +1549,14 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                       ],
                       if (_isSending ||
                           _isChoosingComplaintDraft ||
-                          _isSubmittingBookingAction) ...[
+                          _isSubmittingBookingAction ||
+                          _isSubmittingSupportTicket) ...[
                         const _TypingIndicator(),
                         const SizedBox(height: 10),
                       ],
-                      if (_complaintDraft == null && _bookingDraft == null) ...[
+                      if (_complaintDraft == null &&
+                          _bookingDraft == null &&
+                          _supportTicketDraft == null) ...[
                         const SizedBox(height: 4),
                         const TourFlowText(
                           'Quick actions',
@@ -1349,6 +1586,26 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                               ),
                               label: TourFlowText(complaintCopy.startComplaint),
                               backgroundColor: const Color(0xFFFFF3C4),
+                              side: const BorderSide(
+                                color: TourFlowColors.border,
+                              ),
+                            ),
+                            ActionChip(
+                              onPressed:
+                                  _isSending ||
+                                      _isChoosingComplaintDraft ||
+                                      _isSubmittingComplaint ||
+                                      _isSubmittingBookingAction ||
+                                      _isSubmittingSupportTicket
+                                  ? null
+                                  : _beginGuidedSupport,
+                              avatar: const Icon(
+                                Icons.support_agent_rounded,
+                                size: 16,
+                                color: Color(0xFF1D4ED8),
+                              ),
+                              label: TourFlowText(supportCopy.start),
+                              backgroundColor: const Color(0xFFEFF6FF),
                               side: const BorderSide(
                                 color: TourFlowColors.border,
                               ),
@@ -1456,12 +1713,15 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
             controller: _messageController,
             onSend: _sendMessage,
             guidedComplaintActive:
-                _complaintDraft != null || _bookingDraft != null,
+                _complaintDraft != null ||
+                _bookingDraft != null ||
+                _supportTicketDraft != null,
             isSending:
                 _isSending ||
                 _isChoosingComplaintDraft ||
                 _isSubmittingComplaint ||
                 _isSubmittingBookingAction ||
+                _isSubmittingSupportTicket ||
                 _isLoading ||
                 _loadError != null,
           ),
@@ -2163,19 +2423,19 @@ class _ComplaintGuideCopy {
   );
 
   String submittedMessage(String code) => _text(
-    english: 'Complaint submitted.\nTicket ID: $code\nCurrent status: Pending',
-    mandarin: '投诉已提交。\n工单编号：$code\n当前状态：待处理',
-    bahasa: 'Aduan telah dihantar.\nID Tiket: $code\nStatus semasa: Menunggu',
-    japanese: '苦情を送信しました。\nチケットID：$code\n現在のステータス：保留中',
-    korean: '불만이 제출되었습니다.\n티켓 ID: $code\n현재 상태: 대기 중',
+    english: 'Complaint submitted.\nReport ID: $code\nCurrent status: Pending',
+    mandarin: '投诉已提交。\n报告编号：$code\n当前状态：待处理',
+    bahasa: 'Aduan telah dihantar.\nID Laporan: $code\nStatus semasa: Menunggu',
+    japanese: '苦情を送信しました。\nレポートID：$code\n現在のステータス：保留中',
+    korean: '불만이 제출되었습니다.\n신고 ID: $code\n현재 상태: 대기 중',
   );
 
   String submittedDetails(String code) => _text(
-    english: 'Ticket ID: $code\nCurrent status: Pending',
-    mandarin: '工单编号：$code\n当前状态：待处理',
-    bahasa: 'ID Tiket: $code\nStatus semasa: Menunggu',
-    japanese: 'チケットID：$code\n現在のステータス：保留中',
-    korean: '티켓 ID: $code\n현재 상태: 대기 중',
+    english: 'Report ID: $code\nCurrent status: Pending',
+    mandarin: '报告编号：$code\n当前状态：待处理',
+    bahasa: 'ID Laporan: $code\nStatus semasa: Menunggu',
+    japanese: 'レポートID：$code\n現在のステータス：保留中',
+    korean: '신고 ID: $code\n현재 상태: 대기 중',
   );
 
   String selectedAttraction(String value) => _text(

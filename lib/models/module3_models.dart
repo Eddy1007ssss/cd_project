@@ -143,36 +143,46 @@ class TourBooking {
   }
 
   factory TourBooking.fromMap(Map<String, dynamic> map) {
+    final booking = TourBooking.tryFromMap(map);
+    if (booking == null) {
+      throw const FormatException(
+        'Booking response does not include valid slot or attraction details.',
+      );
+    }
+    return booking;
+  }
+
+  static TourBooking? tryFromMap(Map<String, dynamic> map) {
     final rawSlot =
         (map['slot'] as Map?)?.cast<String, dynamic>() ??
             (map['attraction_slots'] as Map?)?.cast<String, dynamic>();
 
-    if (rawSlot == null) {
-      throw const FormatException(
-        'Booking response does not include its slot.',
+    if (rawSlot == null) return null;
+
+    try {
+      final checkIn = _readCheckInRecord(
+        map['check_in'] ?? map['attraction_check_ins'],
       );
+
+      return TourBooking(
+        id: map['id'] as String,
+        bookingCode: map['booking_code'] as String,
+        qrToken: map['qr_token'] as String,
+        visitorCount: (map['visitor_count'] as num).toInt(),
+        status: BookingStatus.values.byName(map['status'] as String),
+        slot: AttractionSlot.fromMap(rawSlot),
+        createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
+        checkedInAt: _readOptionalDateTime(
+          checkIn?['checked_in_at'] ?? map['checked_in_at'],
+        ),
+        checkedOutAt: _readOptionalDateTime(
+          checkIn?['checked_out_at'] ?? map['checked_out_at'],
+        ),
+        completedAt: _readOptionalDateTime(map['completed_at']),
+      );
+    } on Object {
+      return null;
     }
-
-    final checkIn = _readCheckInRecord(
-      map['check_in'] ?? map['attraction_check_ins'],
-    );
-
-    return TourBooking(
-      id: map['id'] as String,
-      bookingCode: map['booking_code'] as String,
-      qrToken: map['qr_token'] as String,
-      visitorCount: (map['visitor_count'] as num).toInt(),
-      status: BookingStatus.values.byName(map['status'] as String),
-      slot: AttractionSlot.fromMap(rawSlot),
-      createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
-      checkedInAt: _readOptionalDateTime(
-        checkIn?['checked_in_at'] ?? map['checked_in_at'],
-      ),
-      checkedOutAt: _readOptionalDateTime(
-        checkIn?['checked_out_at'] ?? map['checked_out_at'],
-      ),
-      completedAt: _readOptionalDateTime(map['completed_at']),
-    );
   }
 }
 

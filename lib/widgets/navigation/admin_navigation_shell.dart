@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../screens/staff/admin_analytics_dashboard_page.dart';
 import '../../screens/staff/admin_attraction_review_page.dart';
 import '../../screens/staff/admin_user_management_page.dart';
+import '../../screens/staff/admin_complaint_management_page.dart';
 import '../../screens/staff/support_ticket_management_page.dart';
 import '../tourflow_widgets.dart';
 import 'admin_bottom_navigation_bar.dart';
@@ -27,6 +28,7 @@ class AdminNavigationShell extends StatelessWidget {
         dashboardBuilder ?? (_) => const AdminAnalyticsDashboardPage(),
         (_) => const AdminUserManagementPage(),
         (_) => const AdminAttractionReviewPage(),
+        (_) => const AdminComplaintManagementPage(),
         (_) => const SupportTicketManagementPage(
           navigationRole: TourFlowNavigationRole.administrator,
         ),

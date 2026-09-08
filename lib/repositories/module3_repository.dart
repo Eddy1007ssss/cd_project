@@ -4,14 +4,14 @@ import '../models/module3_models.dart';
 
 const _slotSelection =
     'id, attraction_id, starts_at, ends_at, maximum_capacity, '
-    'reserved_capacity, status, attraction:attractions('
+    'reserved_capacity, status, attraction:attractions!inner('
     'id, name, category, location_name, latitude, longitude, '
     'cover_image_url, check_in_method, geofence_radius_m)';
 
 const _bookingSelection =
     'id, booking_code, qr_token, visitor_count, status, '
     'created_at, completed_at, '
-    'slot:attraction_slots($_slotSelection), '
+    'slot:attraction_slots!inner($_slotSelection), '
     'check_in:attraction_check_ins(checked_in_at, checked_out_at)';
 
 class Module3Repository {
@@ -99,7 +99,12 @@ class Module3Repository {
         .eq('tourist_id', _userId)
         .order('created_at', ascending: false);
 
-    return rows.map(TourBooking.fromMap).toList();
+    return rows
+        .map(
+          (row) => TourBooking.tryFromMap(Map<String, dynamic>.from(row)),
+        )
+        .whereType<TourBooking>()
+        .toList();
   }
 
   Future<TourBooking> fetchBooking(String bookingId) async {

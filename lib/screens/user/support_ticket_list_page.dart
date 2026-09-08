@@ -5,7 +5,6 @@ import '../../services/support_ticket_service.dart';
 import '../../widgets/tourflow_widgets.dart';
 import '../../widgets/navigation/navigation_routes.dart';
 import 'support_ticket_details_page.dart';
-import 'support_ticket_form_page.dart';
 
 class SupportTicketListPage extends StatefulWidget {
   const SupportTicketListPage({super.key});
@@ -57,11 +56,6 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
       SupportTicketDetailsPage.routeName,
       arguments: SupportTicketDetailsArguments(ticketId: ticket.id),
     );
-    if (mounted) await _load();
-  }
-
-  Future<void> _createTicket() async {
-    await Navigator.pushNamed(context, SupportTicketFormPage.routeName);
     if (mounted) await _load();
   }
 
@@ -126,17 +120,12 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
           onPressed: _loading ? null : _load,
           icon: const Icon(Icons.refresh_rounded),
         ),
-        IconButton(
-          tooltip: context.tr('Create ticket'),
-          onPressed: _loading ? null : _createTicket,
-          icon: const Icon(Icons.add_circle_outline_rounded),
-        ),
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SectionTitle(
-            'Track your complaints',
+            'Track your support requests',
             subtitle:
                 'View current status, staff responses, attachments, and the complete processing history.',
           ),
@@ -150,6 +139,7 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
                     'pending': 'Pending',
                     'in_progress': 'In Progress',
                     'resolved': 'Resolved',
+                    'closed': 'Closed',
                   }.entries.map((entry) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -193,11 +183,9 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
                           : 'No tickets match this status.',
                     ),
                     if (_tickets.isEmpty) ...[
-                      const SizedBox(height: 12),
-                      FilledButton.icon(
-                        onPressed: _createTicket,
-                        icon: const Icon(Icons.add_rounded),
-                        label: const TourFlowText('Create Ticket'),
+                      const SizedBox(height: 8),
+                      const TourFlowText(
+                        'Ask TourFlow Assistant to create a support ticket.',
                       ),
                     ],
                   ],
@@ -313,6 +301,7 @@ class _TicketStatusChip extends StatelessWidget {
     final color = switch (status) {
       'resolved' => TourFlowColors.success,
       'in_progress' => const Color(0xFF1D4ED8),
+      'closed' => TourFlowColors.muted,
       _ => TourFlowColors.warning,
     };
     return StatusChip(

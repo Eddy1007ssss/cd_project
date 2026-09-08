@@ -20,6 +20,7 @@ abstract final class TourFlowRoutes {
   static const adminAnalyticsDashboard = '/admin-analytics-dashboard';
   static const adminDashboard = '/admin-user-management';
   static const adminAttractionReview = '/admin-attraction-review';
+  static const adminComplaints = '/admin/complaints';
   static const adminSupportTickets = '/admin/support-tickets';
   static const adminGenerateReport = '/admin-generate-report';
 

@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/engagement_models.dart';
 
 const _visitSelection =
-    'id, booking_code, slot:attraction_slots(starts_at, '
-    'attraction:attractions(id, name, address))';
+    'id, booking_code, slot:attraction_slots!inner(starts_at, '
+    'attraction:attractions!inner(id, name, address))';
 
 abstract interface class StaffCheckInGateway {
   Future<StaffBookingVerification> verifyStaffBooking(
@@ -72,7 +72,10 @@ class EngagementRepository implements StaffCheckInGateway {
     final reviewed = feedback.map((row) => row['booking_id'] as String).toSet();
 
     return bookings
-        .map(VisitOption.fromMap)
+        .map(
+          (row) => VisitOption.tryFromMap(Map<String, dynamic>.from(row)),
+        )
+        .whereType<VisitOption>()
         .where((visit) => !reviewed.contains(visit.bookingId))
         .toList();
   }
@@ -85,7 +88,12 @@ class EngagementRepository implements StaffCheckInGateway {
         .eq('status', 'confirmed')
         .order('created_at', ascending: false);
 
-    return rows.map(VisitOption.fromMap).toList();
+    return rows
+        .map(
+          (row) => VisitOption.tryFromMap(Map<String, dynamic>.from(row)),
+        )
+        .whereType<VisitOption>()
+        .toList();
   }
 
   Future<void> submitFeedback({
@@ -364,6 +372,15 @@ class EngagementRepository implements StaffCheckInGateway {
 
     final rows = await query.order('created_at', ascending: false);
 
+    return rows.map(IssueReport.fromMap).toList();
+  }
+
+  Future<List<IssueReport>> fetchAdminReports({String? status}) async {
+    var query = _client
+        .from('issue_reports')
+        .select('*, attraction:attractions(name)');
+    if (status != null) query = query.eq('status', status);
+    final rows = await query.order('created_at', ascending: false);
     return rows.map(IssueReport.fromMap).toList();
   }
 

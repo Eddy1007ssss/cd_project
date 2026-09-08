@@ -76,9 +76,15 @@ const List<TourFlowSidebarItem> adminSidebarItems = [
     routeName: TourFlowRoutes.adminAttractionReview,
   ),
   TourFlowSidebarItem(
+    label: 'Complaints',
+    icon: Icons.report_problem_outlined,
+    navigationIndex: 3,
+    routeName: TourFlowRoutes.adminComplaints,
+  ),
+  TourFlowSidebarItem(
     label: 'Support Tickets',
     icon: Icons.support_agent_outlined,
-    navigationIndex: 3,
+    navigationIndex: 4,
     routeName: TourFlowRoutes.adminSupportTickets,
   ),
 ];

@@ -42,7 +42,10 @@ class _SupportTicketManagementPageState
       _error = null;
     });
     try {
-      final tickets = await _service.fetchManagedTickets();
+      final tickets = await _service.fetchManagedTickets(
+        isAdmin:
+            widget.navigationRole == TourFlowNavigationRole.administrator,
+      );
       if (!mounted) return;
       setState(() {
         _tickets = tickets;
@@ -104,7 +107,7 @@ class _SupportTicketManagementPageState
           widget.navigationRole == TourFlowNavigationRole.operator
           ? 4
           : widget.navigationRole == TourFlowNavigationRole.administrator
-          ? 3
+          ? 4
           : 0,
       actions: [
         IconButton(
@@ -119,7 +122,7 @@ class _SupportTicketManagementPageState
           const SectionTitle(
             'Support overview',
             subtitle:
-                'Review tourist complaints, reply, and update ticket progress.',
+                'Review app support requests, reply, and update progress.',
           ),
           const SizedBox(height: 14),
           Row(
@@ -171,6 +174,7 @@ class _SupportTicketManagementPageState
                     'pending': 'Pending',
                     'in_progress': 'In Progress',
                     'resolved': 'Resolved',
+                    'closed': 'Closed',
                   }.entries.map((entry) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -306,6 +310,7 @@ class _SupportTicketManagementPageState
 Color _statusColor(String status) => switch (status) {
   'resolved' => TourFlowColors.success,
   'in_progress' => const Color(0xFF1D4ED8),
+  'closed' => TourFlowColors.muted,
   _ => TourFlowColors.warning,
 };
 

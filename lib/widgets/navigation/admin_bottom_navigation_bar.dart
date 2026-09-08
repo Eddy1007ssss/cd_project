@@ -19,6 +19,11 @@ const List<TourFlowNavigationItem> adminNavigationItems = [
     selectedIcon: Icons.fact_check_rounded,
   ),
   TourFlowNavigationItem(
+    label: 'Complaints',
+    icon: Icons.report_problem_outlined,
+    selectedIcon: Icons.report_problem_rounded,
+  ),
+  TourFlowNavigationItem(
     label: 'Support',
     icon: Icons.support_agent_outlined,
     selectedIcon: Icons.support_agent_rounded,

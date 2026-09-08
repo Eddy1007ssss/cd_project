@@ -38,7 +38,6 @@ import 'screens/user/report_status_page.dart';
 import 'screens/user/sign_in_page.dart';
 import 'screens/user/smart_recommendations_page.dart';
 import 'screens/user/support_ticket_details_page.dart';
-import 'screens/user/support_ticket_form_page.dart';
 import 'screens/user/support_ticket_list_page.dart';
 import 'screens/user/time_slot_selection_page.dart';
 import 'screens/user/tourist_registration_page.dart';
@@ -109,7 +108,7 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _navigatorKey.currentState?.pushNamedAndRemoveUntil(
           PasswordRecoveryPage.routeName,
-          (route) => false,
+              (route) => false,
         );
       });
     });
@@ -145,30 +144,30 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
         SignInPage.routeName: (_) => const SignInPage(),
         PasswordRecoveryPage.routeName: (_) => const PasswordRecoveryPage(),
         TouristRegistrationPage.routeName: (_) =>
-            const TouristRegistrationPage(),
+        const TouristRegistrationPage(),
         UserHomePage.routeName: (_) => const UserNavigationShell(),
         AttractionDiscoveryPage.routeName: (_) =>
-            const UserNavigationShell(initialIndex: 1),
+        const UserNavigationShell(initialIndex: 1),
         AttractionComparisonPage.routeName: (_) =>
-            const AttractionComparisonPage(),
+        const AttractionComparisonPage(),
         user.AttractionDetailsPage.routeName: (_) =>
-            const user.AttractionDetailsPage(),
+        const user.AttractionDetailsPage(),
         SmartRecommendationsPage.routeName: (_) =>
-            const SmartRecommendationsPage(),
+        const SmartRecommendationsPage(),
         NearbyAttractionsPage.routeName: (_) => const NearbyAttractionsPage(),
         DiscoveryPreferencesPage.routeName: (_) =>
-            const DiscoveryPreferencesPage(),
+        const DiscoveryPreferencesPage(),
         TimeSlotSelectionPage.routeName: (_) => const TimeSlotSelectionPage(),
         BookingReviewPage.routeName: (_) => const BookingReviewPage(),
         BookingConfirmationPage.routeName: (_) =>
-            const BookingConfirmationPage(),
+        const BookingConfirmationPage(),
         BookingHistoryPage.routeName: (_) =>
-            const UserNavigationShell(initialIndex: 2),
+        const UserNavigationShell(initialIndex: 2),
         CapacityAlertPage.routeName: (_) => const CapacityAlertPage(),
         RescheduleBookingPage.routeName: (_) => const RescheduleBookingPage(),
         ItineraryPlannerPage.routeName: (_) => const ItineraryPlannerPage(),
         ProfileSecurityPage.routeName: (_) =>
-            const UserNavigationShell(initialIndex: 4),
+        const UserNavigationShell(initialIndex: 4),
         TourFlowRoutes.staffProfile: (_) => const ProfileSecurityPage(
           navigationRole: TourFlowNavigationRole.staff,
           pageLevel: TourFlowPageLevel.secondary,
@@ -181,26 +180,28 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
         ReportStatusPage.routeName: (_) => const ReportStatusPage(),
         GeofencePage.routeName: (_) => const GeofencePage(),
         OperatorRegistrationPage.routeName: (_) =>
-            const OperatorRegistrationPage(),
+        const OperatorRegistrationPage(),
         TourFlowRoutes.adminDashboard: (context) =>
-            const AdminNavigationShell(initialIndex: 1),
+        const AdminNavigationShell(initialIndex: 1),
         TourFlowRoutes.adminSupportTickets: (context) =>
-            const AdminNavigationShell(initialIndex: 3),
+        const AdminNavigationShell(initialIndex: 4),
+        TourFlowRoutes.adminComplaints: (context) =>
+        const AdminNavigationShell(initialIndex: 3),
         TourFlowRoutes.staffSupportTickets: (_) =>
-            const SupportTicketManagementPage(
-              navigationRole: TourFlowNavigationRole.operator,
-            ),
+        const SupportTicketManagementPage(
+          navigationRole: TourFlowNavigationRole.operator,
+        ),
         TourFlowRoutes.operatorSupportTickets: (_) =>
-            const OperatorNavigationShell(initialIndex: 4),
+        const OperatorNavigationShell(initialIndex: 4),
         OperatorDashboardPage.routeName: (_) => const OperatorNavigationShell(),
         AttractionDetailsPage.routeName: (_) =>
-            const OperatorNavigationShell(initialIndex: 1),
+        const OperatorNavigationShell(initialIndex: 1),
         AttractionConfigurationPage.routeName: (_) =>
-            const AttractionConfigurationPage(),
+        const AttractionConfigurationPage(),
         TourFlowRoutes.adminAttractionReview: (context) =>
-            const AdminNavigationShell(initialIndex: 2),
+        const AdminNavigationShell(initialIndex: 2),
         SlotManagerPage.routeName: (_) =>
-            const OperatorNavigationShell(initialIndex: 2),
+        const OperatorNavigationShell(initialIndex: 2),
         BookingDetailsPage.routeName: (_) => const BookingDetailsPage(),
         BookingQrPage.routeName: (_) => const BookingQrPage(),
         ChatSupportPage.routeName: (context) {
@@ -212,33 +213,32 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
         },
         ChatHistoryPage.routeName: (_) => const ChatHistoryPage(),
         LanguageSettingsPage.routeName: (_) => const LanguageSettingsPage(),
-        SupportTicketFormPage.routeName: (_) => const SupportTicketFormPage(),
         SupportTicketListPage.routeName: (_) => const SupportTicketListPage(),
         SupportTicketDetailsPage.routeName: (_) =>
-            const SupportTicketDetailsPage(),
+        const SupportTicketDetailsPage(),
         StaffSupportTicketDetailsPage.routeName: (_) =>
-            const StaffSupportTicketDetailsPage(),
+        const StaffSupportTicketDetailsPage(),
         OperatorFeedbackPage.routeName: (_) => const OperatorFeedbackPage(),
         StaffQrScannerPage.routeName: (_) => const StaffQrScannerPage(),
         OperatorLiveCrowdPage.routeName: (_) => const OperatorLiveCrowdPage(),
         OperatorLiveCrowdDetailsPage.routeName: (_) =>
-            const OperatorLiveCrowdDetailsPage(),
+        const OperatorLiveCrowdDetailsPage(),
         TourFlowRoutes.operatorReports: (_) =>
-            const OperatorNavigationShell(initialIndex: 3),
+        const OperatorNavigationShell(initialIndex: 3),
         ResolveReportPage.routeName: (_) => const ResolveReportPage(),
         RevenuePromotionPage.routeName: (_) => const RevenuePromotionPage(),
         PromotionSuggestionPage.routeName: (_) =>
-            const PromotionSuggestionPage(),
+        const PromotionSuggestionPage(),
         VisitorStatisticsPage.routeName: (_) =>
-            const OperatorNavigationShell(initialIndex: 5),
+        const OperatorNavigationShell(initialIndex: 5),
         TourFlowRoutes.adminAnalyticsDashboard: (context) =>
-            const AdminNavigationShell(initialIndex: 0),
+        const AdminNavigationShell(initialIndex: 0),
         AdminGenerateReportPage.routeName: (context) =>
-            const AdminGenerateReportPage(),
+        const AdminGenerateReportPage(),
         AdminPerformanceReportPage.routeName: (context) =>
-            const AdminPerformanceReportPage(),
+        const AdminPerformanceReportPage(),
         AdminSustainabilityReportPage.routeName: (context) =>
-            const AdminSustainabilityReportPage(),
+        const AdminSustainabilityReportPage(),
       },
     );
   }

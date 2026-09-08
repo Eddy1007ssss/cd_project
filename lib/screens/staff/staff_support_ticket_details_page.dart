@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/support_ticket_models.dart';
@@ -36,6 +38,7 @@ class _StaffSupportTicketDetailsPageState
   bool _loading = true;
   bool _saving = false;
   String? _error;
+  Timer? _refreshTimer;
 
   @override
   void didChangeDependencies() {
@@ -51,10 +54,19 @@ class _StaffSupportTicketDetailsPageState
     }
     _arguments = value;
     _load();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) {
+        if (mounted && !_saving && ModalRoute.of(context)?.isCurrent == true) {
+          _load(showLoader: false);
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     _responseController.dispose();
     super.dispose();
   }
@@ -117,6 +129,20 @@ class _StaffSupportTicketDetailsPageState
     }
   }
 
+  Future<void> _transfer(String handlerType) async {
+    if (_saving || _details?.ticket.handlerType == handlerType) return;
+    setState(() => _saving = true);
+    try {
+      await _service.transferTicket(_arguments!.ticketId, handlerType);
+      await _load(showLoader: false);
+      if (mounted) _snack('Ticket routed to $handlerType.');
+    } catch (error) {
+      if (mounted) _snack(_message(error));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final navigationRole =
@@ -132,7 +158,7 @@ class _StaffSupportTicketDetailsPageState
       selectedNavigationIndex: navigationRole == TourFlowNavigationRole.operator
           ? 4
           : navigationRole == TourFlowNavigationRole.administrator
-          ? 3
+          ? 4
           : 0,
       actions: [
         IconButton(
@@ -256,6 +282,15 @@ class _StaffSupportTicketDetailsPageState
                   ),
                 ),
               ],
+              const SizedBox(height: 7),
+              Text(
+                'Handler: ${ticket.handlerType == 'operator' ? 'Attraction Operator' : 'TourFlow Admin'}',
+                style: const TextStyle(
+                  color: TourFlowColors.primaryText,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const Divider(height: 25),
               Text(
                 ticket.description,
@@ -268,9 +303,42 @@ class _StaffSupportTicketDetailsPageState
             ],
           ),
         ),
+        if (_arguments?.navigationRole ==
+            TourFlowNavigationRole.administrator) ...[
+          const SizedBox(height: 16),
+          const SectionTitle('Routing'),
+          const SizedBox(height: 10),
+          ModuleCard(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    ticket.handlerType == 'operator'
+                        ? 'Attraction Operator'
+                        : 'TourFlow Admin',
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: _saving
+                      ? null
+                      : () => _transfer(
+                          ticket.handlerType == 'operator'
+                              ? 'admin'
+                              : 'operator',
+                        ),
+                  child: Text(
+                    ticket.handlerType == 'operator'
+                        ? 'Move to Admin'
+                        : 'Move to Operator',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         if (data.attachments.isNotEmpty) ...[
           const SizedBox(height: 16),
-          const SectionTitle('Complaint photos'),
+          const SectionTitle('Attachments'),
           const SizedBox(height: 10),
           ...data.attachments.map(
             (attachment) => Padding(
@@ -425,6 +493,7 @@ String _eventTitle(SupportTicketEvent event) => switch (event.eventType) {
   'status_changed' =>
     'Status changed to ${supportTicketStatusLabel(event.toStatus)}',
   'attachment' => 'Attachment added',
+  'routing_changed' => 'Support routing changed',
   _ => '${event.actorName} replied',
 };
 

@@ -10,12 +10,14 @@ class GeminiChatResponse {
     required this.conversationId,
     this.complaintDraft,
     this.bookingDraft,
+    this.supportTicketDraft,
   });
 
   final String reply;
   final String conversationId;
   final ComplaintDraft? complaintDraft;
   final ChatBookingDraft? bookingDraft;
+  final SupportTicketDraft? supportTicketDraft;
 }
 
 class GeminiChatService {
@@ -30,6 +32,7 @@ class GeminiChatService {
     String? conversationId,
     Map<String, dynamic>? complaintAction,
     Map<String, dynamic>? bookingAction,
+    Map<String, dynamic>? supportTicketAction,
   }) async {
     _requireUser();
 
@@ -46,6 +49,9 @@ class GeminiChatService {
     }
     if (bookingAction != null) {
       requestBody['bookingAction'] = bookingAction;
+    }
+    if (supportTicketAction != null) {
+      requestBody['supportTicketAction'] = supportTicketAction;
     }
 
     final response = await _client.functions.invoke(
@@ -67,6 +73,7 @@ class GeminiChatService {
     final returnedConversationId = data['conversationId']?.toString() ?? '';
     final rawComplaintDraft = data['complaintDraft'];
     final rawBookingDraft = data['bookingDraft'];
+    final rawSupportTicketDraft = data['supportTicketDraft'];
 
     if (reply.isEmpty) {
       throw Exception('The chatbot returned an empty reply.');
@@ -89,7 +96,27 @@ class GeminiChatService {
               Map<String, dynamic>.from(rawBookingDraft),
             )
           : null,
+      supportTicketDraft: rawSupportTicketDraft is Map
+          ? SupportTicketDraft.fromMap(
+              Map<String, dynamic>.from(rawSupportTicketDraft),
+            )
+          : null,
     );
+  }
+
+  Future<SupportTicketDraft?> getSupportTicketDraft(
+    String conversationId,
+  ) async {
+    final user = _requireUser();
+    final row = await _client
+        .from('chat_conversations')
+        .select('support_ticket_draft')
+        .eq('id', conversationId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+    final rawDraft = row?['support_ticket_draft'];
+    if (rawDraft is! Map) return null;
+    return SupportTicketDraft.fromMap(Map<String, dynamic>.from(rawDraft));
   }
 
   Future<ChatBookingDraft?> getBookingDraft(String conversationId) async {
