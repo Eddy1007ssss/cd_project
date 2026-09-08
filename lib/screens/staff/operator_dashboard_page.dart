@@ -441,9 +441,9 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                     },
                     child: const MetricCard(
                       label: 'Live Crowd',
-                      value: '68 / 120',
+                      value: 'View Attraction',
                       icon: Icons.groups_outlined,
-                      note: 'MODERATE · 57%',
+                      note: 'View live crowd status',
                     ),
                   ),
                 ),
