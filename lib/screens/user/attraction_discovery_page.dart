@@ -8,6 +8,8 @@ import '../../models/attraction.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
 import '../../widgets/navigation/navigation_routes.dart';
+import '../../widgets/navigation/navigation_logout.dart';
+import '../../widgets/navigation/user_sidebar.dart';
 import 'attraction_comparison_page.dart';
 import 'attraction_details_page.dart';
 import 'discovery_preferences_page.dart';
@@ -34,8 +36,7 @@ enum _AttractionSort {
 class AttractionDiscoveryPage extends StatefulWidget {
   const AttractionDiscoveryPage({super.key});
 
-  static const routeName =
-      TourFlowRoutes.attractionDiscovery;
+  static const routeName = TourFlowRoutes.attractionDiscovery;
 
   @override
   State<AttractionDiscoveryPage> createState() =>
@@ -46,8 +47,7 @@ class AttractionDiscoveryPage extends StatefulWidget {
 // PAGE STATE
 // ================================================================
 
-class _AttractionDiscoveryPageState
-    extends State<AttractionDiscoveryPage> {
+class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
   final _service = AttractionService();
   final _locationService = LocationService();
   final _search = TextEditingController();
@@ -58,11 +58,9 @@ class _AttractionDiscoveryPageState
 
   LocationPoint? _origin;
 
-  AttractionFilters _filters =
-  const AttractionFilters();
+  AttractionFilters _filters = const AttractionFilters();
 
-  _AttractionSort _sort =
-      _AttractionSort.nameAscending;
+  _AttractionSort _sort = _AttractionSort.nameAscending;
 
   late Future<List<Attraction>> _results;
 
@@ -90,8 +88,7 @@ class _AttractionDiscoveryPageState
   }
 
   Future<List<Attraction>> _initialize() async {
-    _origin =
-    await _locationService.currentLocation();
+    _origin = await _locationService.currentLocation();
 
     return _query();
   }
@@ -101,125 +98,93 @@ class _AttractionDiscoveryPageState
   // ==============================================================
 
   Future<List<Attraction>> _query() async {
-    final attractions =
-    await _service.searchAndFilter(
+    final attractions = await _service.searchAndFilter(
       keyword: _search.text.trim(),
       filters: _filters,
       origin: _origin,
     );
 
-    return _sortAttractions(
-      attractions,
-    );
+    return _sortAttractions(attractions);
   }
 
   // ==============================================================
   // SORT ATTRACTIONS
   // ==============================================================
 
-  List<Attraction> _sortAttractions(
-      List<Attraction> attractions,
-      ) {
-    final sorted =
-    List<Attraction>.from(attractions);
+  List<Attraction> _sortAttractions(List<Attraction> attractions) {
+    final sorted = List<Attraction>.from(attractions);
 
     switch (_sort) {
-    // ----------------------------------------------------------
-    // NAME A-Z
-    // ----------------------------------------------------------
+      // ----------------------------------------------------------
+      // NAME A-Z
+      // ----------------------------------------------------------
 
       case _AttractionSort.nameAscending:
         sorted.sort(
-              (a, b) => a.name
-              .toLowerCase()
-              .compareTo(
-            b.name.toLowerCase(),
-          ),
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
         );
         break;
 
-    // ----------------------------------------------------------
-    // PRICE LOW-HIGH
-    // ----------------------------------------------------------
+      // ----------------------------------------------------------
+      // PRICE LOW-HIGH
+      // ----------------------------------------------------------
 
       case _AttractionSort.priceLowToHigh:
-        sorted.sort(
-              (a, b) =>
-              a.entrancePriceMyr.compareTo(
-                b.entrancePriceMyr,
-              ),
-        );
+        sorted.sort((a, b) => a.entrancePriceMyr.compareTo(b.entrancePriceMyr));
         break;
 
-    // ----------------------------------------------------------
-    // PRICE HIGH-LOW
-    // ----------------------------------------------------------
+      // ----------------------------------------------------------
+      // PRICE HIGH-LOW
+      // ----------------------------------------------------------
 
       case _AttractionSort.priceHighToLow:
-        sorted.sort(
-              (a, b) =>
-              b.entrancePriceMyr.compareTo(
-                a.entrancePriceMyr,
-              ),
-        );
+        sorted.sort((a, b) => b.entrancePriceMyr.compareTo(a.entrancePriceMyr));
         break;
 
-    // ----------------------------------------------------------
-    // NEAREST FIRST
-    // ----------------------------------------------------------
+      // ----------------------------------------------------------
+      // NEAREST FIRST
+      // ----------------------------------------------------------
 
       case _AttractionSort.nearestFirst:
-        sorted.sort(
-              (a, b) {
-            final aDistance = a.distanceKm;
-            final bDistance = b.distanceKm;
+        sorted.sort((a, b) {
+          final aDistance = a.distanceKm;
+          final bDistance = b.distanceKm;
 
-            if (aDistance == null &&
-                bDistance == null) {
-              return 0;
-            }
+          if (aDistance == null && bDistance == null) {
+            return 0;
+          }
 
-            if (aDistance == null) {
-              return 1;
-            }
+          if (aDistance == null) {
+            return 1;
+          }
 
-            if (bDistance == null) {
-              return -1;
-            }
+          if (bDistance == null) {
+            return -1;
+          }
 
-            return aDistance.compareTo(
-              bDistance,
-            );
-          },
-        );
+          return aDistance.compareTo(bDistance);
+        });
         break;
 
-    // ----------------------------------------------------------
-    // CROWD LOW-HIGH
-    // ----------------------------------------------------------
+      // ----------------------------------------------------------
+      // CROWD LOW-HIGH
+      // ----------------------------------------------------------
 
       case _AttractionSort.crowdLowToHigh:
         sorted.sort(
-              (a, b) => _crowdRank(
+          (a, b) => _crowdRank(
             a.estimatedCrowdLevel,
-          ).compareTo(
-            _crowdRank(
-              b.estimatedCrowdLevel,
-            ),
-          ),
+          ).compareTo(_crowdRank(b.estimatedCrowdLevel)),
         );
         break;
 
-    // ----------------------------------------------------------
-    // MOST SLOTS
-    // ----------------------------------------------------------
+      // ----------------------------------------------------------
+      // MOST SLOTS
+      // ----------------------------------------------------------
 
       case _AttractionSort.mostAvailableSlots:
         sorted.sort(
-              (a, b) =>
-              b.availableSlots.length.compareTo(
-                a.availableSlots.length,
-              ),
+          (a, b) => b.availableSlots.length.compareTo(a.availableSlots.length),
         );
         break;
     }
@@ -227,9 +192,7 @@ class _AttractionDiscoveryPageState
     return sorted;
   }
 
-  int _crowdRank(
-      String value,
-      ) {
+  int _crowdRank(String value) {
     switch (value.toLowerCase()) {
       case 'low':
         return 0;
@@ -292,19 +255,12 @@ class _AttractionDiscoveryPageState
   // SEARCH
   // ==============================================================
 
-  void _onSearch(
-      String value,
-      ) {
+  void _onSearch(String value) {
     setState(() {});
 
     _debounce?.cancel();
 
-    _debounce = Timer(
-      const Duration(
-        milliseconds: 350,
-      ),
-      _reload,
-    );
+    _debounce = Timer(const Duration(milliseconds: 350), _reload);
   }
 
   // ==============================================================
@@ -312,21 +268,15 @@ class _AttractionDiscoveryPageState
   // ==============================================================
 
   Future<void> _showFilters() async {
-    var price =
-        _filters.maximumPrice;
+    var price = _filters.maximumPrice;
 
-    var distance =
-        _filters.maximumDistanceKm;
+    var distance = _filters.maximumDistanceKm;
 
-    var crowd =
-        _filters.crowdLevel;
+    var crowd = _filters.crowdLevel;
 
-    var openNow =
-        _filters.openNow;
+    var openNow = _filters.openNow;
 
-    final result =
-    await showModalBottomSheet<
-        AttractionFilters>(
+    final result = await showModalBottomSheet<AttractionFilters>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -335,362 +285,189 @@ class _AttractionDiscoveryPageState
           child: FractionallySizedBox(
             heightFactor: 0.82,
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Padding(
-                  padding:
-                  EdgeInsets.fromLTRB(
-                    20,
-                    4,
-                    20,
-                    12,
-                  ),
+                  padding: EdgeInsets.fromLTRB(20, 4, 20, 12),
                   child: Text(
                     'Discovery Filters',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight:
-                      FontWeight.w800,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
                 ),
 
-                const Divider(
-                  height: 1,
-                ),
+                const Divider(height: 1),
 
                 Expanded(
-                  child:
-                  StatefulBuilder(
-                    builder:
-                        (
-                        context,
-                        setSheetState,
-                        ) {
+                  child: StatefulBuilder(
+                    builder: (context, setSheetState) {
                       return ListView(
-                        padding:
-                        const EdgeInsets
-                            .all(
-                          20,
-                        ),
+                        padding: const EdgeInsets.all(20),
                         children: [
                           // ======================================
                           // PRICE
                           // ======================================
-
-                          DropdownButtonFormField<
-                              double?>(
-                            initialValue:
-                            price,
-                            decoration:
-                            const InputDecoration(
-                              labelText:
-                              'Maximum price',
-                              border:
-                              OutlineInputBorder(),
+                          DropdownButtonFormField<double?>(
+                            initialValue: price,
+                            decoration: const InputDecoration(
+                              labelText: 'Maximum price',
+                              border: OutlineInputBorder(),
                             ),
-                            items:
-                            const [
-                              DropdownMenuItem<
-                                  double?>(
-                                value:
-                                null,
-                                child:
-                                Text(
-                                  'Any price',
-                                ),
+                            items: const [
+                              DropdownMenuItem<double?>(
+                                value: null,
+                                child: Text('Any price'),
                               ),
-                              DropdownMenuItem<
-                                  double?>(
-                                value:
-                                10,
-                                child:
-                                Text(
-                                  'Up to RM10',
-                                ),
+                              DropdownMenuItem<double?>(
+                                value: 10,
+                                child: Text('Up to RM10'),
                               ),
-                              DropdownMenuItem<
-                                  double?>(
-                                value:
-                                25,
-                                child:
-                                Text(
-                                  'Up to RM25',
-                                ),
+                              DropdownMenuItem<double?>(
+                                value: 25,
+                                child: Text('Up to RM25'),
                               ),
-                              DropdownMenuItem<
-                                  double?>(
-                                value:
-                                50,
-                                child:
-                                Text(
-                                  'Up to RM50',
-                                ),
+                              DropdownMenuItem<double?>(
+                                value: 50,
+                                child: Text('Up to RM50'),
                               ),
                             ],
-                            onChanged:
-                                (
-                                value,
-                                ) {
-                              setSheetState(
-                                    () {
-                                  price =
-                                      value;
-                                },
-                              );
+                            onChanged: (value) {
+                              setSheetState(() {
+                                price = value;
+                              });
                             },
                           ),
 
-                          const SizedBox(
-                            height: 14,
-                          ),
+                          const SizedBox(height: 14),
 
                           // ======================================
                           // DISTANCE
                           // ======================================
-
-                          DropdownButtonFormField<
-                              double?>(
-                            initialValue:
-                            distance,
-                            decoration:
-                            const InputDecoration(
-                              labelText:
-                              'Maximum distance',
-                              border:
-                              OutlineInputBorder(),
+                          DropdownButtonFormField<double?>(
+                            initialValue: distance,
+                            decoration: const InputDecoration(
+                              labelText: 'Maximum distance',
+                              border: OutlineInputBorder(),
                             ),
-                            items:
-                            const [
-                              DropdownMenuItem<
-                                  double?>(
-                                value:
-                                null,
-                                child:
-                                Text(
-                                  'Any distance',
-                                ),
+                            items: const [
+                              DropdownMenuItem<double?>(
+                                value: null,
+                                child: Text('Any distance'),
                               ),
-                              DropdownMenuItem<
-                                  double?>(
-                                value:
-                                3,
-                                child:
-                                Text(
-                                  'Within 3 km',
-                                ),
+                              DropdownMenuItem<double?>(
+                                value: 3,
+                                child: Text('Within 3 km'),
                               ),
-                              DropdownMenuItem<
-                                  double?>(
-                                value:
-                                10,
-                                child:
-                                Text(
-                                  'Within 10 km',
-                                ),
+                              DropdownMenuItem<double?>(
+                                value: 10,
+                                child: Text('Within 10 km'),
                               ),
-                              DropdownMenuItem<
-                                  double?>(
-                                value:
-                                25,
-                                child:
-                                Text(
-                                  'Within 25 km',
-                                ),
+                              DropdownMenuItem<double?>(
+                                value: 25,
+                                child: Text('Within 25 km'),
                               ),
                             ],
-                            onChanged:
-                                (
-                                value,
-                                ) {
-                              setSheetState(
-                                    () {
-                                  distance =
-                                      value;
-                                },
-                              );
+                            onChanged: (value) {
+                              setSheetState(() {
+                                distance = value;
+                              });
                             },
                           ),
 
-                          const SizedBox(
-                            height: 14,
-                          ),
+                          const SizedBox(height: 14),
 
                           // ======================================
                           // CROWD
                           // ======================================
-
-                          DropdownButtonFormField<
-                              String?>(
-                            initialValue:
-                            crowd,
-                            decoration:
-                            const InputDecoration(
-                              labelText:
-                              'Estimated crowd',
-                              border:
-                              OutlineInputBorder(),
+                          DropdownButtonFormField<String?>(
+                            initialValue: crowd,
+                            decoration: const InputDecoration(
+                              labelText: 'Estimated crowd',
+                              border: OutlineInputBorder(),
                             ),
-                            items:
-                            const [
-                              DropdownMenuItem<
-                                  String?>(
-                                value:
-                                null,
-                                child:
-                                Text(
-                                  'Any crowd level',
-                                ),
+                            items: const [
+                              DropdownMenuItem<String?>(
+                                value: null,
+                                child: Text('Any crowd level'),
                               ),
-                              DropdownMenuItem<
-                                  String?>(
-                                value:
-                                'Low',
-                                child:
-                                Text(
-                                  'Low',
-                                ),
+                              DropdownMenuItem<String?>(
+                                value: 'Low',
+                                child: Text('Low'),
                               ),
-                              DropdownMenuItem<
-                                  String?>(
-                                value:
-                                'Moderate',
-                                child:
-                                Text(
-                                  'Moderate',
-                                ),
+                              DropdownMenuItem<String?>(
+                                value: 'Moderate',
+                                child: Text('Moderate'),
                               ),
-                              DropdownMenuItem<
-                                  String?>(
-                                value:
-                                'High',
-                                child:
-                                Text(
-                                  'High',
-                                ),
+                              DropdownMenuItem<String?>(
+                                value: 'High',
+                                child: Text('High'),
                               ),
                             ],
-                            onChanged:
-                                (
-                                value,
-                                ) {
-                              setSheetState(
-                                    () {
-                                  crowd =
-                                      value;
-                                },
-                              );
+                            onChanged: (value) {
+                              setSheetState(() {
+                                crowd = value;
+                              });
                             },
                           ),
 
-                          const SizedBox(
-                            height: 8,
-                          ),
+                          const SizedBox(height: 8),
 
                           // ======================================
                           // OPEN NOW
                           // ======================================
-
                           SwitchListTile(
-                            contentPadding:
-                            EdgeInsets
-                                .zero,
-                            value:
-                            openNow,
-                            title:
-                            const Text(
-                              'Open now',
-                            ),
-                            subtitle:
-                            const Text(
+                            contentPadding: EdgeInsets.zero,
+                            value: openNow,
+                            title: const Text('Open now'),
+                            subtitle: const Text(
                               'Only show attractions currently open',
                             ),
-                            onChanged:
-                                (
-                                value,
-                                ) {
-                              setSheetState(
-                                    () {
-                                  openNow =
-                                      value;
-                                },
-                              );
+                            onChanged: (value) {
+                              setSheetState(() {
+                                openNow = value;
+                              });
                             },
                           ),
 
-                          const SizedBox(
-                            height: 14,
-                          ),
+                          const SizedBox(height: 14),
 
                           // ======================================
                           // APPLY
                           // ======================================
-
                           SizedBox(
-                            width:
-                            double
-                                .infinity,
-                            child:
-                            FilledButton.icon(
-                              onPressed:
-                                  () {
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: () {
                                 Navigator.pop(
                                   context,
                                   AttractionFilters(
-                                    maximumPrice:
-                                    price,
-                                    maximumDistanceKm:
-                                    distance,
-                                    crowdLevel:
-                                    crowd,
-                                    openNow:
-                                    openNow,
+                                    maximumPrice: price,
+                                    maximumDistanceKm: distance,
+                                    crowdLevel: crowd,
+                                    openNow: openNow,
                                   ),
                                 );
                               },
-                              icon:
-                              const Icon(
-                                Icons
-                                    .check,
-                              ),
-                              label:
-                              const Text(
-                                'Apply Filters',
-                              ),
+                              icon: const Icon(Icons.check),
+                              label: const Text('Apply Filters'),
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 8,
-                          ),
+                          const SizedBox(height: 8),
 
                           // ======================================
                           // CLEAR
                           // ======================================
-
                           SizedBox(
-                            width:
-                            double
-                                .infinity,
-                            child:
-                            OutlinedButton.icon(
-                              onPressed:
-                                  () {
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
                                 Navigator.pop(
                                   context,
                                   const AttractionFilters(),
                                 );
                               },
-                              icon:
-                              const Icon(
-                                Icons
-                                    .filter_alt_off_outlined,
-                              ),
-                              label:
-                              const Text(
-                                'Clear Filters',
-                              ),
+                              icon: const Icon(Icons.filter_alt_off_outlined),
+                              label: const Text('Clear Filters'),
                             ),
                           ),
                         ],
@@ -718,9 +495,7 @@ class _AttractionDiscoveryPageState
   // ==============================================================
 
   Future<void> _showSort() async {
-    final selected =
-    await showModalBottomSheet<
-        _AttractionSort>(
+    final selected = await showModalBottomSheet<_AttractionSort>(
       context: context,
 
       // Important:
@@ -734,171 +509,105 @@ class _AttractionDiscoveryPageState
           child: FractionallySizedBox(
             heightFactor: 0.82,
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ================================================
                 // TITLE
                 // ================================================
-
                 const Padding(
-                  padding:
-                  EdgeInsets.fromLTRB(
-                    20,
-                    4,
-                    20,
-                    12,
-                  ),
+                  padding: EdgeInsets.fromLTRB(20, 4, 20, 12),
                   child: Text(
                     'Sort Attractions',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight:
-                      FontWeight.w800,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
                 ),
 
-                const Divider(
-                  height: 1,
-                ),
+                const Divider(height: 1),
 
                 // ================================================
                 // SCROLLABLE OPTIONS
                 // ================================================
-
                 Expanded(
                   child: ListView(
-                    padding:
-                    const EdgeInsets
-                        .symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 8,
                     ),
                     children: [
                       _SortTile(
-                        title:
-                        'Name A → Z',
-                        subtitle:
-                        'Sort attractions alphabetically',
-                        icon:
-                        Icons.sort_by_alpha,
-                        selected:
-                        _sort ==
-                            _AttractionSort
-                                .nameAscending,
+                        title: 'Name A → Z',
+                        subtitle: 'Sort attractions alphabetically',
+                        icon: Icons.sort_by_alpha,
+                        selected: _sort == _AttractionSort.nameAscending,
+                        onTap: () {
+                          Navigator.pop(context, _AttractionSort.nameAscending);
+                        },
+                      ),
+
+                      _SortTile(
+                        title: 'Price: Low → High',
+                        subtitle: 'Show cheaper attractions first',
+                        icon: Icons.arrow_upward,
+                        selected: _sort == _AttractionSort.priceLowToHigh,
                         onTap: () {
                           Navigator.pop(
                             context,
-                            _AttractionSort
-                                .nameAscending,
+                            _AttractionSort.priceLowToHigh,
                           );
                         },
                       ),
 
                       _SortTile(
-                        title:
-                        'Price: Low → High',
-                        subtitle:
-                        'Show cheaper attractions first',
-                        icon:
-                        Icons.arrow_upward,
-                        selected:
-                        _sort ==
-                            _AttractionSort
-                                .priceLowToHigh,
+                        title: 'Price: High → Low',
+                        subtitle: 'Show higher-priced attractions first',
+                        icon: Icons.arrow_downward,
+                        selected: _sort == _AttractionSort.priceHighToLow,
                         onTap: () {
                           Navigator.pop(
                             context,
-                            _AttractionSort
-                                .priceLowToHigh,
+                            _AttractionSort.priceHighToLow,
                           );
                         },
                       ),
 
                       _SortTile(
-                        title:
-                        'Price: High → Low',
-                        subtitle:
-                        'Show higher-priced attractions first',
-                        icon:
-                        Icons.arrow_downward,
-                        selected:
-                        _sort ==
-                            _AttractionSort
-                                .priceHighToLow,
+                        title: 'Distance: Nearest First',
+                        subtitle: 'Show the closest attractions first',
+                        icon: Icons.near_me_outlined,
+                        selected: _sort == _AttractionSort.nearestFirst,
+                        onTap: () {
+                          Navigator.pop(context, _AttractionSort.nearestFirst);
+                        },
+                      ),
+
+                      _SortTile(
+                        title: 'Crowd: Low → High',
+                        subtitle: 'Show quieter attractions first',
+                        icon: Icons.groups_outlined,
+                        selected: _sort == _AttractionSort.crowdLowToHigh,
                         onTap: () {
                           Navigator.pop(
                             context,
-                            _AttractionSort
-                                .priceHighToLow,
+                            _AttractionSort.crowdLowToHigh,
                           );
                         },
                       ),
 
                       _SortTile(
-                        title:
-                        'Distance: Nearest First',
+                        title: 'Most Available Slots',
                         subtitle:
-                        'Show the closest attractions first',
-                        icon:
-                        Icons.near_me_outlined,
-                        selected:
-                        _sort ==
-                            _AttractionSort
-                                .nearestFirst,
+                            'Show attractions with more available slots first',
+                        icon: Icons.calendar_month_outlined,
+                        selected: _sort == _AttractionSort.mostAvailableSlots,
                         onTap: () {
                           Navigator.pop(
                             context,
-                            _AttractionSort
-                                .nearestFirst,
+                            _AttractionSort.mostAvailableSlots,
                           );
                         },
                       ),
 
-                      _SortTile(
-                        title:
-                        'Crowd: Low → High',
-                        subtitle:
-                        'Show quieter attractions first',
-                        icon:
-                        Icons.groups_outlined,
-                        selected:
-                        _sort ==
-                            _AttractionSort
-                                .crowdLowToHigh,
-                        onTap: () {
-                          Navigator.pop(
-                            context,
-                            _AttractionSort
-                                .crowdLowToHigh,
-                          );
-                        },
-                      ),
-
-                      _SortTile(
-                        title:
-                        'Most Available Slots',
-                        subtitle:
-                        'Show attractions with more available slots first',
-                        icon:
-                        Icons.calendar_month_outlined,
-                        selected:
-                        _sort ==
-                            _AttractionSort
-                                .mostAvailableSlots,
-                        onTap: () {
-                          Navigator.pop(
-                            context,
-                            _AttractionSort
-                                .mostAvailableSlots,
-                          );
-                        },
-                      ),
-
-                      const SizedBox(
-                        height: 12,
-                      ),
+                      const SizedBox(height: 12),
                     ],
                   ),
                 ),
@@ -921,19 +630,11 @@ class _AttractionDiscoveryPageState
   // COMPARISON
   // ==============================================================
 
-  void _changeComparison(
-      Attraction attraction,
-      bool selected,
-      ) {
-    if (selected &&
-        _selectedForComparison.length >=
-            3) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+  void _changeComparison(Attraction attraction, bool selected) {
+    if (selected && _selectedForComparison.length >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'You can compare up to three attractions.',
-          ),
+          content: Text('You can compare up to three attractions.'),
         ),
       );
 
@@ -942,13 +643,9 @@ class _AttractionDiscoveryPageState
 
     setState(() {
       if (selected) {
-        _selectedForComparison.add(
-          attraction.id,
-        );
+        _selectedForComparison.add(attraction.id);
       } else {
-        _selectedForComparison.remove(
-          attraction.id,
-        );
+        _selectedForComparison.remove(attraction.id);
       }
     });
   }
@@ -957,159 +654,103 @@ class _AttractionDiscoveryPageState
   // MAP ATTRACTION BOTTOM SHEET
   // ==============================================================
 
-  void _showMapAttraction(
-      Attraction attraction,
-      ) {
+  void _showMapAttraction(Attraction attraction) {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
-      builder: (
-          sheetContext,
-          ) {
-        final selected =
-        _selectedForComparison
-            .contains(
-          attraction.id,
-        );
+      builder: (sheetContext) {
+        final selected = _selectedForComparison.contains(attraction.id);
 
         return SafeArea(
           child: Padding(
-            padding:
-            const EdgeInsets.fromLTRB(
-              20,
-              4,
-              20,
-              24,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
             child: Column(
-              mainAxisSize:
-              MainAxisSize.min,
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   attraction.name,
-                  style:
-                  const TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
-                    fontWeight:
-                    FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
 
-                const SizedBox(
-                  height: 4,
-                ),
+                const SizedBox(height: 4),
 
                 Text(
                   '${attraction.category} · '
-                      '${attraction.locationName}',
+                  '${attraction.locationName}',
                 ),
 
-                const SizedBox(
-                  height: 12,
-                ),
+                const SizedBox(height: 12),
 
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     _MapInfoChip(
-                      icon:
-                      Icons.payments_outlined,
-                      label: attraction
-                          .entrancePriceMyr ==
-                          0
+                      icon: Icons.payments_outlined,
+                      label: attraction.entrancePriceMyr == 0
                           ? 'Free'
                           : 'RM${attraction.entrancePriceMyr.toStringAsFixed(0)}',
                     ),
 
-                    if (attraction.distanceKm !=
-                        null)
+                    if (attraction.distanceKm != null)
                       _MapInfoChip(
-                        icon: Icons
-                            .location_on_outlined,
+                        icon: Icons.location_on_outlined,
                         label:
-                        '${attraction.distanceKm!.toStringAsFixed(1)} km',
+                            '${attraction.distanceKm!.toStringAsFixed(1)} km',
                       ),
 
                     _MapInfoChip(
-                      icon:
-                      Icons.groups_outlined,
-                      label:
-                      '${attraction.estimatedCrowdLevel} crowd',
+                      icon: Icons.groups_outlined,
+                      label: '${attraction.estimatedCrowdLevel} crowd',
                     ),
 
                     _MapInfoChip(
-                      icon:
-                      Icons.calendar_month_outlined,
-                      label:
-                      '${attraction.availableSlots.length} slots',
+                      icon: Icons.calendar_month_outlined,
+                      label: '${attraction.availableSlots.length} slots',
                     ),
                   ],
                 ),
 
-                const SizedBox(
-                  height: 18,
-                ),
+                const SizedBox(height: 18),
 
                 SizedBox(
-                  width:
-                  double.infinity,
-                  child:
-                  FilledButton.icon(
+                  width: double.infinity,
+                  child: FilledButton.icon(
                     onPressed: () {
-                      Navigator.pop(
-                        sheetContext,
-                      );
+                      Navigator.pop(sheetContext);
 
                       Navigator.pushNamed(
                         context,
-                        AttractionDetailsPage
-                            .routeName,
-                        arguments:
-                        attraction.id,
+                        AttractionDetailsPage.routeName,
+                        arguments: attraction.id,
                       );
                     },
-                    icon: const Icon(
-                      Icons.info_outline,
-                    ),
-                    label: const Text(
-                      'View Attraction Details',
-                    ),
+                    icon: const Icon(Icons.info_outline),
+                    label: const Text('View Attraction Details'),
                   ),
                 ),
 
-                const SizedBox(
-                  height: 8,
-                ),
+                const SizedBox(height: 8),
 
                 SizedBox(
-                  width:
-                  double.infinity,
-                  child:
-                  OutlinedButton.icon(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
                     onPressed: () {
-                      Navigator.pop(
-                        sheetContext,
-                      );
+                      Navigator.pop(sheetContext);
 
-                      _changeComparison(
-                        attraction,
-                        !selected,
-                      );
+                      _changeComparison(attraction, !selected);
                     },
                     icon: Icon(
                       selected
-                          ? Icons
-                          .remove_circle_outline
-                          : Icons
-                          .compare_arrows,
+                          ? Icons.remove_circle_outline
+                          : Icons.compare_arrows,
                     ),
                     label: Text(
-                      selected
-                          ? 'Remove from Comparison'
-                          : 'Add to Comparison',
+                      selected ? 'Remove from Comparison' : 'Add to Comparison',
                     ),
                   ),
                 ),
@@ -1125,37 +766,22 @@ class _AttractionDiscoveryPageState
   // MAP
   // ==============================================================
 
-  Widget _buildMap(
-      List<Attraction> attractions,
-      ) {
-    final mappableAttractions =
-    attractions.where(
-          (attraction) {
-        return attraction.latitude !=
-            null &&
-            attraction.longitude != null;
-      },
-    ).toList();
+  Widget _buildMap(List<Attraction> attractions) {
+    final mappableAttractions = attractions.where((attraction) {
+      return attraction.latitude != null && attraction.longitude != null;
+    }).toList();
 
     if (mappableAttractions.isEmpty) {
       return const Card(
         child: Padding(
-          padding: EdgeInsets.all(
-            24,
-          ),
+          padding: EdgeInsets.all(24),
           child: Column(
             children: [
-              Icon(
-                Icons.map_outlined,
-                size: 44,
-              ),
-              SizedBox(
-                height: 10,
-              ),
+              Icon(Icons.map_outlined, size: 44),
+              SizedBox(height: 10),
               Text(
                 'No map locations are available for these attractions.',
-                textAlign:
-                TextAlign.center,
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -1167,18 +793,11 @@ class _AttractionDiscoveryPageState
 
     // If current location is available, use it.
     if (_origin != null) {
-      initialCenter = LatLng(
-        _origin!.latitude,
-        _origin!.longitude,
-      );
+      initialCenter = LatLng(_origin!.latitude, _origin!.longitude);
     } else {
-      final first =
-          mappableAttractions.first;
+      final first = mappableAttractions.first;
 
-      initialCenter = LatLng(
-        first.latitude!,
-        first.longitude!,
-      );
+      initialCenter = LatLng(first.latitude!, first.longitude!);
     }
 
     return Column(
@@ -1186,24 +805,19 @@ class _AttractionDiscoveryPageState
         SizedBox(
           height: 520,
           child: ClipRRect(
-            borderRadius:
-            BorderRadius.circular(
-              16,
-            ),
+            borderRadius: BorderRadius.circular(16),
             child: Stack(
               children: [
                 FlutterMap(
                   options: MapOptions(
-                    initialCenter:
-                    initialCenter,
+                    initialCenter: initialCenter,
                     initialZoom: 11,
                   ),
                   children: [
                     TileLayer(
                       urlTemplate:
-                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName:
-                      'com.example.cd_project',
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.cd_project',
                     ),
 
                     MarkerLayer(
@@ -1211,26 +825,20 @@ class _AttractionDiscoveryPageState
                         // =========================================
                         // CURRENT LOCATION
                         // =========================================
-
                         if (_origin != null)
                           Marker(
                             point: LatLng(
                               _origin!.latitude,
-                              _origin!
-                                  .longitude,
+                              _origin!.longitude,
                             ),
                             width: 50,
                             height: 50,
-                            child:
-                            const Tooltip(
-                              message:
-                              'Your location',
+                            child: const Tooltip(
+                              message: 'Your location',
                               child: Icon(
-                                Icons
-                                    .my_location,
+                                Icons.my_location,
                                 size: 30,
-                                color:
-                                Colors.blue,
+                                color: Colors.blue,
                               ),
                             ),
                           ),
@@ -1238,48 +846,29 @@ class _AttractionDiscoveryPageState
                         // =========================================
                         // ATTRACTION MARKERS
                         // =========================================
-
-                        ...mappableAttractions
-                            .map(
-                              (
-                              attraction,
-                              ) {
-                            return Marker(
-                              point: LatLng(
-                                attraction
-                                    .latitude!,
-                                attraction
-                                    .longitude!,
-                              ),
-                              width: 54,
-                              height: 54,
-                              child:
-                              GestureDetector(
-                                onTap: () {
-                                  _showMapAttraction(
-                                    attraction,
-                                  );
-                                },
-                                child:
-                                Tooltip(
-                                  message:
-                                  attraction
-                                      .name,
-                                  child:
-                                  const Icon(
-                                    Icons
-                                        .location_pin,
-                                    size: 46,
-                                    color:
-                                    Color(
-                                      0xFF79571E,
-                                    ),
-                                  ),
+                        ...mappableAttractions.map((attraction) {
+                          return Marker(
+                            point: LatLng(
+                              attraction.latitude!,
+                              attraction.longitude!,
+                            ),
+                            width: 54,
+                            height: 54,
+                            child: GestureDetector(
+                              onTap: () {
+                                _showMapAttraction(attraction);
+                              },
+                              child: Tooltip(
+                                message: attraction.name,
+                                child: const Icon(
+                                  Icons.location_pin,
+                                  size: 46,
+                                  color: Color(0xFF79571E),
                                 ),
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        }),
                       ],
                     ),
                   ],
@@ -1288,36 +877,21 @@ class _AttractionDiscoveryPageState
                 // ===============================================
                 // OPENSTREETMAP CREDIT
                 // ===============================================
-
                 Positioned(
                   right: 6,
                   bottom: 6,
                   child: Container(
-                    padding:
-                    const EdgeInsets
-                        .symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 3,
                     ),
-                    decoration:
-                    BoxDecoration(
-                      color: Colors.white
-                          .withValues(
-                        alpha: .85,
-                      ),
-                      borderRadius:
-                      BorderRadius
-                          .circular(
-                        5,
-                      ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .85),
+                      borderRadius: BorderRadius.circular(5),
                     ),
-                    child:
-                    const Text(
+                    child: const Text(
                       '© OpenStreetMap contributors',
-                      style:
-                      TextStyle(
-                        fontSize: 9,
-                      ),
+                      style: TextStyle(fontSize: 9),
                     ),
                   ),
                 ),
@@ -1326,18 +900,11 @@ class _AttractionDiscoveryPageState
           ),
         ),
 
-        const SizedBox(
-          height: 8,
-        ),
+        const SizedBox(height: 8),
 
         const Text(
           'Tap an attraction marker to view more information.',
-          style: TextStyle(
-            fontSize: 11,
-            color: Color(
-              0xFF64748B,
-            ),
-          ),
+          style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
         ),
       ],
     );
@@ -1348,80 +915,60 @@ class _AttractionDiscoveryPageState
   // ==============================================================
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return Scaffold(
+      drawer: UserSidebar(
+        displayName: 'Alex Tan',
+        email: 'alex@example.com',
+        selectedIndex: 1,
+        onLogout: () async => signOutAndReturnToSignIn(context),
+      ),
+
       // ==========================================================
       // APP BAR
       // ==========================================================
-
       appBar: AppBar(
-        title: const Text(
-          'Discover Attractions',
-        ),
+        title: const Text('Discover Attractions'),
 
         actions: [
           // ------------------------------------------------------
           // PREFERENCES
           // ------------------------------------------------------
-
           IconButton(
-            tooltip:
-            'Discovery Preferences',
+            tooltip: 'Discovery Preferences',
             onPressed: () async {
               await Navigator.pushNamed(
                 context,
-                DiscoveryPreferencesPage
-                    .routeName,
+                DiscoveryPreferencesPage.routeName,
               );
 
               if (mounted) {
                 _reload();
               }
             },
-            icon: const Icon(
-              Icons.tune_rounded,
-            ),
+            icon: const Icon(Icons.tune_rounded),
           ),
 
           // ------------------------------------------------------
           // SMART RECOMMENDATIONS
           // ------------------------------------------------------
-
           IconButton(
-            tooltip:
-            'Smart Recommendations',
+            tooltip: 'Smart Recommendations',
             onPressed: () {
-              Navigator.pushNamed(
-                context,
-                SmartRecommendationsPage
-                    .routeName,
-              );
+              Navigator.pushNamed(context, SmartRecommendationsPage.routeName);
             },
-            icon: const Icon(
-              Icons
-                  .auto_awesome_outlined,
-            ),
+            icon: const Icon(Icons.auto_awesome_outlined),
           ),
 
           // ------------------------------------------------------
           // NEARBY
           // ------------------------------------------------------
-
           IconButton(
-            tooltip:
-            'Nearby Attractions',
+            tooltip: 'Nearby Attractions',
             onPressed: () {
-              Navigator.pushNamed(
-                context,
-                NearbyAttractionsPage
-                    .routeName,
-              );
+              Navigator.pushNamed(context, NearbyAttractionsPage.routeName);
             },
-            icon: const Icon(
-              Icons.near_me_outlined,
-            ),
+            icon: const Icon(Icons.near_me_outlined),
           ),
         ],
       ),
@@ -1429,42 +976,27 @@ class _AttractionDiscoveryPageState
       // ==========================================================
       // BODY
       // ==========================================================
-
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
-          physics:
-          const AlwaysScrollableScrollPhysics(),
-          padding:
-          const EdgeInsets.all(
-            16,
-          ),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
           children: [
             // ====================================================
             // DEMO MODE
             // ====================================================
-
             if (_service.isDemoMode)
               const Card(
-                color: Color(
-                  0xFFFFE7C2,
-                ),
+                color: Color(0xFFFFE7C2),
                 child: ListTile(
-                  leading: Icon(
-                    Icons
-                        .science_outlined,
-                  ),
+                  leading: Icon(Icons.science_outlined),
                   title: Text(
                     'Module 2 demo mode',
-                    style: TextStyle(
-                      fontWeight:
-                      FontWeight
-                          .w800,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                   subtitle: Text(
                     'No login is required. '
-                        'Preference changes last until the app restarts.',
+                    'Preference changes last until the app restarts.',
                   ),
                 ),
               ),
@@ -1472,285 +1004,162 @@ class _AttractionDiscoveryPageState
             // ====================================================
             // SEARCH
             // ====================================================
-
             TextField(
-              controller:
-              _search,
-              onChanged:
-              _onSearch,
-              decoration:
-              InputDecoration(
-                hintText:
-                'Search name, category or location',
-                prefixIcon:
-                const Icon(
-                  Icons.search,
-                ),
-                suffixIcon:
-                _search.text.isEmpty
+              controller: _search,
+              onChanged: _onSearch,
+              decoration: InputDecoration(
+                hintText: 'Search name, category or location',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _search.text.isEmpty
                     ? null
                     : IconButton(
-                  tooltip:
-                  'Clear search',
-                  onPressed:
-                      () {
-                    _search
-                        .clear();
+                        tooltip: 'Clear search',
+                        onPressed: () {
+                          _search.clear();
 
-                    setState(
-                            () {});
+                          setState(() {});
 
-                    _reload();
-                  },
-                  icon:
-                  const Icon(
-                    Icons.clear,
-                  ),
-                ),
+                          _reload();
+                        },
+                        icon: const Icon(Icons.clear),
+                      ),
                 filled: true,
-                fillColor:
-                Colors.white,
-                border:
-                OutlineInputBorder(
-                  borderRadius:
-                  BorderRadius
-                      .circular(
-                    14,
-                  ),
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ),
 
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
 
             // ====================================================
             // FILTER + SORT
             // ====================================================
-
             Row(
               children: [
                 Expanded(
-                  child:
-                  OutlinedButton.icon(
-                    onPressed:
-                    _showFilters,
-                    icon:
-                    const Icon(
-                      Icons
-                          .filter_list,
-                    ),
+                  child: OutlinedButton.icon(
+                    onPressed: _showFilters,
+                    icon: const Icon(Icons.filter_list),
                     label: Text(
-                      _filters.isActive
-                          ? 'Filters active'
-                          : 'Filters',
+                      _filters.isActive ? 'Filters active' : 'Filters',
                     ),
                   ),
                 ),
 
-                const SizedBox(
-                  width: 8,
-                ),
+                const SizedBox(width: 8),
 
                 Expanded(
-                  child:
-                  OutlinedButton.icon(
-                    onPressed:
-                    _showSort,
-                    icon:
-                    const Icon(
-                      Icons.sort,
-                    ),
-                    label:
-                    const Text(
-                      'Sort',
-                    ),
+                  child: OutlinedButton.icon(
+                    onPressed: _showSort,
+                    icon: const Icon(Icons.sort),
+                    label: const Text('Sort'),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
 
             // ====================================================
             // NEARBY BUTTON
             // ====================================================
-
             SizedBox(
-              width:
-              double.infinity,
-              child:
-              OutlinedButton.icon(
+              width: double.infinity,
+              child: OutlinedButton.icon(
                 onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    NearbyAttractionsPage
-                        .routeName,
-                  );
+                  Navigator.pushNamed(context, NearbyAttractionsPage.routeName);
                 },
-                icon:
-                const Icon(
-                  Icons
-                      .location_on_outlined,
-                ),
-                label:
-                const Text(
-                  'Nearby Attractions',
-                ),
+                icon: const Icon(Icons.location_on_outlined),
+                label: const Text('Nearby Attractions'),
               ),
             ),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
 
             // ====================================================
             // ACTIVE SORT
             // ====================================================
-
             Row(
               children: [
-                const Icon(
-                  Icons.sort,
-                  size: 15,
-                  color: Color(
-                    0xFF64748B,
-                  ),
-                ),
+                const Icon(Icons.sort, size: 15, color: Color(0xFF64748B)),
 
-                const SizedBox(
-                  width: 5,
-                ),
+                const SizedBox(width: 5),
 
                 Expanded(
                   child: Text(
                     'Sorted by: $_sortLabel',
-                    style:
-                    const TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
-                      color: Color(
-                        0xFF64748B,
-                      ),
+                      color: Color(0xFF64748B),
                     ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(
-              height: 4,
-            ),
+            const SizedBox(height: 4),
 
             // ====================================================
             // LOCATION
             // ====================================================
-
             if (_origin != null)
               Row(
-                crossAxisAlignment:
-                CrossAxisAlignment
-                    .start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(
-                    Icons
-                        .my_location_outlined,
+                    Icons.my_location_outlined,
                     size: 15,
-                    color:
-                    Color(
-                      0xFF64748B,
-                    ),
+                    color: Color(0xFF64748B),
                   ),
 
-                  const SizedBox(
-                    width: 5,
-                  ),
+                  const SizedBox(width: 5),
 
                   Expanded(
                     child: Text(
-                      _origin!
-                          .isFallback
+                      _origin!.isFallback
                           ? 'Distance origin: ${_origin!.label}'
                           : 'Using ${_origin!.label}',
-                      style:
-                      const TextStyle(
-                        fontSize:
-                        11,
-                        color:
-                        Color(
-                          0xFF64748B,
-                        ),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF64748B),
                       ),
                     ),
                   ),
                 ],
               ),
 
-            const SizedBox(
-              height: 14,
-            ),
+            const SizedBox(height: 14),
 
             // ====================================================
             // CROWD INFO
             // ====================================================
-
             const Card(
-              color: Color(
-                0xFFF2F3FF,
-              ),
+              color: Color(0xFFF2F3FF),
               child: ListTile(
-                leading: Icon(
-                  Icons.info_outline,
-                  color:
-                  Color(
-                    0xFF79571E,
-                  ),
-                ),
-                title: Text(
-                  'Crowd labels are slot occupancy estimates',
-                ),
-                subtitle: Text(
-                  'Live visitor counts will come from Module 4.',
-                ),
+                leading: Icon(Icons.info_outline, color: Color(0xFF79571E)),
+                title: Text('Crowd labels are slot occupancy estimates'),
+                subtitle: Text('Live visitor counts will come from Module 4.'),
               ),
             ),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
 
             // ====================================================
             // RESULTS
             // ====================================================
-
-            FutureBuilder<
-                List<Attraction>>(
-              future:
-              _results,
-              builder:
-                  (
-                  context,
-                  snapshot,
-                  ) {
+            FutureBuilder<List<Attraction>>(
+              future: _results,
+              builder: (context, snapshot) {
                 // ===============================================
                 // LOADING
                 // ===============================================
 
-                if (snapshot
-                    .connectionState ==
-                    ConnectionState
-                        .waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Padding(
-                    padding:
-                    EdgeInsets.all(
-                      40,
-                    ),
-                    child: Center(
-                      child:
-                      CircularProgressIndicator(),
-                    ),
+                    padding: EdgeInsets.all(40),
+                    child: Center(child: CircularProgressIndicator()),
                   );
                 }
 
@@ -1758,42 +1167,27 @@ class _AttractionDiscoveryPageState
                 // ERROR
                 // ===============================================
 
-                if (snapshot
-                    .hasError) {
+                if (snapshot.hasError) {
                   return _ErrorCard(
-                    message:
-                    '${snapshot.error}',
-                    onRetry:
-                    _reload,
+                    message: '${snapshot.error}',
+                    onRetry: _reload,
                   );
                 }
 
-                final attractions =
-                    snapshot.data ??
-                        const <
-                            Attraction>[];
+                final attractions = snapshot.data ?? const <Attraction>[];
 
                 // ===============================================
                 // NO RESULTS
                 // ===============================================
 
-                if (attractions
-                    .isEmpty) {
+                if (attractions.isEmpty) {
                   return const Card(
                     child: Padding(
-                      padding:
-                      EdgeInsets
-                          .all(
-                        24,
-                      ),
-                      child:
-                      Center(
-                        child:
-                        Text(
+                      padding: EdgeInsets.all(24),
+                      child: Center(
+                        child: Text(
                           'No approved attractions match your current search or filters.',
-                          textAlign:
-                          TextAlign
-                              .center,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),
@@ -1805,172 +1199,94 @@ class _AttractionDiscoveryPageState
                     // =============================================
                     // LIST / MAP VIEW
                     // =============================================
-
                     SizedBox(
-                      width:
-                      double
-                          .infinity,
-                      child:
-                      SegmentedButton<
-                          bool>(
-                        segments:
-                        const [
-                          ButtonSegment<
-                              bool>(
-                            value:
-                            false,
-                            icon:
-                            Icon(
-                              Icons
-                                  .view_list,
-                            ),
-                            label:
-                            Text(
-                              'List View',
-                            ),
+                      width: double.infinity,
+                      child: SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment<bool>(
+                            value: false,
+                            icon: Icon(Icons.view_list),
+                            label: Text('List View'),
                           ),
 
-                          ButtonSegment<
-                              bool>(
-                            value:
-                            true,
-                            icon:
-                            Icon(
-                              Icons
-                                  .map_outlined,
-                            ),
-                            label:
-                            Text(
-                              'Map View',
-                            ),
+                          ButtonSegment<bool>(
+                            value: true,
+                            icon: Icon(Icons.map_outlined),
+                            label: Text('Map View'),
                           ),
                         ],
-                        selected: {
-                          _mapView,
-                        },
-                        onSelectionChanged:
-                            (
-                            selection,
-                            ) {
-                          setState(
-                                () {
-                              _mapView =
-                                  selection
-                                      .first;
-                            },
-                          );
+                        selected: {_mapView},
+                        onSelectionChanged: (selection) {
+                          setState(() {
+                            _mapView = selection.first;
+                          });
                         },
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 14,
-                    ),
+                    const SizedBox(height: 14),
 
                     // =============================================
                     // RESULT COUNT
                     // =============================================
-
                     Row(
                       children: [
                         Expanded(
-                          child:
-                          Text(
+                          child: Text(
                             '${attractions.length} attraction'
-                                '${attractions.length == 1 ? '' : 's'} found',
-                            style:
-                            const TextStyle(
-                              fontWeight:
-                              FontWeight
-                                  .w700,
-                            ),
+                            '${attractions.length == 1 ? '' : 's'} found',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
 
                         Text(
                           _sortLabel,
-                          style:
-                          const TextStyle(
-                            fontSize:
-                            11,
-                            color:
-                            Color(
-                              0xFF64748B,
-                            ),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF64748B),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
 
                     // =============================================
                     // MAP
                     // =============================================
-
                     if (_mapView)
-                      _buildMap(
-                        attractions,
-                      )
-
+                      _buildMap(attractions)
                     // =============================================
                     // LIST
                     // =============================================
-
                     else
                       Column(
-                        children:
-                        attractions
-                            .map(
-                              (
-                              attraction,
-                              ) {
-                            return _AttractionCard(
-                              attraction:
-                              attraction,
-                              selected:
-                              _selectedForComparison
-                                  .contains(
-                                attraction
-                                    .id,
-                              ),
-                              imageUrl:
-                              attraction
-                                  .coverImageUrl,
-                              onCompare:
-                                  (
-                                  selected,
-                                  ) {
-                                _changeComparison(
-                                  attraction,
-                                  selected,
-                                );
-                              },
-                              onTap:
-                                  () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AttractionDetailsPage
-                                      .routeName,
-                                  arguments:
-                                  attraction
-                                      .id,
-                                );
-                              },
-                            );
-                          },
-                        ).toList(),
+                        children: attractions.map((attraction) {
+                          return _AttractionCard(
+                            attraction: attraction,
+                            selected: _selectedForComparison.contains(
+                              attraction.id,
+                            ),
+                            imageUrl: attraction.coverImageUrl,
+                            onCompare: (selected) {
+                              _changeComparison(attraction, selected);
+                            },
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AttractionDetailsPage.routeName,
+                                arguments: attraction.id,
+                              );
+                            },
+                          );
+                        }).toList(),
                       ),
                   ],
                 );
               },
             ),
 
-            const SizedBox(
-              height: 80,
-            ),
+            const SizedBox(height: 80),
           ],
         ),
       ),
@@ -1978,75 +1294,41 @@ class _AttractionDiscoveryPageState
       // ==========================================================
       // COMPARE FLOATING BUTTON
       // ==========================================================
-
-      floatingActionButton:
-      _selectedForComparison
-          .length <
-          2
+      floatingActionButton: _selectedForComparison.length < 2
           ? null
-          : FloatingActionButton
-          .extended(
-        onPressed:
-            () async {
-          final all =
-          await _results;
+          : FloatingActionButton.extended(
+              onPressed: () async {
+                final all = await _results;
 
-          if (!context
-              .mounted) {
-            return;
-          }
+                if (!context.mounted) {
+                  return;
+                }
 
-          final selected =
-          all.where(
-                (
-                attraction,
-                ) {
-              return _selectedForComparison
-                  .contains(
-                attraction
-                    .id,
-              );
-            },
-          ).toList();
+                final selected = all.where((attraction) {
+                  return _selectedForComparison.contains(attraction.id);
+                }).toList();
 
-          if (selected
-              .length <
-              2) {
-            ScaffoldMessenger
-                .of(
-              context,
-            )
-                .showSnackBar(
-              const SnackBar(
-                content:
-                Text(
-                  'Please select at least two visible attractions to compare.',
-                ),
-              ),
-            );
+                if (selected.length < 2) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Please select at least two visible attractions to compare.',
+                      ),
+                    ),
+                  );
 
-            return;
-          }
+                  return;
+                }
 
-          Navigator
-              .pushNamed(
-            context,
-            AttractionComparisonPage
-                .routeName,
-            arguments:
-            selected,
-          );
-        },
-        icon:
-        const Icon(
-          Icons
-              .compare_arrows,
-        ),
-        label:
-        Text(
-          'Compare ${_selectedForComparison.length}',
-        ),
-      ),
+                Navigator.pushNamed(
+                  context,
+                  AttractionComparisonPage.routeName,
+                  arguments: selected,
+                );
+              },
+              icon: const Icon(Icons.compare_arrows),
+              label: Text('Compare ${_selectedForComparison.length}'),
+            ),
     );
   }
 }
@@ -2055,8 +1337,7 @@ class _AttractionDiscoveryPageState
 // SORT TILE
 // ================================================================
 
-class _SortTile
-    extends StatelessWidget {
+class _SortTile extends StatelessWidget {
   const _SortTile({
     required this.title,
     required this.subtitle,
@@ -2072,44 +1353,19 @@ class _SortTile
   final VoidCallback onTap;
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return ListTile(
-      onTap:
-      onTap,
-      leading:
-      Icon(
-        icon,
-        color: selected
-            ? const Color(
-          0xFF79571E,
-        )
-            : null,
-      ),
-      title:
-      Text(
+      onTap: onTap,
+      leading: Icon(icon, color: selected ? const Color(0xFF79571E) : null),
+      title: Text(
         title,
-        style:
-        TextStyle(
-          fontWeight: selected
-              ? FontWeight.w800
-              : FontWeight.w600,
+        style: TextStyle(
+          fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
         ),
       ),
-      subtitle:
-      Text(
-        subtitle,
-      ),
+      subtitle: Text(subtitle),
       trailing: selected
-          ? const Icon(
-        Icons
-            .check_circle,
-        color:
-        Color(
-          0xFF79571E,
-        ),
-      )
+          ? const Icon(Icons.check_circle, color: Color(0xFF79571E))
           : null,
     );
   }
@@ -2119,8 +1375,7 @@ class _SortTile
 // ATTRACTION CARD
 // ================================================================
 
-class _AttractionCard
-    extends StatelessWidget {
+class _AttractionCard extends StatelessWidget {
   const _AttractionCard({
     required this.attraction,
     required this.selected,
@@ -2136,8 +1391,7 @@ class _AttractionCard
   final VoidCallback onTap;
 
   Color get crowdColor {
-    switch (
-    attraction.estimatedCrowdLevel) {
+    switch (attraction.estimatedCrowdLevel) {
       case 'Low':
         return Colors.green;
 
@@ -2156,206 +1410,102 @@ class _AttractionCard
   }
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return Card(
-      color:
-      Colors.white,
-      margin:
-      const EdgeInsets.only(
-        bottom: 12,
-      ),
-      child:
-      InkWell(
-        onTap:
-        onTap,
-        borderRadius:
-        BorderRadius.circular(
-          12,
-        ),
-        child:
-        Padding(
-          padding:
-          const EdgeInsets
-              .all(
-            12,
-          ),
-          child:
-          Row(
-            crossAxisAlignment:
-            CrossAxisAlignment
-                .start,
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ==================================================
               // IMAGE
               // ==================================================
-
               ClipRRect(
-                borderRadius:
-                BorderRadius
-                    .circular(
-                  12,
-                ),
-                child: imageUrl ==
-                    null
+                borderRadius: BorderRadius.circular(12),
+                child: imageUrl == null
                     ? Container(
-                  width:
-                  82,
-                  height:
-                  100,
-                  color:
-                  const Color(
-                    0xFFFFE2B5,
-                  ),
-                  child:
-                  const Icon(
-                    Icons
-                        .place_outlined,
-                  ),
-                )
+                        width: 82,
+                        height: 100,
+                        color: const Color(0xFFFFE2B5),
+                        child: const Icon(Icons.place_outlined),
+                      )
                     : Image.network(
-                  imageUrl!,
-                  width:
-                  82,
-                  height:
-                  100,
-                  fit: BoxFit
-                      .cover,
-                  errorBuilder:
-                      (
-                      _,
-                      _,
-                      _,
-                      ) {
-                    return Container(
-                      width:
-                      82,
-                      height:
-                      100,
-                      color:
-                      const Color(
-                        0xFFFFE2B5,
+                        imageUrl!,
+                        width: 82,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) {
+                          return Container(
+                            width: 82,
+                            height: 100,
+                            color: const Color(0xFFFFE2B5),
+                            child: const Icon(Icons.place_outlined),
+                          );
+                        },
                       ),
-                      child:
-                      const Icon(
-                        Icons
-                            .place_outlined,
-                      ),
-                    );
-                  },
-                ),
               ),
 
-              const SizedBox(
-                width: 12,
-              ),
+              const SizedBox(width: 12),
 
               // ==================================================
               // INFORMATION
               // ==================================================
-
               Expanded(
-                child:
-                Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      attraction
-                          .name,
-                      style:
-                      const TextStyle(
-                        fontWeight:
-                        FontWeight
-                            .w800,
-                      ),
+                      attraction.name,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
 
                     Text(
                       '${attraction.category} · '
-                          '${attraction.locationName}',
-                      style:
-                      const TextStyle(
-                        fontSize:
-                        11,
-                      ),
+                      '${attraction.locationName}',
+                      style: const TextStyle(fontSize: 11),
                     ),
 
-                    const SizedBox(
-                      height:
-                      6,
-                    ),
+                    const SizedBox(height: 6),
 
                     Text(
-                      attraction
-                          .entrancePriceMyr ==
-                          0
+                      attraction.entrancePriceMyr == 0
                           ? 'Free entry'
                           : 'RM ${attraction.entrancePriceMyr.toStringAsFixed(2)}',
                     ),
 
                     Text(
-                      attraction
-                          .distanceKm ==
-                          null
+                      attraction.distanceKm == null
                           ? 'Distance unavailable'
                           : '${attraction.distanceKm!.toStringAsFixed(1)} km away',
-                      style:
-                      const TextStyle(
-                        fontSize:
-                        11,
-                      ),
+                      style: const TextStyle(fontSize: 11),
                     ),
 
-                    const SizedBox(
-                      height:
-                      6,
-                    ),
+                    const SizedBox(height: 6),
 
                     Wrap(
-                      spacing:
-                      6,
-                      runSpacing:
-                      4,
+                      spacing: 6,
+                      runSpacing: 4,
                       children: [
                         Chip(
-                          label:
-                          Text(
+                          label: Text(
                             '${attraction.estimatedCrowdLevel} estimate',
-                            style:
-                            TextStyle(
-                              color:
-                              crowdColor,
-                              fontSize:
-                              10,
-                            ),
+                            style: TextStyle(color: crowdColor, fontSize: 10),
                           ),
-                          side:
-                          BorderSide
-                              .none,
-                          backgroundColor:
-                          crowdColor
-                              .withValues(
-                            alpha:
-                            .1,
-                          ),
+                          side: BorderSide.none,
+                          backgroundColor: crowdColor.withValues(alpha: .1),
                         ),
 
                         Chip(
-                          label:
-                          Text(
+                          label: Text(
                             '${attraction.availableSlots.length} slots',
-                            style:
-                            const TextStyle(
-                              fontSize:
-                              10,
-                            ),
+                            style: const TextStyle(fontSize: 10),
                           ),
-                          side:
-                          BorderSide
-                              .none,
+                          side: BorderSide.none,
                         ),
                       ],
                     ),
@@ -2366,18 +1516,10 @@ class _AttractionCard
               // ==================================================
               // COMPARE CHECKBOX
               // ==================================================
-
               Checkbox(
-                value:
-                selected,
-                onChanged:
-                    (
-                    value,
-                    ) {
-                  onCompare(
-                    value ??
-                        false,
-                  );
+                value: selected,
+                onChanged: (value) {
+                  onCompare(value ?? false);
                 },
               ),
             ],
@@ -2392,61 +1534,30 @@ class _AttractionCard
 // MAP INFO CHIP
 // ================================================================
 
-class _MapInfoChip
-    extends StatelessWidget {
-  const _MapInfoChip({
-    required this.icon,
-    required this.label,
-  });
+class _MapInfoChip extends StatelessWidget {
+  const _MapInfoChip({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return Container(
-      padding:
-      const EdgeInsets
-          .symmetric(
-        horizontal: 9,
-        vertical: 6,
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(20),
       ),
-      decoration:
-      BoxDecoration(
-        color: Colors
-            .grey.shade100,
-        borderRadius:
-        BorderRadius
-            .circular(
-          20,
-        ),
-      ),
-      child:
-      Row(
-        mainAxisSize:
-        MainAxisSize.min,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 15,
-          ),
+          Icon(icon, size: 15),
 
-          const SizedBox(
-            width: 4,
-          ),
+          const SizedBox(width: 4),
 
           Text(
             label,
-            style:
-            const TextStyle(
-              fontSize:
-              11,
-              fontWeight:
-              FontWeight
-                  .w600,
-            ),
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -2458,75 +1569,39 @@ class _MapInfoChip
 // ERROR CARD
 // ================================================================
 
-class _ErrorCard
-    extends StatelessWidget {
-  const _ErrorCard({
-    required this.message,
-    required this.onRetry,
-  });
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return Card(
-      color:
-      const Color(
-        0xFFFFEDEA,
-      ),
-      child:
-      Padding(
-        padding:
-        const EdgeInsets
-            .all(
-          16,
-        ),
-        child:
-        Column(
+      color: const Color(0xFFFFEDEA),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           children: [
             const Text(
               'Could not load approved attractions.',
-              style:
-              TextStyle(
-                fontWeight:
-                FontWeight
-                    .w700,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w700),
             ),
 
-            const SizedBox(
-              height: 6,
-            ),
+            const SizedBox(height: 6),
 
             Text(
               message,
-              style:
-              const TextStyle(
-                fontSize:
-                11,
-              ),
-              textAlign:
-              TextAlign.center,
+              style: const TextStyle(fontSize: 11),
+              textAlign: TextAlign.center,
             ),
 
-            const SizedBox(
-              height: 6,
-            ),
+            const SizedBox(height: 6),
 
             TextButton.icon(
-              onPressed:
-              onRetry,
-              icon:
-              const Icon(
-                Icons.refresh,
-              ),
-              label:
-              const Text(
-                'Try again',
-              ),
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try again'),
             ),
           ],
         ),

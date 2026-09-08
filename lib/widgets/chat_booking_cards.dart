@@ -135,17 +135,21 @@ class ChatBookingCopy {
   );
 
   String get noAvailableSlots => _text(
-    english: 'No suitable future slot is available. Choose another attraction or try later.',
+    english:
+        'No suitable future slot is available. Choose another attraction or try later.',
     mandarin: '目前没有合适的未来时段。请选择其他景点或稍后再试。',
-    malay: 'Tiada slot masa hadapan yang sesuai. Pilih tarikan lain atau cuba lagi nanti.',
+    malay:
+        'Tiada slot masa hadapan yang sesuai. Pilih tarikan lain atau cuba lagi nanti.',
     japanese: '利用可能な時間枠がありません。別の観光地を選ぶか、後でもう一度お試しください。',
     korean: '이용 가능한 시간대가 없습니다. 다른 관광지를 선택하거나 나중에 다시 시도하세요.',
   );
 
   String get noRemainingSpaces => _text(
-    english: 'This time slot no longer has any spaces available. Please choose another time slot.',
+    english:
+        'This time slot no longer has any spaces available. Please choose another time slot.',
     mandarin: '这个时段已经没有剩余位置，请选择其他时段。',
-    malay: 'Slot masa ini sudah tiada tempat kosong. Sila pilih slot masa lain.',
+    malay:
+        'Slot masa ini sudah tiada tempat kosong. Sila pilih slot masa lain.',
     japanese: 'この時間枠には空きがありません。別の時間枠を選択してください。',
     korean: '이 시간대에는 남은 자리가 없습니다. 다른 시간대를 선택해 주세요.',
   );
@@ -215,17 +219,21 @@ class ChatBookingCopy {
   );
 
   String get capacityWarning => _text(
-    english: 'Availability and booking status will be checked again when you confirm.',
+    english:
+        'Availability and booking status will be checked again when you confirm.',
     mandarin: '确认时系统会再次检查空位和预订状态。',
-    malay: 'Ketersediaan dan status tempahan akan diperiksa semula semasa pengesahan.',
+    malay:
+        'Ketersediaan dan status tempahan akan diperiksa semula semasa pengesahan.',
     japanese: '確定時に空き状況と予約ステータスを再確認します。',
     korean: '확정할 때 잔여 좌석과 예약 상태를 다시 확인합니다.',
   );
 
   String get cancellationWarning => _text(
-    english: 'The reserved spaces will be released immediately. This cannot be undone.',
+    english:
+        'The reserved spaces will be released immediately. This cannot be undone.',
     mandarin: '预留空位会立即释放，而且无法撤销。',
-    malay: 'Tempat yang ditempah akan dilepaskan serta-merta dan tidak boleh dipulihkan.',
+    malay:
+        'Tempat yang ditempah akan dilepaskan serta-merta dan tidak boleh dipulihkan.',
     japanese: '確保された枠はすぐに解放され、この操作は元に戻せません。',
     korean: '예약 좌석이 즉시 해제되며 이 작업은 되돌릴 수 없습니다.',
   );
@@ -354,7 +362,8 @@ class ChatBookingCopy {
       ChatBookingOperation.reschedule => _text(
         english: 'Booking rescheduled. Booking ID: $code\nStatus: Confirmed',
         mandarin: '改期成功。预订编号：$code\n状态：已确认',
-        malay: 'Masa tempahan berjaya diubah. ID Tempahan: $code\nStatus: Disahkan',
+        malay:
+            'Masa tempahan berjaya diubah. ID Tempahan: $code\nStatus: Disahkan',
         japanese: '予約時間を変更しました。予約ID：$code\nステータス：確定済み',
         korean: '예약 시간이 변경되었습니다. 예약 ID: $code\n상태: 확정됨',
       ),
@@ -470,9 +479,7 @@ class ChatBookingGuideCard extends StatelessWidget {
         return _EmptyState(copy.noAvailableAttractions);
       }
       return _BookingAttractionPicker(
-        key: ValueKey(
-          'booking-attractions-${draft.attractionOptions.length}',
-        ),
+        key: ValueKey('booking-attractions-${draft.attractionOptions.length}'),
         options: draft.attractionOptions,
         copy: copy,
         isBusy: isBusy,
@@ -519,7 +526,9 @@ class ChatBookingGuideCard extends StatelessWidget {
       final selectedSlot = draft.slotOptions
           .where((option) => option.id == draft.slotId)
           .firstOrNull;
-      final maximum = selectedSlot?.remainingCapacity ?? 0;
+      final maximum = chatBookingVisitorLimit(
+        selectedSlot?.remainingCapacity ?? 0,
+      );
       if (maximum < 1) {
         return _EmptyState(copy.noRemainingSpaces);
       }
@@ -720,10 +729,7 @@ class _VisitorCountSliderState extends State<_VisitorCountSlider> {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('1'),
-              Text('${widget.maximum}'),
-            ],
+            children: [const Text('1'), Text('${widget.maximum}')],
           ),
         ),
         const SizedBox(height: 12),
@@ -807,7 +813,9 @@ class ChatBookingConfirmationCard extends StatelessWidget {
                   destructive
                       ? Icons.warning_amber_rounded
                       : Icons.fact_check_outlined,
-                  color: destructive ? Colors.red.shade700 : TourFlowColors.primaryText,
+                  color: destructive
+                      ? Colors.red.shade700
+                      : TourFlowColors.primaryText,
                 ),
                 const SizedBox(width: 8),
                 Expanded(

@@ -6,11 +6,15 @@ abstract final class TourFlowRoutes {
   static const userTrips = '/user/trips';
   static const userChat = '/user/chat';
   static const profileSecurity = '/profile-security';
+  static const passwordRecovery = '/auth/recovery';
+  static const supportTicketForm = '/user/support-ticket/new';
+  static const supportTicketList = '/user/support-tickets';
 
   static const operatorDashboard = '/operator-dashboard';
   static const attractionDetails = '/attraction-details';
   static const slotManager = '/slot-manager';
   static const operatorReports = '/operator-report-queue';
+  static const operatorSupportTickets = '/operator/support-tickets';
   static const operatorAnalytics = '/visitor-statistics';
 
   static const adminAnalyticsDashboard = '/admin-analytics-dashboard';

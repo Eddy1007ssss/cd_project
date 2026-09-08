@@ -28,6 +28,12 @@ row-level-security policies. Module 2 deliberately uses local demonstration
 data when no user is signed in. AI chat additionally requires the
 `gemini-chat` Edge Function and its `GEMINI_API_KEY` Supabase secret.
 
+Password recovery uses the native redirect `tourflow://auth/recovery`. Add this
+exact URI to **Authentication > URL Configuration > Redirect URLs** in the
+Supabase dashboard. Configure a custom SMTP provider under Authentication email
+settings for reliable Gmail delivery; no Gmail password or SMTP secret belongs
+in this repository.
+
 ## Current functional areas
 
 - Tourist, operator, and administrator navigation use role-specific persistent
@@ -37,8 +43,9 @@ data when no user is signed in. AI chat additionally requires the
   recommendations use shared attraction services.
 - Booking, cancellation, rescheduling, and itinerary operations use database
   functions that enforce atomic capacity changes where required.
-- Feedback, issue reports, geofence check-in, crowd data, and operator report
-  resolution use the shared engagement repository.
+- Feedback, support tickets, geofence check-in, crowd data, and operator ticket
+  responses use shared database-backed services. Legacy issue reports are
+  migrated into the support-ticket workflow by the latest migration.
 - Some administration, attraction configuration, QR verification, profile,
   and support-ticket screens remain UI demonstrations for their assigned
   modules to complete.

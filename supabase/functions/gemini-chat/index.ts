@@ -284,11 +284,23 @@ async function bookingDraftFor(
     draft.slotId = selected.id;
     draft.slotStartsAt = selected.startsAt;
     draft.slotEndsAt = selected.endsAt;
-  } else if (type === "set_visitors") {
-    const count = Number(value);
-    if (!Number.isInteger(count) || count < 1 || count > 6) {
-      throw new Error("Visitor count must be between 1 and 6.");
-    }
+    } else if (type === "set_visitors") {
+      const count = Number(value);
+      const options = Array.isArray(draft.slotOptions) ? draft.slotOptions : [];
+      const selected = options.find(
+        (item) => isRecord(item) && item.id === draft.slotId,
+      );
+      const remaining = isRecord(selected)
+        ? Number(selected.remainingCapacity)
+        : 0;
+      const maximum = Math.min(6, Math.max(0, remaining));
+      if (!Number.isInteger(count) || count < 1 || count > maximum) {
+        throw new Error(
+          maximum > 0
+            ? `Visitor count must be between 1 and ${maximum}.`
+            : "The selected slot no longer has available capacity.",
+        );
+      }
     draft.visitorCount = count;
   }
 

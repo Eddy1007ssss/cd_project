@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase.dart';
+import 'repositories/auth_repository.dart';
 import 'l10n/tourflow_localization.dart';
 import 'screens/staff/attraction_configuration_page.dart';
 import 'screens/staff/attraction_details_page.dart';
 import 'screens/staff/operator_dashboard_page.dart';
 import 'screens/staff/operator_registration_page.dart';
-import 'screens/staff/resolve_report_page.dart';
 import 'screens/staff/slot_manager_page.dart';
 import 'screens/staff/staff_support_ticket_details_page.dart';
 import 'screens/staff/support_ticket_management_page.dart';
@@ -27,6 +30,7 @@ import 'screens/user/my_feedback_page.dart';
 import 'screens/user/nearby_attractions_page.dart';
 import 'screens/user/discovery_preferences_page.dart';
 import 'screens/user/profile_security_page.dart';
+import 'screens/user/password_recovery_page.dart';
 import 'screens/user/reschedule_booking_page.dart';
 import 'screens/user/sign_in_page.dart';
 import 'screens/user/smart_recommendations_page.dart';
@@ -40,14 +44,11 @@ import 'screens/user/booking_qr_page.dart';
 import 'screens/user/booking_details_page.dart';
 import 'screens/user/feedback_centre_page.dart';
 import 'screens/user/submit_feedback_page.dart';
-import 'screens/user/report_issue_page.dart';
-import 'screens/user/report_status_page.dart';
 import 'screens/user/capacity_alert_page.dart';
 import 'screens/user/geofence_page.dart';
 import 'screens/staff/staff_qr_scanner_page.dart';
 import 'screens/staff/operator_live_crowd_page.dart';
 import 'screens/staff/operator_live_crowd_details_page.dart';
-import 'screens/staff/operator_report_queue_page.dart';
 import 'screens/staff/revenue_promotion_page.dart';
 import 'screens/staff/promotion_suggestion_page.dart';
 import 'screens/staff/visitor_statistics_page.dart';
@@ -64,28 +65,64 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseConfig.initialize();
   await TourFlowLocaleController.instance.loadForCurrentUser();
-  runApp(const MyApp());
+  runApp(const MyApp(listenForPasswordRecovery: true));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({this.listenForPasswordRecovery = false, super.key});
+
+  final bool listenForPasswordRecovery;
 
   @override
   Widget build(BuildContext context) {
     return TourFlowLanguageScope(
       controller: TourFlowLocaleController.instance,
-      child: const _TourFlowMaterialApp(),
+      child: _TourFlowMaterialApp(
+        listenForPasswordRecovery: listenForPasswordRecovery,
+      ),
     );
   }
 }
 
-class _TourFlowMaterialApp extends StatelessWidget {
-  const _TourFlowMaterialApp();
+class _TourFlowMaterialApp extends StatefulWidget {
+  const _TourFlowMaterialApp({required this.listenForPasswordRecovery});
+
+  final bool listenForPasswordRecovery;
+
+  @override
+  State<_TourFlowMaterialApp> createState() => _TourFlowMaterialAppState();
+}
+
+class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  StreamSubscription<AuthState>? _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.listenForPasswordRecovery) return;
+    _authSubscription = AuthRepository().authStateChanges.listen((state) {
+      if (state.event != AuthChangeEvent.passwordRecovery) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          PasswordRecoveryPage.routeName,
+          (route) => false,
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final localeController = TourFlowLanguageScope.of(context);
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'TourFlow',
       locale: localeController.locale,
@@ -103,6 +140,7 @@ class _TourFlowMaterialApp extends StatelessWidget {
       initialRoute: SignInPage.routeName,
       routes: {
         SignInPage.routeName: (_) => const SignInPage(),
+        PasswordRecoveryPage.routeName: (_) => const PasswordRecoveryPage(),
         TouristRegistrationPage.routeName: (_) =>
             const TouristRegistrationPage(),
         UserHomePage.routeName: (_) => const UserNavigationShell(),
@@ -136,8 +174,8 @@ class _TourFlowMaterialApp extends StatelessWidget {
         FeedbackCentrePage.routeName: (_) => const FeedbackCentrePage(),
         SubmitFeedbackPage.routeName: (_) => const SubmitFeedbackPage(),
         MyFeedbackPage.routeName: (_) => const MyFeedbackPage(),
-        ReportIssuePage.routeName: (_) => const ReportIssuePage(),
-        ReportStatusPage.routeName: (_) => const ReportStatusPage(),
+        '/report-issue': (_) => const SupportTicketFormPage(),
+        '/report-status': (_) => const SupportTicketListPage(),
         GeofencePage.routeName: (_) => const GeofencePage(),
         OperatorRegistrationPage.routeName: (_) =>
             const OperatorRegistrationPage(),
@@ -149,6 +187,8 @@ class _TourFlowMaterialApp extends StatelessWidget {
             const SupportTicketManagementPage(
               navigationRole: TourFlowNavigationRole.operator,
             ),
+        TourFlowRoutes.operatorSupportTickets: (_) =>
+            const OperatorNavigationShell(initialIndex: 3),
         OperatorDashboardPage.routeName: (_) => const OperatorNavigationShell(),
         AttractionDetailsPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 1),
@@ -180,9 +220,8 @@ class _TourFlowMaterialApp extends StatelessWidget {
         OperatorLiveCrowdPage.routeName: (_) => const OperatorLiveCrowdPage(),
         OperatorLiveCrowdDetailsPage.routeName: (_) =>
             const OperatorLiveCrowdDetailsPage(),
-        OperatorReportQueuePage.routeName: (_) =>
+        TourFlowRoutes.operatorReports: (_) =>
             const OperatorNavigationShell(initialIndex: 3),
-        ResolveReportPage.routeName: (_) => const ResolveReportPage(),
         RevenuePromotionPage.routeName: (_) => const RevenuePromotionPage(),
         PromotionSuggestionPage.routeName: (_) =>
             const PromotionSuggestionPage(),

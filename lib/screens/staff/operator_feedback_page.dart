@@ -33,15 +33,21 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
     });
   }
 
-  List<OperatorFeedbackEntry> _prepareFeedback(List<OperatorFeedbackEntry> entries) {
+  List<OperatorFeedbackEntry> _prepareFeedback(
+    List<OperatorFeedbackEntry> entries,
+  ) {
     var result = [...entries];
 
     if (_attractionFilter != null) {
-      result = result.where((entry) => entry.attractionName == _attractionFilter).toList();
+      result = result
+          .where((entry) => entry.attractionName == _attractionFilter)
+          .toList();
     }
 
     if (_ratingFilter != null) {
-      result = result.where((entry) => entry.overallRating == _ratingFilter).toList();
+      result = result
+          .where((entry) => entry.overallRating == _ratingFilter)
+          .toList();
     }
 
     if (_sort == 'newest') {
@@ -62,15 +68,19 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
 
     return entries.where((entry) {
       final date = entry.createdAt;
-      return date.year == now.year && date.month == now.month && date.day == now.day;
+      return date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day;
     }).length;
   }
 
   int _weekCount(List<OperatorFeedbackEntry> entries) {
     final now = DateTime.now();
-    final start = DateTime(now.year, now.month, now.day).subtract(
-      Duration(days: now.weekday - 1),
-    );
+    final start = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: now.weekday - 1));
 
     return entries.where((entry) => !entry.createdAt.isBefore(start)).length;
   }
@@ -79,7 +89,8 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
     final now = DateTime.now();
 
     return entries.where((entry) {
-      return entry.createdAt.year == now.year && entry.createdAt.month == now.month;
+      return entry.createdAt.year == now.year &&
+          entry.createdAt.month == now.month;
     }).length;
   }
 
@@ -89,7 +100,7 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
       title: 'Tourist Feedback',
       role: 'TOURFLOW · OPERATOR',
       navigationRole: TourFlowNavigationRole.operator,
-      selectedNavigationIndex: 0,
+      selectedNavigationIndex: 5,
       child: FutureBuilder<List<OperatorFeedbackEntry>>(
         future: _feedback,
         builder: (context, snapshot) {
@@ -109,11 +120,9 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
 
           final allEntries = snapshot.data ?? const [];
 
-          final attractionNames = allEntries
-              .map((entry) => entry.attractionName)
-              .toSet()
-              .toList()
-            ..sort();
+          final attractionNames =
+              allEntries.map((entry) => entry.attractionName).toSet().toList()
+                ..sort();
 
           final entries = _prepareFeedback(allEntries);
 
@@ -183,10 +192,7 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
                     isExpanded: true,
                     hint: const Text(
                       'All Attractions',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF667085),
-                      ),
+                      style: TextStyle(fontSize: 11, color: Color(0xFF667085)),
                     ),
                     items: [
                       const DropdownMenuItem<String?>(
@@ -197,7 +203,7 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
                         ),
                       ),
                       ...attractionNames.map(
-                            (name) => DropdownMenuItem<String?>(
+                        (name) => DropdownMenuItem<String?>(
                           value: name,
                           child: Text(
                             name,
@@ -418,10 +424,7 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
 }
 
 class _FeedbackSummaryCard extends StatelessWidget {
-  const _FeedbackSummaryCard({
-    required this.label,
-    required this.value,
-  });
+  const _FeedbackSummaryCard({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -440,10 +443,7 @@ class _FeedbackSummaryCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: TourFlowColors.muted,
-              fontSize: 8.5,
-            ),
+            style: const TextStyle(color: TourFlowColors.muted, fontSize: 8.5),
           ),
 
           const SizedBox(height: 4),
@@ -479,27 +479,18 @@ class _RatingFilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 13,
-          vertical: 9,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFA000)
-              : Colors.white,
+          color: selected ? const Color(0xFFFFA000) : Colors.white,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: selected
-                ? const Color(0xFFFFA000)
-                : const Color(0xFFE1E5EB),
+            color: selected ? const Color(0xFFFFA000) : const Color(0xFFE1E5EB),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected
-                ? Colors.white
-                : const Color(0xFF667085),
+            color: selected ? Colors.white : const Color(0xFF667085),
             fontSize: 10,
             fontWeight: FontWeight.w700,
           ),
@@ -510,9 +501,7 @@ class _RatingFilterChip extends StatelessWidget {
 }
 
 class _FeedbackCard extends StatelessWidget {
-  const _FeedbackCard({
-    required this.entry,
-  });
+  const _FeedbackCard({required this.entry});
 
   final OperatorFeedbackEntry entry;
 
@@ -559,7 +548,7 @@ class _FeedbackCard extends StatelessWidget {
                     Row(
                       children: List.generate(
                         5,
-                            (index) => Icon(
+                        (index) => Icon(
                           Icons.star_rounded,
                           size: 16,
                           color: index < entry.overallRating
@@ -610,10 +599,7 @@ class _FeedbackCard extends StatelessWidget {
 
             Text(
               'Booking: ${entry.bookingCode}',
-              style: const TextStyle(
-                color: TourFlowColors.muted,
-                fontSize: 9,
-              ),
+              style: const TextStyle(color: TourFlowColors.muted, fontSize: 9),
             ),
           ],
 
@@ -645,9 +631,7 @@ class _FeedbackCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF8E8),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: const Color(0xFFFFD98A),
-                    ),
+                    border: Border.all(color: const Color(0xFFFFD98A)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -677,10 +661,7 @@ class _FeedbackCard extends StatelessWidget {
 
           const SizedBox(height: 13),
 
-          const Divider(
-            height: 1,
-            color: Color(0xFFEAECF0),
-          ),
+          const Divider(height: 1, color: Color(0xFFEAECF0)),
 
           const SizedBox(height: 10),
 
@@ -724,10 +705,7 @@ class _FeedbackCard extends StatelessWidget {
 }
 
 class _ErrorPanel extends StatelessWidget {
-  const _ErrorPanel({
-    required this.message,
-    required this.onRetry,
-  });
+  const _ErrorPanel({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
@@ -740,9 +718,7 @@ class _ErrorPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE1E5EB),
-        ),
+        border: Border.all(color: const Color(0xFFE1E5EB)),
       ),
       child: Column(
         children: [
@@ -768,19 +744,14 @@ class _ErrorPanel extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: TourFlowColors.muted,
-              fontSize: 9,
-            ),
+            style: const TextStyle(color: TourFlowColors.muted, fontSize: 9),
           ),
 
           const SizedBox(height: 13),
 
           OutlinedButton.icon(
             onPressed: onRetry,
-            icon: const Icon(
-              Icons.refresh_rounded,
-            ),
+            icon: const Icon(Icons.refresh_rounded),
             label: const Text('Try Again'),
           ),
         ],

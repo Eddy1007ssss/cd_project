@@ -91,7 +91,7 @@ class UserHomePage extends StatelessWidget {
                   name: 'Jalan Alor Food Street',
                   location: 'Bukit Bintang',
                   rating: '4.5',
-                  crowdText: 'BUSY',
+                  crowdText: 'High',
                   crowdColor: Color(0xFFF59E0B),
                   icon: Icons.restaurant_rounded,
                 ),
@@ -103,7 +103,7 @@ class UserHomePage extends StatelessWidget {
                   name: 'Pavilion Shopping Mall',
                   location: 'City Center',
                   rating: '4.6',
-                  crowdText: 'LIGHT',
+                  crowdText: 'Low',
                   crowdColor: Color(0xFF16A34A),
                   icon: Icons.shopping_bag_rounded,
                 ),
@@ -296,7 +296,7 @@ class _RecommendedAttractions extends StatelessWidget {
             distance: '1.2 km away',
             category: 'Landmark',
             rating: '4.9',
-            crowdText: 'LOW CROWD',
+            crowdText: 'Low',
             crowdColor: Color(0xFF16A34A),
             backgroundColors: [Color(0xFF0B315E), Color(0xFF3795C9)],
             icon: Icons.apartment_rounded,
@@ -307,7 +307,7 @@ class _RecommendedAttractions extends StatelessWidget {
             distance: '12.5 km away',
             category: 'Nature',
             rating: '4.7',
-            crowdText: 'MODERATE',
+            crowdText: 'Moderate',
             crowdColor: Color(0xFFF97316),
             backgroundColors: [Color(0xFF315B31), Color(0xFFA6C76A)],
             icon: Icons.landscape_rounded,
@@ -455,7 +455,7 @@ class _FeaturedAttractionCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _CrowdBadge(text: 'VERY BUSY', color: Color(0xFFDC2626)),
+                _CrowdBadge(text: 'Critical', color: Color(0xFFDC2626)),
                 SizedBox(height: 8),
                 TourFlowText(
                   'KL Tower & Eco Park',
@@ -692,12 +692,12 @@ class _CrowdLevelGuide extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _GuideItem(color: Color(0xFF16A34A), text: 'Low: < 25%'),
+                child: _GuideItem(color: Color(0xFF16A34A), text: 'Low: < 40%'),
               ),
               Expanded(
                 child: _GuideItem(
                   color: Color(0xFFF97316),
-                  text: 'Mod: 25-60%',
+                  text: 'Moderate: 40-69%',
                 ),
               ),
             ],
@@ -708,13 +708,13 @@ class _CrowdLevelGuide extends StatelessWidget {
               Expanded(
                 child: _GuideItem(
                   color: Color(0xFFF59E0B),
-                  text: 'Busy: 60-85%',
+                  text: 'High: 70-89%',
                 ),
               ),
               Expanded(
                 child: _GuideItem(
                   color: Color(0xFFDC2626),
-                  text: 'Peak: > 85%',
+                  text: 'Critical: 90%+',
                 ),
               ),
             ],

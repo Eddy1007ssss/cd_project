@@ -1,3 +1,25 @@
+class ManagedAttractionSummary {
+  const ManagedAttractionSummary({
+    required this.id,
+    required this.name,
+    required this.locationName,
+    required this.listingStatus,
+  });
+
+  final String id;
+  final String name;
+  final String locationName;
+  final String listingStatus;
+
+  factory ManagedAttractionSummary.fromMap(Map<String, dynamic> map) =>
+      ManagedAttractionSummary(
+        id: map['id'] as String,
+        name: map['name'] as String? ?? 'Attraction',
+        locationName: map['location_name'] as String? ?? '',
+        listingStatus: map['listing_status'] as String? ?? 'draft',
+      );
+}
+
 class VisitOption {
   const VisitOption({
     required this.bookingId,
@@ -17,8 +39,7 @@ class VisitOption {
 
   factory VisitOption.fromMap(Map<String, dynamic> map) {
     final slot = (map['slot'] as Map).cast<String, dynamic>();
-    final attraction =
-    (slot['attraction'] as Map).cast<String, dynamic>();
+    final attraction = (slot['attraction'] as Map).cast<String, dynamic>();
 
     return VisitOption(
       bookingId: map['id'] as String,
@@ -26,9 +47,7 @@ class VisitOption {
       attractionId: attraction['id'] as String,
       attractionName: attraction['name'] as String,
       attractionAddress: attraction['address'] as String? ?? '',
-      startsAt: DateTime.parse(
-        slot['starts_at'] as String,
-      ).toLocal(),
+      startsAt: DateTime.parse(slot['starts_at'] as String).toLocal(),
     );
   }
 }
@@ -60,14 +79,13 @@ class FeedbackEntry {
 
   factory FeedbackEntry.fromMap(Map<String, dynamic> map) {
     final booking = (map['booking'] as Map?)?.cast<String, dynamic>();
-    final attraction =
-    (map['attraction'] as Map?)?.cast<String, dynamic>();
+    final attraction = (map['attraction'] as Map?)?.cast<String, dynamic>();
 
     return FeedbackEntry(
       id: map['id'] as String,
       bookingCode: booking?['booking_code'] as String? ?? '',
       attractionName:
-      attraction?['name'] as String? ?? 'Attraction unavailable',
+          attraction?['name'] as String? ?? 'Attraction unavailable',
       attractionAddress: attraction?['address'] as String? ?? '',
       coverImageUrl: attraction?['cover_image_url'] as String?,
       overallRating: (map['overall_rating'] as num).toInt(),
@@ -102,38 +120,24 @@ class OperatorFeedbackEntry {
   final String comment;
   final DateTime createdAt;
 
-  factory OperatorFeedbackEntry.fromMap(
-      Map<String, dynamic> map,
-      ) {
-    final tourist =
-    (map['tourist'] as Map?)?.cast<String, dynamic>();
+  factory OperatorFeedbackEntry.fromMap(Map<String, dynamic> map) {
+    final tourist = (map['tourist'] as Map?)?.cast<String, dynamic>();
 
-    final booking =
-    (map['booking'] as Map?)?.cast<String, dynamic>();
+    final booking = (map['booking'] as Map?)?.cast<String, dynamic>();
 
-    final attraction =
-    (map['attraction'] as Map?)?.cast<String, dynamic>();
+    final attraction = (map['attraction'] as Map?)?.cast<String, dynamic>();
 
     return OperatorFeedbackEntry(
       id: map['id'] as String,
-      touristName:
-      tourist?['full_name'] as String? ?? 'Tourist',
-      bookingCode:
-      booking?['booking_code'] as String? ?? '',
+      touristName: tourist?['full_name'] as String? ?? 'Tourist',
+      bookingCode: booking?['booking_code'] as String? ?? '',
       attractionName:
-      attraction?['name'] as String? ??
-          'Attraction unavailable',
-      overallRating:
-      (map['overall_rating'] as num).toInt(),
-      crowdComfort:
-      (map['crowd_comfort'] as num).toInt(),
-      tags: List<String>.from(
-        map['tags'] as List? ?? const [],
-      ),
+          attraction?['name'] as String? ?? 'Attraction unavailable',
+      overallRating: (map['overall_rating'] as num).toInt(),
+      crowdComfort: (map['crowd_comfort'] as num).toInt(),
+      tags: List<String>.from(map['tags'] as List? ?? const []),
       comment: map['comment'] as String? ?? '',
-      createdAt: DateTime.parse(
-        map['created_at'] as String,
-      ).toLocal(),
+      createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
     );
   }
 }
@@ -175,15 +179,10 @@ class IssueReport {
     description: map['description'] as String,
     priority: map['priority'] as String,
     status: map['status'] as String,
-    createdAt: DateTime.parse(
-      map['created_at'] as String,
-    ).toLocal(),
-    attractionName:
-    (map['attraction'] as Map?)?['name'] as String?,
-    resolutionNote:
-    map['resolution_note'] as String?,
-    evidencePath:
-    map['evidence_path'] as String?,
+    createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
+    attractionName: (map['attraction'] as Map?)?['name'] as String?,
+    resolutionNote: map['resolution_note'] as String?,
+    evidencePath: map['evidence_path'] as String?,
   );
 }
 
@@ -200,30 +199,17 @@ class VisitorTrendEntry {
   final int visitorCount;
   final DateTime checkedInAt;
 
-  factory VisitorTrendEntry.fromMap(
-      Map<String, dynamic> map,
-      ) {
-    final attraction =
-    (map['attraction'] as Map?)
-        ?.cast<String, dynamic>();
+  factory VisitorTrendEntry.fromMap(Map<String, dynamic> map) {
+    final attraction = (map['attraction'] as Map?)?.cast<String, dynamic>();
 
-    final booking =
-    (map['booking'] as Map?)
-        ?.cast<String, dynamic>();
+    final booking = (map['booking'] as Map?)?.cast<String, dynamic>();
 
     return VisitorTrendEntry(
-      attractionId:
-      attraction?['id'] as String? ?? '',
+      attractionId: attraction?['id'] as String? ?? '',
       attractionName:
-      attraction?['name'] as String? ??
-          'Attraction unavailable',
-      visitorCount:
-      (booking?['visitor_count'] as num?)
-          ?.toInt() ??
-          1,
-      checkedInAt: DateTime.parse(
-        map['checked_in_at'] as String,
-      ).toLocal(),
+          attraction?['name'] as String? ?? 'Attraction unavailable',
+      visitorCount: (booking?['visitor_count'] as num?)?.toInt() ?? 1,
+      checkedInAt: DateTime.parse(map['checked_in_at'] as String).toLocal(),
     );
   }
 }
@@ -245,39 +231,22 @@ class RevenueEntry {
   final double entrancePrice;
   final DateTime completedAt;
 
-  double get revenue =>
-      visitorCount * entrancePrice;
+  double get revenue => visitorCount * entrancePrice;
 
-  factory RevenueEntry.fromMap(
-      Map<String, dynamic> map,
-      ) {
-    final slot =
-    (map['slot'] as Map?)
-        ?.cast<String, dynamic>();
+  factory RevenueEntry.fromMap(Map<String, dynamic> map) {
+    final slot = (map['slot'] as Map?)?.cast<String, dynamic>();
 
-    final attraction =
-    (slot?['attraction'] as Map?)
-        ?.cast<String, dynamic>();
+    final attraction = (slot?['attraction'] as Map?)?.cast<String, dynamic>();
 
     return RevenueEntry(
       bookingId: map['id'] as String,
-      attractionId:
-      attraction?['id'] as String? ?? '',
+      attractionId: attraction?['id'] as String? ?? '',
       attractionName:
-      attraction?['name'] as String? ??
-          'Attraction unavailable',
-      visitorCount:
-      (map['visitor_count'] as num?)
-          ?.toInt() ??
-          0,
+          attraction?['name'] as String? ?? 'Attraction unavailable',
+      visitorCount: (map['visitor_count'] as num?)?.toInt() ?? 0,
       entrancePrice:
-      (attraction?['entrance_price_myr']
-      as num?)
-          ?.toDouble() ??
-          0.0,
-      completedAt: DateTime.parse(
-        map['completed_at'] as String,
-      ).toLocal(),
+          (attraction?['entrance_price_myr'] as num?)?.toDouble() ?? 0.0,
+      completedAt: DateTime.parse(map['completed_at'] as String).toLocal(),
     );
   }
 }

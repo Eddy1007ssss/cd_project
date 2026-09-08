@@ -9,8 +9,8 @@ const _visitSelection =
 
 abstract interface class StaffCheckInGateway {
   Future<StaffBookingVerification> verifyStaffBooking(
-      String bookingCodeOrToken,
-      );
+    String bookingCodeOrToken,
+  );
 
   Future<StaffBookingVerification> confirmStaffCheckIn(String bookingId);
 
@@ -19,7 +19,7 @@ abstract interface class StaffCheckInGateway {
 
 class EngagementRepository implements StaffCheckInGateway {
   EngagementRepository({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
 
@@ -29,6 +29,31 @@ class EngagementRepository implements StaffCheckInGateway {
       throw const AuthException('Please sign in to continue.');
     }
     return id;
+  }
+
+  Future<List<ManagedAttractionSummary>> fetchOperatorAttractions() async {
+    final memberships = await _client
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', _userId)
+        .eq('is_active', true);
+    final organizationIds = memberships
+        .map((row) => row['organization_id'] as String)
+        .toSet()
+        .toList();
+    if (organizationIds.isEmpty) return const [];
+
+    final rows = await _client
+        .from('attractions')
+        .select('id, name, location_name, listing_status')
+        .inFilter('organization_id', organizationIds)
+        .order('name', ascending: true);
+    return rows
+        .map(
+          (row) =>
+              ManagedAttractionSummary.fromMap(Map<String, dynamic>.from(row)),
+        )
+        .toList();
   }
 
   Future<List<VisitOption>> fetchCompletedVisitsWithoutFeedback() async {
@@ -44,9 +69,7 @@ class EngagementRepository implements StaffCheckInGateway {
         .select('booking_id')
         .eq('tourist_id', _userId);
 
-    final reviewed = feedback
-        .map((row) => row['booking_id'] as String)
-        .toSet();
+    final reviewed = feedback.map((row) => row['booking_id'] as String).toSet();
 
     return bookings
         .map(VisitOption.fromMap)
@@ -85,10 +108,10 @@ class EngagementRepository implements StaffCheckInGateway {
     final rows = await _client
         .from('feedback')
         .select(
-      'id, overall_rating, crowd_comfort, tags, comment, created_at, '
+          'id, overall_rating, crowd_comfort, tags, comment, created_at, '
           'booking:bookings(booking_code), '
           'attraction:attractions(name, address, cover_image_url)',
-    )
+        )
         .eq('tourist_id', _userId)
         .order('created_at', ascending: false);
 
@@ -103,9 +126,7 @@ class EngagementRepository implements StaffCheckInGateway {
         .eq('is_active', true);
 
     final organizationIds = memberships
-        .map(
-          (row) => row['organization_id'] as String,
-    )
+        .map((row) => row['organization_id'] as String)
         .toSet()
         .toList();
 
@@ -116,15 +137,10 @@ class EngagementRepository implements StaffCheckInGateway {
     final attractions = await _client
         .from('attractions')
         .select('id')
-        .inFilter(
-      'organization_id',
-      organizationIds,
-    );
+        .inFilter('organization_id', organizationIds);
 
     final attractionIds = attractions
-        .map(
-          (row) => row['id'] as String,
-    )
+        .map((row) => row['id'] as String)
         .toSet()
         .toList();
 
@@ -135,28 +151,19 @@ class EngagementRepository implements StaffCheckInGateway {
     final rows = await _client
         .from('feedback')
         .select(
-      'id, overall_rating, crowd_comfort, tags, '
+          'id, overall_rating, crowd_comfort, tags, '
           'comment, created_at, '
           'tourist:profiles(full_name), '
           'booking:bookings(booking_code), '
           'attraction:attractions(name)',
-    )
-        .inFilter(
-      'attraction_id',
-      attractionIds,
-    )
-        .order(
-      'created_at',
-      ascending: false,
-    );
+        )
+        .inFilter('attraction_id', attractionIds)
+        .order('created_at', ascending: false);
 
-    return rows
-        .map(OperatorFeedbackEntry.fromMap)
-        .toList();
+    return rows.map(OperatorFeedbackEntry.fromMap).toList();
   }
 
-  Future<List<VisitorTrendEntry>>
-  fetchOperatorVisitorTrends() async {
+  Future<List<VisitorTrendEntry>> fetchOperatorVisitorTrends() async {
     final memberships = await _client
         .from('organization_members')
         .select('organization_id')
@@ -164,9 +171,7 @@ class EngagementRepository implements StaffCheckInGateway {
         .eq('is_active', true);
 
     final organizationIds = memberships
-        .map(
-          (row) => row['organization_id'] as String,
-    )
+        .map((row) => row['organization_id'] as String)
         .toSet()
         .toList();
 
@@ -177,15 +182,10 @@ class EngagementRepository implements StaffCheckInGateway {
     final attractions = await _client
         .from('attractions')
         .select('id')
-        .inFilter(
-      'organization_id',
-      organizationIds,
-    );
+        .inFilter('organization_id', organizationIds);
 
     final attractionIds = attractions
-        .map(
-          (row) => row['id'] as String,
-    )
+        .map((row) => row['id'] as String)
         .toSet()
         .toList();
 
@@ -196,26 +196,17 @@ class EngagementRepository implements StaffCheckInGateway {
     final rows = await _client
         .from('attraction_check_ins')
         .select(
-      'checked_in_at, '
+          'checked_in_at, '
           'attraction:attractions(id, name), '
           'booking:bookings(visitor_count)',
-    )
-        .inFilter(
-      'attraction_id',
-      attractionIds,
-    )
-        .order(
-      'checked_in_at',
-      ascending: false,
-    );
+        )
+        .inFilter('attraction_id', attractionIds)
+        .order('checked_in_at', ascending: false);
 
-    return rows
-        .map(VisitorTrendEntry.fromMap)
-        .toList();
+    return rows.map(VisitorTrendEntry.fromMap).toList();
   }
 
-  Future<List<RevenueEntry>>
-  fetchOperatorRevenue() async {
+  Future<List<RevenueEntry>> fetchOperatorRevenue() async {
     final memberships = await _client
         .from('organization_members')
         .select('organization_id')
@@ -223,9 +214,7 @@ class EngagementRepository implements StaffCheckInGateway {
         .eq('is_active', true);
 
     final organizationIds = memberships
-        .map(
-          (row) => row['organization_id'] as String,
-    )
+        .map((row) => row['organization_id'] as String)
         .toSet()
         .toList();
 
@@ -236,15 +225,10 @@ class EngagementRepository implements StaffCheckInGateway {
     final attractions = await _client
         .from('attractions')
         .select('id')
-        .inFilter(
-      'organization_id',
-      organizationIds,
-    );
+        .inFilter('organization_id', organizationIds);
 
     final attractionIds = attractions
-        .map(
-          (row) => row['id'] as String,
-    )
+        .map((row) => row['id'] as String)
         .toSet()
         .toList();
 
@@ -255,17 +239,9 @@ class EngagementRepository implements StaffCheckInGateway {
     final slots = await _client
         .from('attraction_slots')
         .select('id')
-        .inFilter(
-      'attraction_id',
-      attractionIds,
-    );
+        .inFilter('attraction_id', attractionIds);
 
-    final slotIds = slots
-        .map(
-          (row) => row['id'] as String,
-    )
-        .toSet()
-        .toList();
+    final slotIds = slots.map((row) => row['id'] as String).toSet().toList();
 
     if (slotIds.isEmpty) {
       return const [];
@@ -274,26 +250,18 @@ class EngagementRepository implements StaffCheckInGateway {
     final rows = await _client
         .from('bookings')
         .select(
-      'id, visitor_count, completed_at, '
+          'id, visitor_count, completed_at, '
           'slot:attraction_slots('
           'attraction:attractions('
           'id, name, entrance_price_myr'
           '))',
-    )
+        )
         .eq('status', 'completed')
-        .inFilter(
-      'slot_id',
-      slotIds,
-    )
-        .order(
-      'completed_at',
-      ascending: false,
-    );
+        .inFilter('slot_id', slotIds)
+        .order('completed_at', ascending: false);
 
     return rows
-        .where(
-          (row) => row['completed_at'] != null,
-    )
+        .where((row) => row['completed_at'] != null)
         .map(RevenueEntry.fromMap)
         .toList();
   }
@@ -302,38 +270,29 @@ class EngagementRepository implements StaffCheckInGateway {
     required Uint8List bytes,
     required String extension,
   }) async {
-    final fileName =
-        '${DateTime.now().millisecondsSinceEpoch}.$extension';
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}.$extension';
 
     final filePath = '$_userId/$fileName';
 
     await _client.storage
         .from('issue-evidence')
         .uploadBinary(
-      filePath,
-      bytes,
-      fileOptions: const FileOptions(
-        upsert: false,
-      ),
-    );
+          filePath,
+          bytes,
+          fileOptions: const FileOptions(upsert: false),
+        );
 
     return filePath;
   }
 
-  Future<String?> createIssueEvidenceSignedUrl(
-      String? evidencePath,
-      ) async {
-    if (evidencePath == null ||
-        evidencePath.trim().isEmpty) {
+  Future<String?> createIssueEvidenceSignedUrl(String? evidencePath) async {
+    if (evidencePath == null || evidencePath.trim().isEmpty) {
       return null;
     }
 
     return _client.storage
         .from('issue-evidence')
-        .createSignedUrl(
-      evidencePath,
-      600,
-    );
+        .createSignedUrl(evidencePath, 600);
   }
 
   Future<void> submitIssue({
@@ -364,9 +323,7 @@ class EngagementRepository implements StaffCheckInGateway {
     return rows.map(IssueReport.fromMap).toList();
   }
 
-  Future<List<IssueReport>> fetchOperatorReports({
-    String? status,
-  }) async {
+  Future<List<IssueReport>> fetchOperatorReports({String? status}) async {
     final memberships = await _client
         .from('organization_members')
         .select('organization_id')
@@ -374,9 +331,7 @@ class EngagementRepository implements StaffCheckInGateway {
         .eq('is_active', true);
 
     final organizationIds = memberships
-        .map(
-          (row) => row['organization_id'] as String,
-    )
+        .map((row) => row['organization_id'] as String)
         .toSet()
         .toList();
 
@@ -387,15 +342,10 @@ class EngagementRepository implements StaffCheckInGateway {
     final attractions = await _client
         .from('attractions')
         .select('id')
-        .inFilter(
-      'organization_id',
-      organizationIds,
-    );
+        .inFilter('organization_id', organizationIds);
 
     final attractionIds = attractions
-        .map(
-          (row) => row['id'] as String,
-    )
+        .map((row) => row['id'] as String)
         .toSet()
         .toList();
 
@@ -405,48 +355,32 @@ class EngagementRepository implements StaffCheckInGateway {
 
     var query = _client
         .from('issue_reports')
-        .select(
-      '*, attraction:attractions(name)',
-    )
-        .inFilter(
-      'attraction_id',
-      attractionIds,
-    );
+        .select('*, attraction:attractions(name)')
+        .inFilter('attraction_id', attractionIds);
 
     if (status != null) {
-      query = query.eq(
-        'status',
-        status,
-      );
+      query = query.eq('status', status);
     }
 
-    final rows = await query.order(
-      'created_at',
-      ascending: false,
-    );
+    final rows = await query.order('created_at', ascending: false);
 
-    return rows
-        .map(IssueReport.fromMap)
-        .toList();
+    return rows.map(IssueReport.fromMap).toList();
   }
 
   Future<void> startReport(String reportId) async {
     await _client
         .from('issue_reports')
         .update({
-      'status': 'in_progress',
-      'updated_at': DateTime.now().toIso8601String(),
-    })
+          'status': 'in_progress',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
         .eq('id', reportId);
   }
 
   Future<void> resolveReport(String reportId, String note) async {
     await _client.rpc(
       'resolve_issue_report',
-      params: {
-        'target_report_id': reportId,
-        'note': note.trim(),
-      },
+      params: {'target_report_id': reportId, 'note': note.trim()},
     );
   }
 
@@ -536,27 +470,21 @@ class EngagementRepository implements StaffCheckInGateway {
 
   @override
   Future<StaffBookingVerification> verifyStaffBooking(
-      String bookingCodeOrToken,
-      ) async {
+    String bookingCodeOrToken,
+  ) async {
     final result = await _client.rpc(
       'verify_staff_booking',
-      params: {
-        'lookup_value': bookingCodeOrToken.trim(),
-      },
+      params: {'lookup_value': bookingCodeOrToken.trim()},
     );
 
     return StaffBookingVerification.fromMap(_rpcMap(result));
   }
 
   @override
-  Future<StaffBookingVerification> confirmStaffCheckIn(
-      String bookingId,
-      ) async {
+  Future<StaffBookingVerification> confirmStaffCheckIn(String bookingId) async {
     final result = await _client.rpc(
       'confirm_staff_check_in',
-      params: {
-        'target_booking_id': bookingId,
-      },
+      params: {'target_booking_id': bookingId},
     );
 
     return StaffBookingVerification.fromMap(_rpcMap(result));
@@ -564,13 +492,11 @@ class EngagementRepository implements StaffCheckInGateway {
 
   @override
   Future<StaffBookingVerification> confirmStaffCheckOut(
-      String bookingId,
-      ) async {
+    String bookingId,
+  ) async {
     final result = await _client.rpc(
       'confirm_staff_check_out',
-      params: {
-        'target_booking_id': bookingId,
-      },
+      params: {'target_booking_id': bookingId},
     );
 
     return StaffBookingVerification.fromMap(_rpcMap(result));

@@ -59,11 +59,11 @@ class _StaffSupportTicketDetailsPageState
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool showLoader = true}) async {
     final id = _arguments?.ticketId;
     if (id == null) return;
     setState(() {
-      _loading = true;
+      if (showLoader) _loading = true;
       _error = null;
     });
     try {
@@ -91,13 +91,10 @@ class _StaffSupportTicketDetailsPageState
     }
     setState(() => _saving = true);
     try {
-      final status = await _service.replyToTicket(
-        _arguments!.ticketId,
-        text,
-      );
+      final status = await _service.replyToTicket(_arguments!.ticketId, text);
       _responseController.clear();
       _status = status;
-      await _load();
+      await _load(showLoader: false);
       if (mounted) _snack('Response sent to the tourist.');
     } catch (error) {
       if (mounted) _snack(_message(error));
@@ -111,7 +108,7 @@ class _StaffSupportTicketDetailsPageState
     setState(() => _saving = true);
     try {
       await _service.updateTicketStatus(_arguments!.ticketId, _status);
-      await _load();
+      await _load(showLoader: false);
       if (mounted) _snack('Ticket status updated.');
     } catch (error) {
       if (mounted) _snack(_message(error));
@@ -132,8 +129,9 @@ class _StaffSupportTicketDetailsPageState
           ? 'TOURFLOW · OPERATOR'
           : 'TOURFLOW · STAFF',
       navigationRole: navigationRole,
-      selectedNavigationIndex:
-          navigationRole == TourFlowNavigationRole.administrator ? 2 : 0,
+      selectedNavigationIndex: navigationRole == TourFlowNavigationRole.staff
+          ? 0
+          : 3,
       actions: [
         IconButton(
           tooltip: 'Refresh',
@@ -305,18 +303,19 @@ class _StaffSupportTicketDetailsPageState
                   labelText: 'Ticket status',
                   border: OutlineInputBorder(),
                 ),
-                items: const {
-                  'pending': 'Pending',
-                  'in_progress': 'In Progress',
-                  'resolved': 'Resolved',
-                }.entries
-                    .map(
-                      (entry) => DropdownMenuItem(
-                        value: entry.key,
-                        child: Text(entry.value),
-                      ),
-                    )
-                    .toList(),
+                items:
+                    const {
+                          'pending': 'Pending',
+                          'in_progress': 'In Progress',
+                          'resolved': 'Resolved',
+                        }.entries
+                        .map(
+                          (entry) => DropdownMenuItem(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
                 onChanged: _saving
                     ? null
                     : (value) => setState(() => _status = value ?? _status),
@@ -348,7 +347,8 @@ class _StaffSupportTicketDetailsPageState
                 maxLength: 4000,
                 enabled: !_saving,
                 decoration: const InputDecoration(
-                  hintText: 'Write a clear response or request more information…',
+                  hintText:
+                      'Write a clear response or request more information…',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -412,9 +412,9 @@ class _StaffSupportTicketDetailsPageState
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
+import 'support_ticket_form_page.dart';
+import 'support_ticket_list_page.dart';
 
 class FeedbackCentrePage extends StatelessWidget {
   const FeedbackCentrePage({super.key});
@@ -61,10 +63,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'Submit Rating & Feedback',
             subtitle: 'Share your experience',
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/submit-feedback',
-              );
+              Navigator.pushNamed(context, '/submit-feedback');
             },
           ),
 
@@ -79,10 +78,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'My Feedback',
             subtitle: 'View your submitted ratings and feedback',
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/my-feedback',
-              );
+              Navigator.pushNamed(context, '/my-feedback');
             },
           ),
 
@@ -97,10 +93,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'Report Issue',
             subtitle: 'Let us know the problem',
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/report-issue',
-              );
+              Navigator.pushNamed(context, SupportTicketFormPage.routeName);
             },
           ),
 
@@ -115,10 +108,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'View Report Status',
             subtitle: 'Track your reports',
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/report-status',
-              );
+              Navigator.pushNamed(context, SupportTicketListPage.routeName);
             },
           ),
         ],
@@ -159,18 +149,12 @@ class _FeedbackMenuCard extends StatelessWidget {
 
           // 原本 vertical: 15
           // 改大一点
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 18,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
 
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(
-              color: const Color(0xFFDDE3EC),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFDDE3EC), width: 1),
           ),
 
           child: Row(

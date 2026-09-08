@@ -61,4 +61,16 @@ void main() {
       expect(languageCodeFromName(languageNameFromCode(code)), code);
     }
   });
+
+  test('chat booking visitor limit respects capacity and server maximum', () {
+    expect(chatBookingVisitorLimit(0), 0);
+    expect(chatBookingVisitorLimit(1), 1);
+    expect(chatBookingVisitorLimit(6), 6);
+    expect(chatBookingVisitorLimit(12), 6);
+  });
+
+  test('unknown support submission language remains visible to staff', () {
+    expect(supportTicketSubmissionLanguageLabel('French'), 'French');
+    expect(supportTicketSubmissionLanguageLabel(null), 'Unknown');
+  });
 }

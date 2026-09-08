@@ -129,8 +129,8 @@ class ChatBookingDraft {
 
   bool get canGoBack => switch (operation) {
     ChatBookingOperation.create => attractionId != null,
-    ChatBookingOperation.reschedule || ChatBookingOperation.cancel =>
-      bookingId != null,
+    ChatBookingOperation.reschedule ||
+    ChatBookingOperation.cancel => bookingId != null,
   };
 
   factory ChatBookingDraft.fromMap(Map<String, dynamic> map) {
@@ -165,11 +165,10 @@ class ChatBookingDraft {
   }
 }
 
-List<Map<String, dynamic>> _maps(Object? value) =>
-    (value as List? ?? const [])
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
+List<Map<String, dynamic>> _maps(Object? value) => (value as List? ?? const [])
+    .whereType<Map>()
+    .map((item) => Map<String, dynamic>.from(item))
+    .toList();
 
 String? _nullableString(Object? value) {
   final text = value?.toString().trim() ?? '';
@@ -185,4 +184,13 @@ int _intValue(Object? value) {
   if (value is int) return value;
   if (value is num) return value.toInt();
   return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+const int maxChatBookingVisitors = 6;
+
+int chatBookingVisitorLimit(int remainingCapacity) {
+  if (remainingCapacity <= 0) return 0;
+  return remainingCapacity < maxChatBookingVisitors
+      ? remainingCapacity
+      : maxChatBookingVisitors;
 }

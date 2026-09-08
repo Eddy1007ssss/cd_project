@@ -3,6 +3,8 @@ import 'package:cd_project/l10n/tourflow_localization.dart';
 
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
+import '../../widgets/navigation/navigation_logout.dart';
+import '../../widgets/navigation/user_sidebar.dart';
 
 class ItineraryPlannerPage extends StatefulWidget {
   const ItineraryPlannerPage({super.key});
@@ -32,18 +34,18 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
 
   Future<void> _save(ItineraryPlan plan) async {
     if (_title.text.trim().length < 2) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: TourFlowText('Enter an itinerary name.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: TourFlowText('Enter an itinerary name.')),
+      );
       return;
     }
     setState(() => _saving = true);
     try {
       await _repository.saveItinerary(title: _title.text, plan: plan);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: TourFlowText('Itinerary saved.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: TourFlowText('Itinerary saved.')),
+        );
       }
     } catch (error) {
       if (mounted) {
@@ -60,6 +62,12 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    drawer: UserSidebar(
+      displayName: 'Alex Tan',
+      email: 'alex@example.com',
+      selectedIndex: 5,
+      onLogout: () async => signOutAndReturnToSignIn(context),
+    ),
     appBar: AppBar(title: const TourFlowText('Itinerary Planner')),
     body: FutureBuilder<List<TourBooking>>(
       future: _bookings,

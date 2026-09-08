@@ -134,7 +134,19 @@ class AuthRepository implements ProfileSecurityGateway {
 
   @override
   Future<void> sendPasswordReset(String email) =>
-      _client.auth.resetPasswordForEmail(email.trim());
+      _client.auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: 'tourflow://auth/recovery',
+      );
+
+  Future<void> completePasswordRecovery(String newPassword) async {
+    if (newPassword.length < 8) {
+      throw const FormatException(
+        'The new password must contain at least 8 characters.',
+      );
+    }
+    await _client.auth.updateUser(UserAttributes(password: newPassword));
+  }
 
   Future<void> signOut() async {
     await _client.auth.signOut();

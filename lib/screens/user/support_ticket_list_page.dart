@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import '../../models/support_ticket_models.dart';
 import '../../services/support_ticket_service.dart';
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import 'support_ticket_details_page.dart';
 import 'support_ticket_form_page.dart';
 
 class SupportTicketListPage extends StatefulWidget {
   const SupportTicketListPage({super.key});
 
-  static const routeName = '/user/support-tickets';
+  static const routeName = TourFlowRoutes.supportTicketList;
 
   @override
   State<SupportTicketListPage> createState() => _SupportTicketListPageState();
@@ -64,6 +65,51 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
     if (mounted) await _load();
   }
 
+  Future<void> _deleteTicket(SupportTicket ticket) async {
+    if (ticket.status != 'pending') return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const TourFlowText('Delete pending ticket?'),
+        content: TourFlowText(
+          '${ticket.code} and its attachments will be permanently deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const TourFlowText('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const TourFlowText('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final result = await _service.deletePendingTicket(ticket.id);
+      if (!mounted) return;
+      setState(
+        () => _tickets = _tickets
+            .where((existing) => existing.id != ticket.id)
+            .toList(),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TourFlowText(
+            result.cleanupWarning ?? 'Support ticket deleted.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: TourFlowText(_message(error))));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final visible = _selectedStatus == 'all'
@@ -98,24 +144,25 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: const {
-                'all': 'All',
-                'pending': 'Pending',
-                'in_progress': 'In Progress',
-                'resolved': 'Resolved',
-              }.entries.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: TourFlowText(entry.value),
-                    selected: _selectedStatus == entry.key,
-                    onSelected: (_) =>
-                        setState(() => _selectedStatus = entry.key),
-                    selectedColor: TourFlowColors.primary,
-                    side: const BorderSide(color: TourFlowColors.border),
-                  ),
-                );
-              }).toList(),
+              children:
+                  const {
+                    'all': 'All',
+                    'pending': 'Pending',
+                    'in_progress': 'In Progress',
+                    'resolved': 'Resolved',
+                  }.entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: TourFlowText(entry.value),
+                        selected: _selectedStatus == entry.key,
+                        onSelected: (_) =>
+                            setState(() => _selectedStatus = entry.key),
+                        selectedColor: TourFlowColors.primary,
+                        side: const BorderSide(color: TourFlowColors.border),
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
           const SizedBox(height: 16),
@@ -184,6 +231,17 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
                                 ),
                               ),
                               _TicketStatusChip(status: ticket.status),
+                              if (ticket.status == 'pending') ...[
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  tooltip: context.tr('Delete ticket'),
+                                  onPressed: () => _deleteTicket(ticket),
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: TourFlowColors.danger,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                           const SizedBox(height: 9),

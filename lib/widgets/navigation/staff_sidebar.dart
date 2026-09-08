@@ -27,10 +27,10 @@ const List<TourFlowSidebarItem> operatorSidebarItems = [
   ),
 
   TourFlowSidebarItem(
-    label: 'Reports',
-    icon: Icons.report_outlined,
+    label: 'Support Tickets',
+    icon: Icons.support_agent_outlined,
     navigationIndex: 3,
-    routeName: TourFlowRoutes.operatorReports,
+    routeName: TourFlowRoutes.operatorSupportTickets,
   ),
 
   TourFlowSidebarItem(
@@ -44,14 +44,8 @@ const List<TourFlowSidebarItem> operatorSidebarItems = [
   TourFlowSidebarItem(
     label: 'Feedback',
     icon: Icons.rate_review_outlined,
-    navigationIndex: -1,
+    navigationIndex: 5,
     routeName: '/operator-feedback',
-  ),
-  TourFlowSidebarItem(
-    label: 'Support Tickets',
-    icon: Icons.support_agent_outlined,
-    navigationIndex: -1,
-    routeName: TourFlowRoutes.staffSupportTickets,
   ),
 ];
 

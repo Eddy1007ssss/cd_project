@@ -24,6 +24,9 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
   late Future<List<OperatorFeedbackEntry>> _feedback;
   late Future<List<VisitorTrendEntry>> _visitorTrends;
   late Future<List<RevenueEntry>> _revenue;
+  late Future<List<ManagedAttractionSummary>> _attractions;
+  String _attractionStatus = 'all';
+  bool _showAllAttractions = false;
 
   @override
   void initState() {
@@ -32,6 +35,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
     _feedback = _repository.fetchOperatorFeedback();
     _visitorTrends = _repository.fetchOperatorVisitorTrends();
     _revenue = _repository.fetchOperatorRevenue();
+    _attractions = _repository.fetchOperatorAttractions();
   }
 
   double _currentMonthRevenue(List<RevenueEntry> entries) {
@@ -42,20 +46,16 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
     return entries
         .where(
           (entry) =>
-      !entry.completedAt.isBefore(start) &&
-          entry.completedAt.isBefore(end),
-    )
+              !entry.completedAt.isBefore(start) &&
+              entry.completedAt.isBefore(end),
+        )
         .fold<double>(0.0, (sum, entry) => sum + entry.revenue);
   }
 
   double _previousMonthToDateRevenue(List<RevenueEntry> entries) {
     final now = DateTime.now();
 
-    final previousMonth = DateTime(
-      now.year,
-      now.month - 1,
-      1,
-    );
+    final previousMonth = DateTime(now.year, now.month - 1, 1);
 
     final daysInPreviousMonth = DateTime(
       previousMonth.year,
@@ -63,14 +63,11 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
       0,
     ).day;
 
-    final comparisonDay =
-    now.day > daysInPreviousMonth ? daysInPreviousMonth : now.day;
+    final comparisonDay = now.day > daysInPreviousMonth
+        ? daysInPreviousMonth
+        : now.day;
 
-    final start = DateTime(
-      previousMonth.year,
-      previousMonth.month,
-      1,
-    );
+    final start = DateTime(previousMonth.year, previousMonth.month, 1);
 
     final end = DateTime(
       previousMonth.year,
@@ -81,9 +78,9 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
     return entries
         .where(
           (entry) =>
-      !entry.completedAt.isBefore(start) &&
-          entry.completedAt.isBefore(end),
-    )
+              !entry.completedAt.isBefore(start) &&
+              entry.completedAt.isBefore(end),
+        )
         .fold<double>(0.0, (sum, entry) => sum + entry.revenue);
   }
 
@@ -119,7 +116,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
 
     final total = entries.fold<int>(
       0,
-          (sum, entry) => sum + entry.overallRating,
+      (sum, entry) => sum + entry.overallRating,
     );
 
     return total / entries.length;
@@ -131,9 +128,9 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
     return entries
         .where(
           (entry) =>
-      entry.checkedInAt.year == now.year &&
-          entry.checkedInAt.month == now.month,
-    )
+              entry.checkedInAt.year == now.year &&
+              entry.checkedInAt.month == now.month,
+        )
         .fold<int>(0, (sum, entry) => sum + entry.visitorCount);
   }
 
@@ -142,36 +139,20 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
   }
 
   Map<String, int> _buildDashboardVisitorTrend(
-      List<VisitorTrendEntry> entries,
-      ) {
+    List<VisitorTrendEntry> entries,
+  ) {
     final now = DateTime.now();
 
-    final today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    );
+    final today = DateTime(now.year, now.month, now.day);
 
-    final startDate = today.subtract(
-      const Duration(days: 6),
-    );
+    final startDate = today.subtract(const Duration(days: 6));
 
-    const dayNames = [
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat',
-      'Sun',
-    ];
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     final data = <String, int>{};
 
     for (var i = 0; i < 7; i++) {
-      final date = startDate.add(
-        Duration(days: i),
-      );
+      final date = startDate.add(Duration(days: i));
 
       final label = dayNames[date.weekday - 1];
 
@@ -200,35 +181,25 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
   int _last7DaysVisitors(List<VisitorTrendEntry> entries) {
     final now = DateTime.now();
 
-    final today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    );
+    final today = DateTime(now.year, now.month, now.day);
 
-    final startDate = today.subtract(
-      const Duration(days: 6),
-    );
+    final startDate = today.subtract(const Duration(days: 6));
 
-    return entries.where((entry) {
-      final date = DateTime(
-        entry.checkedInAt.year,
-        entry.checkedInAt.month,
-        entry.checkedInAt.day,
-      );
+    return entries
+        .where((entry) {
+          final date = DateTime(
+            entry.checkedInAt.year,
+            entry.checkedInAt.month,
+            entry.checkedInAt.day,
+          );
 
-      return !date.isBefore(startDate) && !date.isAfter(today);
-    }).fold<int>(
-      0,
-          (sum, entry) => sum + entry.visitorCount,
-    );
+          return !date.isBefore(startDate) && !date.isAfter(today);
+        })
+        .fold<int>(0, (sum, entry) => sum + entry.visitorCount);
   }
 
   Future<void> _openVisitorStatistics() async {
-    await Navigator.pushNamed(
-      context,
-      '/visitor-statistics',
-    );
+    await Navigator.pushNamed(context, '/visitor-statistics');
 
     if (!mounted) return;
 
@@ -248,9 +219,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
       actions: [
         IconButton(
           onPressed: () {},
-          icon: const Icon(
-            Icons.notifications_none_rounded,
-          ),
+          icon: const Icon(Icons.notifications_none_rounded),
         ),
       ],
       child: Column(
@@ -323,22 +292,16 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                   height: 112,
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/revenue-promotion',
-                      );
+                      Navigator.pushNamed(context, '/revenue-promotion');
                     },
                     child: FutureBuilder<List<RevenueEntry>>(
                       future: _revenue,
                       builder: (context, snapshot) {
-                        final entries =
-                            snapshot.data ?? const <RevenueEntry>[];
+                        final entries = snapshot.data ?? const <RevenueEntry>[];
 
-                        final revenue =
-                        _currentMonthRevenue(entries);
+                        final revenue = _currentMonthRevenue(entries);
 
-                        final note =
-                        _revenueChangeNote(entries);
+                        final note = _revenueChangeNote(entries);
 
                         return MetricCard(
                           label: 'Total Revenue',
@@ -361,14 +324,11 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                     future: _visitorTrends,
                     builder: (context, snapshot) {
                       final entries =
-                          snapshot.data ??
-                              const <VisitorTrendEntry>[];
+                          snapshot.data ?? const <VisitorTrendEntry>[];
 
-                      final total =
-                      _currentMonthVisitors(entries);
+                      final total = _currentMonthVisitors(entries);
 
-                      final note =
-                      _visitorChangeNote(entries);
+                      final note = _visitorChangeNote(entries);
 
                       return MetricCard(
                         label: 'Total Visitors',
@@ -392,34 +352,26 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                   height: 112,
                   child: GestureDetector(
                     onTap: () async {
-                      await Navigator.pushNamed(
-                        context,
-                        '/operator-feedback',
-                      );
+                      await Navigator.pushNamed(context, '/operator-feedback');
 
                       if (!mounted) return;
 
                       setState(() {
-                        _feedback =
-                            _repository.fetchOperatorFeedback();
+                        _feedback = _repository.fetchOperatorFeedback();
                       });
                     },
                     child: FutureBuilder<List<OperatorFeedbackEntry>>(
                       future: _feedback,
                       builder: (context, snapshot) {
-                        final entries =
-                            snapshot.data ?? const [];
+                        final entries = snapshot.data ?? const [];
 
-                        final average =
-                        _averageRating(entries);
+                        final average = _averageRating(entries);
 
                         return MetricCard(
                           label: 'Average Rating',
-                          value:
-                          '${average.toStringAsFixed(1)} / 5.0',
+                          value: '${average.toStringAsFixed(1)} / 5.0',
                           icon: Icons.star_outline_rounded,
-                          note:
-                          '${entries.length} tourist reviews',
+                          note: '${entries.length} tourist reviews',
                         );
                       },
                     ),
@@ -456,15 +408,12 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
           FutureBuilder<List<VisitorTrendEntry>>(
             future: _visitorTrends,
             builder: (context, snapshot) {
-              if (snapshot.connectionState !=
-                  ConnectionState.done &&
+              if (snapshot.connectionState != ConnectionState.done &&
                   !snapshot.hasData) {
                 return const ModuleCard(
                   child: SizedBox(
                     height: 125,
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                 );
               }
@@ -495,9 +444,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                                   .fetchOperatorVisitorTrends();
                             });
                           },
-                          child: const Text(
-                            'Try Again',
-                          ),
+                          child: const Text('Try Again'),
                         ),
                       ],
                     ),
@@ -505,46 +452,37 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                 );
               }
 
-              final entries =
-                  snapshot.data ??
-                      const <VisitorTrendEntry>[];
+              final entries = snapshot.data ?? const <VisitorTrendEntry>[];
 
-              final trend =
-              _buildDashboardVisitorTrend(entries);
+              final trend = _buildDashboardVisitorTrend(entries);
 
-              final sevenDayTotal =
-              _last7DaysVisitors(entries);
+              final sevenDayTotal = _last7DaysVisitors(entries);
 
               return GestureDetector(
                 onTap: _openVisitorStatistics,
                 child: ModuleCard(
                   child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           const Expanded(
                             child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Visitor Trends',
                                   style: TextStyle(
-                                    color:
-                                    TourFlowColors.heading,
+                                    color: TourFlowColors.heading,
                                     fontSize: 13,
-                                    fontWeight:
-                                    FontWeight.w800,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
                                 SizedBox(height: 3),
                                 Text(
                                   'Last 7 days',
                                   style: TextStyle(
-                                    color:
-                                    TourFlowColors.muted,
+                                    color: TourFlowColors.muted,
                                     fontSize: 9,
                                   ),
                                 ),
@@ -574,10 +512,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                         height: 105,
                         width: double.infinity,
                         child: CustomPaint(
-                          painter:
-                          _DashboardVisitorTrendPainter(
-                            data: trend,
-                          ),
+                          painter: _DashboardVisitorTrendPainter(data: trend),
                         ),
                       ),
 
@@ -587,8 +522,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                           child: Text(
                             'No check-ins recorded in the last 7 days.',
                             style: TextStyle(
-                              color:
-                              TourFlowColors.muted,
+                              color: TourFlowColors.muted,
                               fontSize: 9,
                             ),
                           ),
@@ -603,82 +537,134 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
 
           const SizedBox(height: 22),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SectionTitle(
-                'Your Attractions',
-              ),
-              TextButton(
-                onPressed: () {},
-                child: const Text('View all'),
-              ),
-            ],
-          ),
+          FutureBuilder<List<ManagedAttractionSummary>>(
+            future: _attractions,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const ModuleCard(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return ModuleCard(
+                  child: Column(
+                    children: [
+                      const Text('Could not load your attractions.'),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _attractions = _repository.fetchOperatorAttractions();
+                        }),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
-          const SizedBox(height: 10),
+              final attractions = snapshot.data ?? const [];
+              const statuses = [
+                'all',
+                'draft',
+                'pending',
+                'approved',
+                'rejected',
+                'suspended',
+              ];
+              final filtered = _attractionStatus == 'all'
+                  ? attractions
+                  : attractions
+                        .where(
+                          (item) => item.listingStatus == _attractionStatus,
+                        )
+                        .toList();
+              final visible = _showAllAttractions
+                  ? filtered
+                  : filtered.take(3).toList();
 
-          const Wrap(
-            spacing: 8,
-            children: [
-              StatusChip(
-                label: 'All (12)',
-                color: TourFlowColors.primaryText,
-              ),
-              StatusChip(
-                label: 'Draft (2)',
-                color: TourFlowColors.muted,
-              ),
-              StatusChip(
-                label: 'Pending (3)',
-                color: TourFlowColors.warning,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          _AttractionSummaryCard(
-            name: 'Old Town Square',
-            location: 'Kuala Lumpur City Centre',
-            visitors: '642 visitors today',
-            rating: '4.9',
-            status: 'ACTIVE',
-            statusColor: TourFlowColors.success,
-            icon: Icons.account_balance_rounded,
-            onTap: () {
-              selectNavigationTabOrPush(
-                context,
-                index: 1,
-                routeName: AttractionDetailsPage.routeName,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SectionTitle('Your Attractions'),
+                      if (filtered.length > 3)
+                        TextButton(
+                          onPressed: () => setState(
+                            () => _showAllAttractions = !_showAllAttractions,
+                          ),
+                          child: Text(
+                            _showAllAttractions ? 'Show less' : 'View all',
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: statuses
+                          .where((status) {
+                            return status == 'all' ||
+                                attractions.any(
+                                  (item) => item.listingStatus == status,
+                                );
+                          })
+                          .map((status) {
+                            final count = status == 'all'
+                                ? attractions.length
+                                : attractions
+                                      .where(
+                                        (item) => item.listingStatus == status,
+                                      )
+                                      .length;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text('${_title(status)} ($count)'),
+                                selected: _attractionStatus == status,
+                                onSelected: (_) => setState(() {
+                                  _attractionStatus = status;
+                                  _showAllAttractions = false;
+                                }),
+                              ),
+                            );
+                          })
+                          .toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  if (visible.isEmpty)
+                    const ModuleCard(
+                      child: Text('No attractions match this status.'),
+                    )
+                  else
+                    ...visible.map(
+                      (attraction) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _AttractionSummaryCard(
+                          name: attraction.name,
+                          location: attraction.locationName,
+                          visitors: attraction.listingStatus == 'approved'
+                              ? 'Published attraction'
+                              : 'Not yet published',
+                          rating: '—',
+                          status: attraction.listingStatus.toUpperCase(),
+                          statusColor: _listingStatusColor(
+                            attraction.listingStatus,
+                          ),
+                          icon: Icons.attractions_rounded,
+                          onTap: () => selectNavigationTabOrPush(
+                            context,
+                            index: 1,
+                            routeName: AttractionDetailsPage.routeName,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               );
             },
-          ),
-
-          const SizedBox(height: 12),
-
-          _AttractionSummaryCard(
-            name: 'Heritage Walking Tour',
-            location: 'Merdeka Square',
-            visitors: '124 visitors today',
-            rating: '4.8',
-            status: 'PENDING',
-            statusColor: TourFlowColors.warning,
-            icon: Icons.directions_walk_rounded,
-            onTap: () {},
-          ),
-
-          const SizedBox(height: 12),
-
-          _AttractionSummaryCard(
-            name: 'Lumina Botanical Gardens',
-            location: 'Perdana Botanical Gardens',
-            visitors: 'Not yet published',
-            rating: '—',
-            status: 'DRAFT',
-            statusColor: TourFlowColors.muted,
-            icon: Icons.local_florist_rounded,
-            onTap: () {},
           ),
 
           const SizedBox(height: 20),
@@ -703,18 +689,24 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
   }
 }
 
+String _title(String value) => value.isEmpty
+    ? value
+    : '${value[0].toUpperCase()}${value.substring(1).toLowerCase()}';
+
+Color _listingStatusColor(String status) => switch (status) {
+  'approved' => TourFlowColors.success,
+  'pending' => TourFlowColors.warning,
+  'rejected' || 'suspended' => TourFlowColors.danger,
+  _ => TourFlowColors.muted,
+};
+
 class _DashboardVisitorTrendPainter extends CustomPainter {
-  const _DashboardVisitorTrendPainter({
-    required this.data,
-  });
+  const _DashboardVisitorTrendPainter({required this.data});
 
   final Map<String, int> data;
 
   @override
-  void paint(
-      Canvas canvas,
-      Size size,
-      ) {
+  void paint(Canvas canvas, Size size) {
     final entries = data.entries.toList();
 
     if (entries.isEmpty) {
@@ -726,16 +718,13 @@ class _DashboardVisitorTrendPainter extends CustomPainter {
     const topPadding = 6.0;
     const bottomPadding = 22.0;
 
-    final chartWidth =
-        size.width - leftPadding - rightPadding;
+    final chartWidth = size.width - leftPadding - rightPadding;
 
-    final chartHeight =
-        size.height - topPadding - bottomPadding;
+    final chartHeight = size.height - topPadding - bottomPadding;
 
     final maxValue = entries.fold<int>(
       0,
-          (max, entry) =>
-      entry.value > max ? entry.value : max,
+      (max, entry) => entry.value > max ? entry.value : max,
     );
 
     final safeMax = maxValue == 0 ? 1 : maxValue;
@@ -756,8 +745,7 @@ class _DashboardVisitorTrendPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     for (var i = 0; i <= 3; i++) {
-      final y =
-          topPadding + chartHeight * i / 3;
+      final y = topPadding + chartHeight * i / 3;
 
       canvas.drawLine(
         Offset(leftPadding, y),
@@ -769,35 +757,23 @@ class _DashboardVisitorTrendPainter extends CustomPainter {
     final points = <Offset>[];
 
     for (var i = 0; i < entries.length; i++) {
-      final x =
-          leftPadding +
-              chartWidth * i / (entries.length - 1);
+      final x = leftPadding + chartWidth * i / (entries.length - 1);
 
-      final ratio =
-          entries[i].value / safeMax;
+      final ratio = entries[i].value / safeMax;
 
-      final y =
-          topPadding +
-              chartHeight * (1 - ratio);
+      final y = topPadding + chartHeight * (1 - ratio);
 
-      points.add(
-        Offset(x, y),
-      );
+      points.add(Offset(x, y));
     }
 
     if (points.length > 1) {
-      final path = Path()
-        ..moveTo(
-          points.first.dx,
-          points.first.dy,
-        );
+      final path = Path()..moveTo(points.first.dx, points.first.dy);
 
       for (var i = 1; i < points.length; i++) {
         final previous = points[i - 1];
         final current = points[i];
 
-        final controlX =
-            (previous.dx + current.dx) / 2;
+        final controlX = (previous.dx + current.dx) / 2;
 
         path.cubicTo(
           controlX,
@@ -809,19 +785,12 @@ class _DashboardVisitorTrendPainter extends CustomPainter {
         );
       }
 
-      canvas.drawPath(
-        path,
-        linePaint,
-      );
+      canvas.drawPath(path, linePaint);
     }
 
     for (var i = 0; i < points.length; i++) {
       if (entries[i].value > 0) {
-        canvas.drawCircle(
-          points[i],
-          3.5,
-          pointPaint,
-        );
+        canvas.drawCircle(points[i], 3.5, pointPaint);
       }
 
       final labelPainter = TextPainter(
@@ -847,9 +816,7 @@ class _DashboardVisitorTrendPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(
-      covariant _DashboardVisitorTrendPainter oldDelegate,
-      ) {
+  bool shouldRepaint(covariant _DashboardVisitorTrendPainter oldDelegate) {
     return oldDelegate.data != data;
   }
 }
@@ -893,19 +860,14 @@ class _AttractionSummaryCard extends StatelessWidget {
                   color: TourFlowColors.lavenderStrong,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: TourFlowColors.primaryText,
-                  size: 32,
-                ),
+                child: Icon(icon, color: TourFlowColors.primaryText, size: 32),
               ),
 
               const SizedBox(width: 12),
 
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
@@ -918,10 +880,7 @@ class _AttractionSummaryCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        StatusChip(
-                          label: status,
-                          color: statusColor,
-                        ),
+                        StatusChip(label: status, color: statusColor),
                       ],
                     ),
 

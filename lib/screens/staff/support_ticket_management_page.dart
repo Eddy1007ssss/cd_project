@@ -75,7 +75,8 @@ class _SupportTicketManagementPageState
     final visible = _tickets.where((ticket) {
       final statusMatches =
           _selectedStatus == 'all' || ticket.status == _selectedStatus;
-      final queryMatches = query.isEmpty ||
+      final queryMatches =
+          query.isEmpty ||
           ticket.code.toLowerCase().contains(query) ||
           ticket.subject.toLowerCase().contains(query) ||
           ticket.requesterName.toLowerCase().contains(query) ||
@@ -85,19 +86,22 @@ class _SupportTicketManagementPageState
     }).toList();
 
     final pending = _tickets.where((item) => item.status == 'pending').length;
-    final inProgress =
-        _tickets.where((item) => item.status == 'in_progress').length;
+    final inProgress = _tickets
+        .where((item) => item.status == 'in_progress')
+        .length;
     final resolved = _tickets.where((item) => item.status == 'resolved').length;
 
     return TourFlowPage(
       title: 'Support Tickets',
       role: widget.navigationRole == TourFlowNavigationRole.administrator
           ? 'TOURFLOW · ADMINISTRATOR'
+          : widget.navigationRole == TourFlowNavigationRole.operator
+          ? 'TOURFLOW · OPERATOR'
           : 'TOURFLOW · STAFF',
       navigationRole: widget.navigationRole,
       pageLevel: TourFlowPageLevel.topLevel,
       selectedNavigationIndex:
-          widget.navigationRole == TourFlowNavigationRole.administrator ? 2 : 0,
+          widget.navigationRole == TourFlowNavigationRole.staff ? 0 : 3,
       actions: [
         IconButton(
           tooltip: 'Refresh',
@@ -157,23 +161,24 @@ class _SupportTicketManagementPageState
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: const {
-                'all': 'All',
-                'pending': 'Pending',
-                'in_progress': 'In Progress',
-                'resolved': 'Resolved',
-              }.entries.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(entry.value),
-                    selected: _selectedStatus == entry.key,
-                    onSelected: (_) =>
-                        setState(() => _selectedStatus = entry.key),
-                    selectedColor: TourFlowColors.primary,
-                  ),
-                );
-              }).toList(),
+              children:
+                  const {
+                    'all': 'All',
+                    'pending': 'Pending',
+                    'in_progress': 'In Progress',
+                    'resolved': 'Resolved',
+                  }.entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(entry.value),
+                        selected: _selectedStatus == entry.key,
+                        onSelected: (_) =>
+                            setState(() => _selectedStatus = entry.key),
+                        selectedColor: TourFlowColors.primary,
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
           const SizedBox(height: 16),

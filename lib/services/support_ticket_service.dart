@@ -208,39 +208,43 @@ class SupportTicketService {
         .select(_ticketColumns)
         .eq('id', ticketId)
         .single();
-    final eventRows = await _client
-        .from('support_ticket_events')
-        .select(
-          'id, sequence_number, actor_name, actor_role, event_type, message, '
-          'from_status, to_status, created_at',
-        )
-        .eq('ticket_id', ticketId)
-        .order('sequence_number', ascending: true);
-    final attachmentRows = await _client
-        .from('support_ticket_attachments')
-        .select(
-          'id, storage_path, file_name, mime_type, size_bytes, created_at',
-        )
-        .eq('ticket_id', ticketId)
-        .order('created_at', ascending: true);
+    final relatedRows = await Future.wait([
+      _client
+          .from('support_ticket_events')
+          .select(
+            'id, sequence_number, actor_name, actor_role, event_type, message, '
+            'from_status, to_status, created_at',
+          )
+          .eq('ticket_id', ticketId)
+          .order('sequence_number', ascending: true),
+      _client
+          .from('support_ticket_attachments')
+          .select(
+            'id, storage_bucket, storage_path, file_name, mime_type, '
+            'size_bytes, created_at',
+          )
+          .eq('ticket_id', ticketId)
+          .order('created_at', ascending: true),
+    ]);
+    final eventRows = relatedRows[0];
+    final attachmentRows = relatedRows[1];
 
-    final attachments = <SupportTicketAttachment>[];
-    for (final raw in attachmentRows) {
+    final attachments = await Future.wait(attachmentRows.map((raw) async {
       final row = Map<String, dynamic>.from(raw);
+      final bucket = row['storage_bucket'] as String? ?? _bucket;
       final signedUrl = await _client.storage
-          .from(_bucket)
+          .from(bucket)
           .createSignedUrl(row['storage_path'] as String, 3600);
-      attachments.add(
-        SupportTicketAttachment(
-          id: row['id'] as String,
-          fileName: row['file_name'] as String,
-          mimeType: row['mime_type'] as String,
-          sizeBytes: (row['size_bytes'] as num).toInt(),
-          createdAt: DateTime.parse(row['created_at'] as String).toLocal(),
-          signedUrl: signedUrl,
-        ),
+      return SupportTicketAttachment(
+        id: row['id'] as String,
+        fileName: row['file_name'] as String,
+        mimeType: row['mime_type'] as String,
+        sizeBytes: (row['size_bytes'] as num).toInt(),
+        createdAt: DateTime.parse(row['created_at'] as String).toLocal(),
+        signedUrl: signedUrl,
+        storageBucket: bucket,
       );
-    }
+    }));
 
     return SupportTicketDetailsData(
       ticket: SupportTicket.fromMap(Map<String, dynamic>.from(ticketRow)),
@@ -268,6 +272,38 @@ class SupportTicketService {
       'update_support_ticket_status',
       params: {'p_ticket_id': ticketId, 'p_status': status},
     );
+  }
+
+  Future<TicketDeletionResult> deletePendingTicket(String ticketId) async {
+    final result = await _client.rpc(
+      'delete_my_pending_support_ticket',
+      params: {'p_ticket_id': ticketId},
+    );
+    final row = _rpcRow(result);
+    final objects = (row['storage_objects'] as List? ?? const [])
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+    try {
+      final grouped = <String, List<String>>{};
+      for (final object in objects) {
+        final bucket = object['bucket']?.toString();
+        final path = object['path']?.toString();
+        if (bucket == null || path == null) continue;
+        grouped.putIfAbsent(bucket, () => <String>[]).add(path);
+      }
+      await Future.wait(
+        grouped.entries.map(
+          (entry) => _client.storage.from(entry.key).remove(entry.value),
+        ),
+      );
+      return const TicketDeletionResult();
+    } catch (error) {
+      return TicketDeletionResult(
+        cleanupWarning: 'The ticket was deleted, but an attachment could not '
+            'be removed: ${_message(error)}',
+      );
+    }
   }
 
   List<SupportTicket> _ticketList(List<dynamic> rows) => rows

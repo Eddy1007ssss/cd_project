@@ -5,13 +5,14 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../models/support_ticket_models.dart';
 import '../../services/support_ticket_service.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 import '../../widgets/tourflow_widgets.dart';
 import 'support_ticket_list_page.dart';
 
 class SupportTicketFormPage extends StatefulWidget {
   const SupportTicketFormPage({super.key});
 
-  static const routeName = '/user/support-ticket/new';
+  static const routeName = TourFlowRoutes.supportTicketForm;
 
   @override
   State<SupportTicketFormPage> createState() => _SupportTicketFormPageState();
@@ -184,13 +185,18 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
               child: Column(
                 children: [
                   TourFlowText(_error!, textAlign: TextAlign.center),
-                  TextButton(onPressed: _loadOptions, child: const TourFlowText('Retry')),
+                  TextButton(
+                    onPressed: _loadOptions,
+                    child: const TourFlowText('Retry'),
+                  ),
                 ],
               ),
             )
           : _attractions.isEmpty
           ? const ModuleCard(
-              child: TourFlowText('No approved attraction is available for a ticket.'),
+              child: TourFlowText(
+                'No approved attraction is available for a ticket.',
+              ),
             )
           : Form(
               key: _formKey,
@@ -219,8 +225,9 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                               .toList(),
                           onChanged: _saving
                               ? null
-                              : (value) =>
-                                    setState(() => _category = value ?? _category),
+                              : (value) => setState(
+                                  () => _category = value ?? _category,
+                                ),
                         ),
                         const SizedBox(height: 14),
                         DropdownButtonFormField<String>(
@@ -260,7 +267,9 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                             ..._bookings.map(
                               (item) => DropdownMenuItem(
                                 value: item.id,
-                                child: TourFlowText('${item.code} · ${item.attractionName}'),
+                                child: TourFlowText(
+                                  '${item.code} · ${item.attractionName}',
+                                ),
                               ),
                             ),
                           ],
@@ -281,7 +290,8 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                           controller: _subjectController,
                           maxLength: 160,
                           decoration: _decoration('Subject'),
-                          validator: (value) => value == null || value.trim().length < 5
+                          validator: (value) =>
+                              value == null || value.trim().length < 5
                               ? 'Enter at least 5 characters.'
                               : null,
                         ),
@@ -292,7 +302,8 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                           maxLines: 7,
                           maxLength: 4000,
                           decoration: _decoration('Complaint details'),
-                          validator: (value) => value == null || value.trim().length < 10
+                          validator: (value) =>
+                              value == null || value.trim().length < 10
                               ? 'Enter at least 10 characters.'
                               : null,
                         ),
@@ -302,9 +313,13 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: _saving ? null : _pickPhoto,
-                                icon: const Icon(Icons.add_photo_alternate_outlined),
+                                icon: const Icon(
+                                  Icons.add_photo_alternate_outlined,
+                                ),
                                 label: TourFlowText(
-                                  _photo == null ? 'Add Photo (optional)' : 'Change Photo',
+                                  _photo == null
+                                      ? 'Add Photo (optional)'
+                                      : 'Change Photo',
                                 ),
                               ),
                             ),
@@ -346,7 +361,9 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.send_rounded),
-                      label: TourFlowText(_saving ? 'Submitting…' : 'Submit Support Ticket'),
+                      label: TourFlowText(
+                        _saving ? 'Submitting…' : 'Submit Support Ticket',
+                      ),
                     ),
                   ),
                 ],
@@ -362,19 +379,18 @@ class _SupportTicketFormPageState extends State<SupportTicketFormPage> {
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
   );
 
-  String _mimeType(String fileName) => switch (
-    fileName.toLowerCase().split('.').last
-  ) {
-    'jpg' || 'jpeg' => 'image/jpeg',
-    'png' => 'image/png',
-    'webp' => 'image/webp',
-    _ => 'application/octet-stream',
-  };
+  String _mimeType(String fileName) =>
+      switch (fileName.toLowerCase().split('.').last) {
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        _ => 'application/octet-stream',
+      };
 
   void _snack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: TourFlowText(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: TourFlowText(message)));
   }
 }
 

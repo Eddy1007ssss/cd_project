@@ -18,7 +18,6 @@ import '../../widgets/tourflow_widgets.dart';
 import 'attraction_discovery_page.dart';
 import 'chat_history_page.dart';
 import 'language_settings_page.dart';
-import 'support_ticket_form_page.dart';
 import 'support_ticket_list_page.dart';
 
 class ChatSupportPage extends StatefulWidget {
@@ -1447,24 +1446,6 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                           onBrowse: () => Navigator.pushNamed(
                             context,
                             AttractionDiscoveryPage.routeName,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        OutlinedButton.icon(
-                          onPressed: () => Navigator.pushNamed(
-                            context,
-                            SupportTicketFormPage.routeName,
-                          ),
-                          icon: const Icon(Icons.contact_support_outlined),
-                          label: const TourFlowText(
-                            'Still need help? Create a support ticket',
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: TourFlowColors.primaryText,
-                            side: const BorderSide(
-                              color: TourFlowColors.border,
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 13),
                           ),
                         ),
                       ],

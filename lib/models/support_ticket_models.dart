@@ -82,23 +82,19 @@ class ComplaintDraft {
           _nullableString(map['baseDescription']) ??
           _nullableString(map['description']),
       additionalDetails: _nullableString(map['additionalDetails']),
-      additionalDetailsComplete:
-          map['additionalDetailsComplete'] is bool
+      additionalDetailsComplete: map['additionalDetailsComplete'] is bool
           ? map['additionalDetailsComplete'] as bool
           : _nullableString(map['description']) != null,
       description: _nullableString(map['description']),
-      wantsPhoto: map['wantsPhoto'] is bool
-          ? map['wantsPhoto'] as bool
-          : null,
+      wantsPhoto: map['wantsPhoto'] is bool ? map['wantsPhoto'] as bool : null,
       missingFields: (map['missingFields'] as List? ?? const [])
           .map((item) => item.toString())
           .toList(),
       bookingOptions: (options as List? ?? const [])
           .whereType<Map>()
           .map(
-            (item) => ComplaintBookingOption.fromMap(
-              Map<String, dynamic>.from(item),
-            ),
+            (item) =>
+                ComplaintBookingOption.fromMap(Map<String, dynamic>.from(item)),
           )
           .toList(),
     );
@@ -279,6 +275,7 @@ class SupportTicketAttachment {
     required this.sizeBytes,
     required this.createdAt,
     required this.signedUrl,
+    this.storageBucket = 'support-ticket-attachments',
   });
 
   final String id;
@@ -287,6 +284,7 @@ class SupportTicketAttachment {
   final int sizeBytes;
   final DateTime createdAt;
   final String signedUrl;
+  final String storageBucket;
 }
 
 class SupportTicketDetailsData {
@@ -317,6 +315,12 @@ class TicketCreationResult {
   final String? attachmentWarning;
 }
 
+class TicketDeletionResult {
+  const TicketDeletionResult({this.cleanupWarning});
+
+  final String? cleanupWarning;
+}
+
 String supportTicketCategoryLabel(String? value) => switch (value) {
   'overcrowding' => 'Overcrowding',
   'facility_damage' => 'Facility Damage',
@@ -331,17 +335,22 @@ String supportTicketStatusLabel(String? value) => switch (value) {
   _ => 'Pending',
 };
 
-String supportTicketSubmissionLanguageLabel(String? value) => switch (
-  value?.trim().toLowerCase()
-) {
-  'en' || 'english' => 'English',
-  'ms' || 'bm' || 'bahasa malaysia' => 'Bahasa Malaysia',
-  'zh' || 'zh-cn' || 'mandarin' || 'chinese' || '中文' || '简体中文' =>
-    '中文 (Mandarin)',
-  'ja' || 'jp' || 'japanese' || '日本語' => '日本語 (Japanese)',
-  'ko' || 'kr' || 'korean' || '한국어' => '한국어 (Korean)',
-  _ => 'Unknown',
-};
+String supportTicketSubmissionLanguageLabel(String? value) {
+  final normalized = value?.trim().toLowerCase();
+  return switch (normalized) {
+    'en' || 'english' => 'English',
+    'ms' || 'bm' || 'bahasa malaysia' => 'Bahasa Malaysia',
+    'zh' ||
+    'zh-cn' ||
+    'mandarin' ||
+    'chinese' ||
+    '中文' ||
+    '简体中文' => '中文 (Mandarin)',
+    'ja' || 'jp' || 'japanese' || '日本語' => '日本語 (Japanese)',
+    'ko' || 'kr' || 'korean' || '한국어' => '한국어 (Korean)',
+    _ => value?.trim().isNotEmpty == true ? value!.trim() : 'Unknown',
+  };
+}
 
 String _titleCase(String value) {
   if (value.isEmpty) return value;
@@ -355,5 +364,7 @@ String? _nullableString(Object? value) {
 
 DateTime? _optionalDateTime(Object? value) {
   final text = value?.toString();
-  return text == null || text.isEmpty ? null : DateTime.tryParse(text)?.toLocal();
+  return text == null || text.isEmpty
+      ? null
+      : DateTime.tryParse(text)?.toLocal();
 }

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../screens/staff/attraction_details_page.dart';
 import '../../screens/staff/operator_dashboard_page.dart';
-import '../../screens/staff/operator_report_queue_page.dart';
+import '../../screens/staff/support_ticket_management_page.dart';
 import '../../screens/staff/slot_manager_page.dart';
 import '../../screens/staff/visitor_statistics_page.dart';
+import '../tourflow_widgets.dart';
 import 'persistent_navigation_shell.dart';
 import 'staff_bottom_navigation_bar.dart';
 
@@ -22,7 +23,9 @@ class OperatorNavigationShell extends StatelessWidget {
         (_) => const OperatorDashboardPage(),
         (_) => const AttractionDetailsPage(),
         (_) => const SlotManagerPage(),
-        (_) => const OperatorReportQueuePage(),
+        (_) => const SupportTicketManagementPage(
+          navigationRole: TourFlowNavigationRole.operator,
+        ),
         (_) => const VisitorStatisticsPage(),
       ],
       bottomBarBuilder: (_, selectedIndex, onItemSelected) =>

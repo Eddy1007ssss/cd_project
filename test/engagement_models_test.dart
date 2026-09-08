@@ -85,4 +85,16 @@ void main() {
     expect(valid.canCheckIn, isTrue);
     expect(used.canCheckIn, isFalse);
   });
+
+  test('managed attraction summary preserves database listing status', () {
+    final attraction = ManagedAttractionSummary.fromMap(const {
+      'id': 'attraction-1',
+      'name': 'National Museum',
+      'location_name': 'Kuala Lumpur',
+      'listing_status': 'pending',
+    });
+
+    expect(attraction.name, 'National Museum');
+    expect(attraction.listingStatus, 'pending');
+  });
 }

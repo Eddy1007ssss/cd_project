@@ -68,6 +68,48 @@ class _SupportTicketDetailsPageState extends State<SupportTicketDetailsPage> {
     }
   }
 
+  Future<void> _delete() async {
+    final details = _details;
+    final id = _ticketId;
+    if (details?.ticket.status != 'pending' || id == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const TourFlowText('Delete pending ticket?'),
+        content: const TourFlowText(
+          'This ticket and its attachments will be permanently deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const TourFlowText('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const TourFlowText('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final result = await _service.deletePendingTicket(id);
+      if (!mounted) return;
+      if (result.cleanupWarning != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: TourFlowText(result.cleanupWarning!)));
+      }
+      Navigator.pop(context, true);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: TourFlowText(_message(error))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return TourFlowPage(
@@ -75,6 +117,12 @@ class _SupportTicketDetailsPageState extends State<SupportTicketDetailsPage> {
       role: 'TOURFLOW · TOURIST',
       selectedNavigationIndex: 3,
       actions: [
+        if (_details?.ticket.status == 'pending')
+          IconButton(
+            tooltip: context.tr('Delete ticket'),
+            onPressed: _loading ? null : _delete,
+            icon: const Icon(Icons.delete_outline_rounded),
+          ),
         IconButton(
           tooltip: context.tr('Refresh'),
           onPressed: _loading ? null : _load,
@@ -136,9 +184,15 @@ class _TicketDetailsBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              _Metadata(icon: Icons.attractions_outlined, text: ticket.attractionName),
+              _Metadata(
+                icon: Icons.attractions_outlined,
+                text: ticket.attractionName,
+              ),
               const SizedBox(height: 7),
-              _Metadata(icon: Icons.category_outlined, text: ticket.categoryLabel),
+              _Metadata(
+                icon: Icons.category_outlined,
+                text: ticket.categoryLabel,
+              ),
               if (ticket.bookingCode != null) ...[
                 const SizedBox(height: 7),
                 _Metadata(
@@ -205,15 +259,16 @@ class _TicketDetailsBody extends StatelessWidget {
         const SizedBox(height: 16),
         const SectionTitle(
           'Complete processing history',
-          subtitle: 'Status changes and staff responses are shown in time order.',
+          subtitle:
+              'Status changes and staff responses are shown in time order.',
         ),
         const SizedBox(height: 10),
         if (details.events.isEmpty)
-          const ModuleCard(child: TourFlowText('No activity has been recorded yet.'))
+          const ModuleCard(
+            child: TourFlowText('No activity has been recorded yet.'),
+          )
         else
-          ...details.events.map(
-            (event) => _TimelineEvent(event: event),
-          ),
+          ...details.events.map((event) => _TimelineEvent(event: event)),
       ],
     );
   }
