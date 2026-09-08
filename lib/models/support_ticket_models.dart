@@ -57,6 +57,7 @@ class ComplaintDraft {
 
   bool get readyForConfirmation => missingFields.isEmpty;
   bool get requiresPhoto => wantsPhoto == true;
+  bool get canGoBack => attractionId != null;
 
   String get categoryLabel => supportTicketCategoryLabel(category);
 

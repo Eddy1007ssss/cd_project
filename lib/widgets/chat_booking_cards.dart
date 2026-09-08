@@ -54,6 +54,30 @@ class ChatBookingCopy {
     korean: '관광지 선택',
   );
 
+  String get searchAttractions => _text(
+    english: 'Search attractions',
+    mandarin: '搜索景点',
+    malay: 'Cari tarikan',
+    japanese: '観光地を検索',
+    korean: '관광지 검색',
+  );
+
+  String get noMatchingAttractions => _text(
+    english: 'No attraction matches your search.',
+    mandarin: '找不到符合搜索条件的景点。',
+    malay: 'Tiada tarikan sepadan dengan carian anda.',
+    japanese: '検索条件に一致する観光地がありません。',
+    korean: '검색과 일치하는 관광지가 없습니다.',
+  );
+
+  String get noBookableSlots => _text(
+    english: 'No available future time slots',
+    mandarin: '暂无可预订的未来时段',
+    malay: 'Tiada slot masa hadapan yang tersedia',
+    japanese: '予約可能な今後の時間枠はありません',
+    korean: '예약 가능한 향후 시간대가 없습니다',
+  );
+
   String get chooseBooking => _text(
     english: 'Choose your booking',
     mandarin: '选择你的 Booking',
@@ -78,6 +102,22 @@ class ChatBookingCopy {
     korean: '방문 인원 선택',
   );
 
+  String selectedVisitorCount(int count) => _text(
+    english: '$count ${count == 1 ? 'visitor' : 'visitors'} selected',
+    mandarin: '已选择 $count 位游客',
+    malay: '$count pelawat dipilih',
+    japanese: '$count 名を選択中',
+    korean: '$count명 선택됨',
+  );
+
+  String get confirmVisitorCount => _text(
+    english: 'Confirm visitors',
+    mandarin: '确认人数',
+    malay: 'Sahkan pelawat',
+    japanese: '人数を確定',
+    korean: '인원 확인',
+  );
+
   String get noAvailableAttractions => _text(
     english: 'No approved attraction currently has an available future slot.',
     mandarin: '目前没有已审核景点提供可预订的未来时段。',
@@ -100,6 +140,14 @@ class ChatBookingCopy {
     malay: 'Tiada slot masa hadapan yang sesuai. Pilih tarikan lain atau cuba lagi nanti.',
     japanese: '利用可能な時間枠がありません。別の観光地を選ぶか、後でもう一度お試しください。',
     korean: '이용 가능한 시간대가 없습니다. 다른 관광지를 선택하거나 나중에 다시 시도하세요.',
+  );
+
+  String get noRemainingSpaces => _text(
+    english: 'This time slot no longer has any spaces available. Please choose another time slot.',
+    mandarin: '这个时段已经没有剩余位置，请选择其他时段。',
+    malay: 'Slot masa ini sudah tiada tempat kosong. Sila pilih slot masa lain.',
+    japanese: 'この時間枠には空きがありません。別の時間枠を選択してください。',
+    korean: '이 시간대에는 남은 자리가 없습니다. 다른 시간대를 선택해 주세요.',
   );
 
   String get availableSpaces => _text(
@@ -270,6 +318,22 @@ class ChatBookingCopy {
     korean: '이 예약 작업 다시 시작',
   );
 
+  String get previousStep => _text(
+    english: 'Back',
+    mandarin: '返回上一步',
+    malay: 'Kembali',
+    japanese: '前のステップ',
+    korean: '이전 단계',
+  );
+
+  String get backMessage => _text(
+    english: 'Go back to the previous booking step',
+    mandarin: '返回上一个预订步骤',
+    malay: 'Kembali ke langkah tempahan sebelumnya',
+    japanese: '前の予約ステップに戻る',
+    korean: '이전 예약 단계로 돌아가기',
+  );
+
   String get stopMessage => _text(
     english: 'Stop this booking action',
     mandarin: '停止这个预订操作',
@@ -314,6 +378,7 @@ class ChatBookingGuideCard extends StatelessWidget {
     required this.onSelectBooking,
     required this.onSelectSlot,
     required this.onSelectVisitors,
+    required this.onBack,
     required this.onRestart,
     required this.onCancel,
     super.key,
@@ -326,6 +391,7 @@ class ChatBookingGuideCard extends StatelessWidget {
   final ValueChanged<ChatBookingOption> onSelectBooking;
   final ValueChanged<ChatBookingSlotOption> onSelectSlot;
   final ValueChanged<int> onSelectVisitors;
+  final VoidCallback onBack;
   final VoidCallback onRestart;
   final VoidCallback onCancel;
 
@@ -366,6 +432,12 @@ class ChatBookingGuideCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
+                if (draft.canGoBack)
+                  TextButton.icon(
+                    onPressed: isBusy ? null : onBack,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: Text(copy.previousStep),
+                  ),
                 TextButton.icon(
                   onPressed: isBusy ? null : onRestart,
                   icon: const Icon(Icons.restart_alt_rounded),
@@ -397,16 +469,14 @@ class ChatBookingGuideCard extends StatelessWidget {
       if (draft.attractionOptions.isEmpty) {
         return _EmptyState(copy.noAvailableAttractions);
       }
-      return Column(
-        children: draft.attractionOptions
-            .map(
-              (option) => _ChoiceTile(
-                icon: Icons.place_outlined,
-                title: option.name,
-                onTap: isBusy ? null : () => onSelectAttraction(option),
-              ),
-            )
-            .toList(),
+      return _BookingAttractionPicker(
+        key: ValueKey(
+          'booking-attractions-${draft.attractionOptions.length}',
+        ),
+        options: draft.attractionOptions,
+        copy: copy,
+        isBusy: isBusy,
+        onSelect: onSelectAttraction,
       );
     }
     if (field == 'booking') {
@@ -449,26 +519,224 @@ class ChatBookingGuideCard extends StatelessWidget {
       final selectedSlot = draft.slotOptions
           .where((option) => option.id == draft.slotId)
           .firstOrNull;
-      final maximum = (selectedSlot?.remainingCapacity ?? 10)
-          .clamp(1, 10)
-          .toInt();
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: List.generate(
-          maximum,
-          (index) {
-            final count = index + 1;
-            return ChoiceChip(
-              selected: draft.visitorCount == count,
-              onSelected: isBusy ? null : (_) => onSelectVisitors(count),
-              label: Text('$count'),
-            );
-          },
-        ),
+      final maximum = selectedSlot?.remainingCapacity ?? 0;
+      if (maximum < 1) {
+        return _EmptyState(copy.noRemainingSpaces);
+      }
+      return _VisitorCountSlider(
+        key: ValueKey('booking-visitors-${draft.slotId}-$maximum'),
+        maximum: maximum,
+        initialValue: draft.visitorCount ?? 1,
+        copy: copy,
+        isBusy: isBusy,
+        onConfirm: onSelectVisitors,
       );
     }
     return const SizedBox.shrink();
+  }
+}
+
+class _BookingAttractionPicker extends StatefulWidget {
+  const _BookingAttractionPicker({
+    required this.options,
+    required this.copy,
+    required this.isBusy,
+    required this.onSelect,
+    super.key,
+  });
+
+  final List<ChatBookingAttractionOption> options;
+  final ChatBookingCopy copy;
+  final bool isBusy;
+  final ValueChanged<ChatBookingAttractionOption> onSelect;
+
+  @override
+  State<_BookingAttractionPicker> createState() =>
+      _BookingAttractionPickerState();
+}
+
+class _BookingAttractionPickerState extends State<_BookingAttractionPicker> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedQuery = _query.trim().toLowerCase();
+    final filtered = normalizedQuery.isEmpty
+        ? widget.options
+        : widget.options
+              .where(
+                (option) => option.name.toLowerCase().contains(normalizedQuery),
+              )
+              .toList();
+
+    return Column(
+      children: [
+        TextField(
+          enabled: !widget.isBusy,
+          onChanged: (value) => setState(() => _query = value),
+          decoration: InputDecoration(
+            hintText: widget.copy.searchAttractions,
+            prefixIcon: const Icon(Icons.search_rounded),
+            isDense: true,
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: TourFlowColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: TourFlowColors.border),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (filtered.isEmpty)
+          _EmptyState(widget.copy.noMatchingAttractions)
+        else
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 420),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final option = filtered[index];
+                return _ChoiceTile(
+                  icon: option.isBookable
+                      ? Icons.place_outlined
+                      : Icons.event_busy_outlined,
+                  title: option.name,
+                  subtitle: option.isBookable
+                      ? null
+                      : widget.copy.noBookableSlots,
+                  onTap: widget.isBusy || !option.isBookable
+                      ? null
+                      : () => widget.onSelect(option),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _VisitorCountSlider extends StatefulWidget {
+  const _VisitorCountSlider({
+    required this.maximum,
+    required this.initialValue,
+    required this.copy,
+    required this.isBusy,
+    required this.onConfirm,
+    super.key,
+  });
+
+  final int maximum;
+  final int initialValue;
+  final ChatBookingCopy copy;
+  final bool isBusy;
+  final ValueChanged<int> onConfirm;
+
+  @override
+  State<_VisitorCountSlider> createState() => _VisitorCountSliderState();
+}
+
+class _VisitorCountSliderState extends State<_VisitorCountSlider> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.initialValue.clamp(1, widget.maximum).toInt();
+  }
+
+  @override
+  void didUpdateWidget(covariant _VisitorCountSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.maximum != widget.maximum ||
+        oldWidget.initialValue != widget.initialValue) {
+      _value = widget.initialValue.clamp(1, widget.maximum).toInt();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canSlide = widget.maximum > 1;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF8ED),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: TourFlowColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFE2A8),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '$_value',
+                  style: const TextStyle(
+                    color: TourFlowColors.heading,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.copy.selectedVisitorCount(_value),
+                  style: const TextStyle(
+                    color: TourFlowColors.heading,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Slider(
+          value: _value.toDouble(),
+          min: 1,
+          max: widget.maximum.toDouble(),
+          divisions: canSlide ? widget.maximum - 1 : null,
+          label: '$_value',
+          onChanged: widget.isBusy || !canSlide
+              ? null
+              : (value) => setState(() => _value = value.round()),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('1'),
+              Text('${widget.maximum}'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: widget.isBusy ? null : () => widget.onConfirm(_value),
+            icon: const Icon(Icons.check_rounded),
+            label: Text(widget.copy.confirmVisitorCount),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -478,6 +746,7 @@ class ChatBookingConfirmationCard extends StatelessWidget {
     required this.copy,
     required this.isSubmitting,
     required this.onConfirm,
+    required this.onBack,
     required this.onRestart,
     required this.onCancel,
     super.key,
@@ -487,6 +756,7 @@ class ChatBookingConfirmationCard extends StatelessWidget {
   final ChatBookingCopy copy;
   final bool isSubmitting;
   final VoidCallback onConfirm;
+  final VoidCallback onBack;
   final VoidCallback onRestart;
   final VoidCallback onCancel;
 
@@ -615,6 +885,12 @@ class ChatBookingConfirmationCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                if (draft.canGoBack)
+                  TextButton.icon(
+                    onPressed: isSubmitting ? null : onBack,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: Text(copy.previousStep),
+                  ),
                 TextButton(
                   onPressed: isSubmitting ? null : onRestart,
                   child: TourFlowText(copy.startOver),
@@ -652,48 +928,66 @@ class _ChoiceTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Material(
-      color: const Color(0xFFF8FAFC),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: enabled ? const Color(0xFFF8FAFC) : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          child: Row(
-            children: [
-              Icon(icon, color: TourFlowColors.primaryText),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TourFlowText(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: enabled
+                      ? TourFlowColors.primaryText
+                      : TourFlowColors.muted,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       TourFlowText(
-                        subtitle!,
-                        style: const TextStyle(
-                          color: TourFlowColors.muted,
-                          fontSize: 12,
+                        title,
+                        style: TextStyle(
+                          color: enabled
+                              ? TourFlowColors.heading
+                              : TourFlowColors.muted,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        TourFlowText(
+                          subtitle!,
+                          style: const TextStyle(
+                            color: TourFlowColors.muted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right_rounded),
-            ],
+                Icon(
+                  enabled ? Icons.chevron_right_rounded : Icons.lock_outline,
+                  color: enabled
+                      ? TourFlowColors.heading
+                      : TourFlowColors.muted,
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _EmptyState extends StatelessWidget {

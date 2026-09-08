@@ -1202,6 +1202,14 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                               await _pickComplaintPhoto();
                             }
                           },
+                          onBack: () => _applyComplaintAction(
+                            type: 'back',
+                            displayText: complaintCopy.backMessage,
+                          ),
+                          onStartOver: () => _applyComplaintAction(
+                            type: 'start',
+                            displayText: complaintCopy.startOver,
+                          ),
                           onCancel: () => _applyComplaintAction(
                             type: 'cancel',
                             displayText: complaintCopy.cancelComplaint,
@@ -1212,6 +1220,7 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                       if (_complaintDraft?.readyForConfirmation == true) ...[
                         _ComplaintConfirmationCard(
                           draft: _complaintDraft!,
+                          copy: complaintCopy,
                           photoName: _complaintPhoto?.fileName,
                           isSubmitting: _isSubmittingComplaint,
                           onPickPhoto: _pickComplaintPhoto,
@@ -1220,6 +1229,10 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                           onSkipPhoto: () => _applyComplaintAction(
                             type: 'photo_no',
                             displayText: complaintCopy.noPhoto,
+                          ),
+                          onBack: () => _applyComplaintAction(
+                            type: 'back',
+                            displayText: complaintCopy.backMessage,
                           ),
                           onStartOver: () => _applyComplaintAction(
                             type: 'start',
@@ -1265,6 +1278,10 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                             value: '$count',
                             displayText: bookingCopy.selectedVisitors(count),
                           ),
+                          onBack: () => _applyBookingAction(
+                            type: 'back',
+                            displayText: bookingCopy.backMessage,
+                          ),
                           onRestart: () => _applyBookingAction(
                             type: 'restart',
                             displayText: bookingCopy.restartMessage,
@@ -1282,6 +1299,10 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
                           copy: bookingCopy,
                           isSubmitting: _isSubmittingBookingAction,
                           onConfirm: _completeBookingAction,
+                          onBack: () => _applyBookingAction(
+                            type: 'back',
+                            displayText: bookingCopy.backMessage,
+                          ),
                           onRestart: () => _applyBookingAction(
                             type: 'restart',
                             displayText: bookingCopy.restartMessage,
@@ -1487,6 +1508,8 @@ class _ComplaintGuideCard extends StatelessWidget {
     required this.onAddAdditionalDetails,
     required this.onSkipAdditionalDetails,
     required this.onPhotoChoice,
+    required this.onBack,
+    required this.onStartOver,
     required this.onCancel,
   });
 
@@ -1506,6 +1529,8 @@ class _ComplaintGuideCard extends StatelessWidget {
   final VoidCallback onAddAdditionalDetails;
   final VoidCallback onSkipAdditionalDetails;
   final ValueChanged<bool> onPhotoChoice;
+  final VoidCallback onBack;
+  final VoidCallback onStartOver;
   final VoidCallback onCancel;
 
   @override
@@ -1581,13 +1606,27 @@ class _ComplaintGuideCard extends StatelessWidget {
           const SizedBox(height: 10),
           _buildOptions(nextField),
           const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: isBusy ? null : onCancel,
-              icon: const Icon(Icons.close_rounded, size: 17),
-              label: TourFlowText(copy.cancelComplaint),
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (draft.canGoBack)
+                TextButton.icon(
+                  onPressed: isBusy ? null : onBack,
+                  icon: const Icon(Icons.arrow_back_rounded, size: 17),
+                  label: TourFlowText(copy.previousStep),
+                ),
+              TextButton.icon(
+                onPressed: isBusy ? null : onStartOver,
+                icon: const Icon(Icons.restart_alt_rounded, size: 17),
+                label: TourFlowText(copy.startOver),
+              ),
+              TextButton.icon(
+                onPressed: isBusy ? null : onCancel,
+                icon: const Icon(Icons.close_rounded, size: 17),
+                label: TourFlowText(copy.cancelComplaint),
+              ),
+            ],
           ),
         ],
       ),
@@ -2099,6 +2138,20 @@ class _ComplaintGuideCopy {
     japanese: '苦情をキャンセル',
     korean: '불만 취소',
   );
+  String get previousStep => _text(
+    english: 'Back',
+    mandarin: '返回上一步',
+    bahasa: 'Kembali',
+    japanese: '前のステップ',
+    korean: '이전 단계',
+  );
+  String get backMessage => _text(
+    english: 'Go back to the previous complaint step',
+    mandarin: '返回上一个投诉步骤',
+    bahasa: 'Kembali ke langkah aduan sebelumnya',
+    japanese: '前の苦情ステップに戻る',
+    korean: '이전 불만 접수 단계로 돌아가기',
+  );
   String get startOver => _text(
     english: 'Start over with new selections',
     mandarin: '重新选择投诉资料',
@@ -2437,22 +2490,26 @@ class _ComplaintGuideCopy {
 class _ComplaintConfirmationCard extends StatelessWidget {
   const _ComplaintConfirmationCard({
     required this.draft,
+    required this.copy,
     required this.photoName,
     required this.isSubmitting,
     required this.onPickPhoto,
     required this.onRemovePhoto,
     required this.onSkipPhoto,
+    required this.onBack,
     required this.onStartOver,
     required this.onCancel,
     required this.onSubmit,
   });
 
   final ComplaintDraft draft;
+  final _ComplaintGuideCopy copy;
   final String? photoName;
   final bool isSubmitting;
   final VoidCallback onPickPhoto;
   final VoidCallback onRemovePhoto;
   final VoidCallback onSkipPhoto;
+  final VoidCallback onBack;
   final VoidCallback onStartOver;
   final VoidCallback onCancel;
   final VoidCallback onSubmit;
@@ -2544,15 +2601,21 @@ class _ComplaintConfirmationCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
+              if (draft.canGoBack)
+                TextButton.icon(
+                  onPressed: isSubmitting ? null : onBack,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: TourFlowText(copy.previousStep),
+                ),
               TextButton.icon(
                 onPressed: isSubmitting ? null : onStartOver,
                 icon: const Icon(Icons.restart_alt_rounded),
-                label: const TourFlowText('Start Over'),
+                label: TourFlowText(copy.startOver),
               ),
               TextButton.icon(
                 onPressed: isSubmitting ? null : onCancel,
                 icon: const Icon(Icons.delete_outline_rounded),
-                label: const TourFlowText('Cancel Draft'),
+                label: TourFlowText(copy.cancelComplaint),
               ),
             ],
           ),
