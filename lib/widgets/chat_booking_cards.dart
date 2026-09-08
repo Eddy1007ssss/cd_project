@@ -78,6 +78,22 @@ class ChatBookingCopy {
     korean: '방문 인원 선택',
   );
 
+  String selectedVisitorCount(int count) => _text(
+    english: '$count ${count == 1 ? 'visitor' : 'visitors'} selected',
+    mandarin: '已选择 $count 位游客',
+    malay: '$count pelawat dipilih',
+    japanese: '$count 名を選択中',
+    korean: '$count명 선택됨',
+  );
+
+  String get confirmVisitorCount => _text(
+    english: 'Confirm visitors',
+    mandarin: '确认人数',
+    malay: 'Sahkan pelawat',
+    japanese: '人数を確定',
+    korean: '인원 확인',
+  );
+
   String get noAvailableAttractions => _text(
     english: 'No approved attraction currently has an available future slot.',
     mandarin: '目前没有已审核景点提供可预订的未来时段。',
@@ -100,6 +116,14 @@ class ChatBookingCopy {
     malay: 'Tiada slot masa hadapan yang sesuai. Pilih tarikan lain atau cuba lagi nanti.',
     japanese: '利用可能な時間枠がありません。別の観光地を選ぶか、後でもう一度お試しください。',
     korean: '이용 가능한 시간대가 없습니다. 다른 관광지를 선택하거나 나중에 다시 시도하세요.',
+  );
+
+  String get noRemainingSpaces => _text(
+    english: 'This time slot no longer has any spaces available. Please choose another time slot.',
+    mandarin: '这个时段已经没有剩余位置，请选择其他时段。',
+    malay: 'Slot masa ini sudah tiada tempat kosong. Sila pilih slot masa lain.',
+    japanese: 'この時間枠には空きがありません。別の時間枠を選択してください。',
+    korean: '이 시간대에는 남은 자리가 없습니다. 다른 시간대를 선택해 주세요.',
   );
 
   String get availableSpaces => _text(
@@ -449,26 +473,139 @@ class ChatBookingGuideCard extends StatelessWidget {
       final selectedSlot = draft.slotOptions
           .where((option) => option.id == draft.slotId)
           .firstOrNull;
-      final maximum = (selectedSlot?.remainingCapacity ?? 10)
-          .clamp(1, 10)
-          .toInt();
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: List.generate(
-          maximum,
-          (index) {
-            final count = index + 1;
-            return ChoiceChip(
-              selected: draft.visitorCount == count,
-              onSelected: isBusy ? null : (_) => onSelectVisitors(count),
-              label: Text('$count'),
-            );
-          },
-        ),
+      final maximum = selectedSlot?.remainingCapacity ?? 0;
+      if (maximum < 1) {
+        return _EmptyState(copy.noRemainingSpaces);
+      }
+      return _VisitorCountSlider(
+        key: ValueKey('booking-visitors-${draft.slotId}-$maximum'),
+        maximum: maximum,
+        initialValue: draft.visitorCount ?? 1,
+        copy: copy,
+        isBusy: isBusy,
+        onConfirm: onSelectVisitors,
       );
     }
     return const SizedBox.shrink();
+  }
+}
+
+class _VisitorCountSlider extends StatefulWidget {
+  const _VisitorCountSlider({
+    required this.maximum,
+    required this.initialValue,
+    required this.copy,
+    required this.isBusy,
+    required this.onConfirm,
+    super.key,
+  });
+
+  final int maximum;
+  final int initialValue;
+  final ChatBookingCopy copy;
+  final bool isBusy;
+  final ValueChanged<int> onConfirm;
+
+  @override
+  State<_VisitorCountSlider> createState() => _VisitorCountSliderState();
+}
+
+class _VisitorCountSliderState extends State<_VisitorCountSlider> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.initialValue.clamp(1, widget.maximum).toInt();
+  }
+
+  @override
+  void didUpdateWidget(covariant _VisitorCountSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.maximum != widget.maximum ||
+        oldWidget.initialValue != widget.initialValue) {
+      _value = widget.initialValue.clamp(1, widget.maximum).toInt();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canSlide = widget.maximum > 1;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF8ED),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: TourFlowColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFE2A8),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '$_value',
+                  style: const TextStyle(
+                    color: TourFlowColors.heading,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.copy.selectedVisitorCount(_value),
+                  style: const TextStyle(
+                    color: TourFlowColors.heading,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Slider(
+          value: _value.toDouble(),
+          min: 1,
+          max: widget.maximum.toDouble(),
+          divisions: canSlide ? widget.maximum - 1 : null,
+          label: '$_value',
+          onChanged: widget.isBusy || !canSlide
+              ? null
+              : (value) => setState(() => _value = value.round()),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('1'),
+              Text('${widget.maximum}'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: widget.isBusy ? null : () => widget.onConfirm(_value),
+            icon: const Icon(Icons.check_rounded),
+            label: Text(widget.copy.confirmVisitorCount),
+          ),
+        ),
+      ],
+    );
   }
 }
 
