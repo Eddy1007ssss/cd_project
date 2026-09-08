@@ -4,26 +4,38 @@ import '../../models/preference_profile.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
 
-class DiscoveryPreferencesPage extends StatefulWidget {
-  const DiscoveryPreferencesPage({super.key});
+class DiscoveryPreferencesPage
+    extends StatefulWidget {
+  const DiscoveryPreferencesPage({
+    super.key,
+  });
 
-  static const routeName = '/discovery-preferences';
+  static const routeName =
+      '/discovery-preferences';
 
   @override
-  State<DiscoveryPreferencesPage> createState() =>
+  State<DiscoveryPreferencesPage>
+  createState() =>
       _DiscoveryPreferencesPageState();
 }
 
-class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
+class _DiscoveryPreferencesPageState
+    extends State<DiscoveryPreferencesPage> {
   final _service = AttractionService();
 
-  final _minBudget = TextEditingController();
-  final _maxBudget = TextEditingController();
-  final _radius = TextEditingController();
+  final _minBudget =
+  TextEditingController();
+
+  final _maxBudget =
+  TextEditingController();
+
+  final _radius =
+  TextEditingController();
 
   final _interests = <String>{};
   final _facilities = <String>{};
-  final _accessibilityNeeds = <String>{};
+  final _accessibilityNeeds =
+  <String>{};
 
   PreferenceProfile? _profile;
 
@@ -35,6 +47,13 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
   String _travellingType = 'solo';
 
   String? _error;
+
+  static const double _minimumRadiusKm = 1;
+  static const double _maximumRadiusKm = 50;
+
+  // ==============================================================
+  // OPTIONS
+  // ==============================================================
 
   static const interestOptions = [
     'history',
@@ -61,9 +80,14 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
     'Step-free access',
   ];
 
+  // ==============================================================
+  // INIT
+  // ==============================================================
+
   @override
   void initState() {
     super.initState();
+
     _load();
   }
 
@@ -72,44 +96,81 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
     _minBudget.dispose();
     _maxBudget.dispose();
     _radius.dispose();
+
     super.dispose();
   }
 
+  // ==============================================================
+  // LOAD
+  // ==============================================================
+
   Future<void> _load() async {
     try {
-      final origin = await LocationService().currentLocation();
+      final origin =
+      await LocationService()
+          .currentLocation();
 
-      final profile = await _service.getPreferences(
+      final profile =
+      await _service.getPreferences(
         defaultOrigin: origin,
       );
 
       _profile = profile;
 
-      _minBudget.text = profile.minBudgetMyr.toStringAsFixed(0);
+      _minBudget.text =
+          profile.minBudgetMyr
+              .toStringAsFixed(
+            0,
+          );
 
       _maxBudget.text =
-          profile.maxBudgetMyr?.toStringAsFixed(0) ?? '';
+          profile.maxBudgetMyr
+              ?.toStringAsFixed(
+            0,
+          ) ??
+              '';
+
+      // Old accounts may have radius above 50 km.
+      // Display a valid value under the new rule.
+      final radius =
+      profile.travelRadiusKm
+          .clamp(
+        _minimumRadiusKm,
+        _maximumRadiusKm,
+      )
+          .toDouble();
 
       _radius.text =
-          profile.travelRadiusKm.toStringAsFixed(0);
+          radius.toStringAsFixed(
+            0,
+          );
 
       _interests
         ..clear()
-        ..addAll(profile.interests);
+        ..addAll(
+          profile.interests,
+        );
 
       _facilities
         ..clear()
-        ..addAll(profile.requiredFacilities);
+        ..addAll(
+          profile.requiredFacilities,
+        );
 
       _accessibilityNeeds
         ..clear()
-        ..addAll(profile.accessibilityNeeds);
+        ..addAll(
+          profile.accessibilityNeeds,
+        );
 
-      _crowd = profile.preferredCrowdLevel;
+      _crowd =
+          profile.preferredCrowdLevel;
 
-      _environment = profile.environmentPreference;
+      _environment =
+          profile.environmentPreference;
 
-      _travellingType = profile.travellingType;
+      _travellingType =
+          profile.travellingType;
     } catch (error) {
       _error = '$error';
     } finally {
@@ -121,80 +182,111 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
     }
   }
 
+  // ==============================================================
+  // SAVE
+  // ==============================================================
+
   Future<void> _save() async {
     if (_profile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Unable to load your preference profile.',
           ),
         ),
       );
+
       return;
     }
 
-    final minBudget = double.tryParse(
+    final minBudget =
+    double.tryParse(
       _minBudget.text.trim(),
     );
 
-    final maxBudget = _maxBudget.text.trim().isEmpty
+    final maxBudget =
+    _maxBudget.text.trim().isEmpty
         ? null
         : double.tryParse(
       _maxBudget.text.trim(),
     );
 
-    final radius = double.tryParse(
+    final radius =
+    double.tryParse(
       _radius.text.trim(),
     );
 
-    // Validate minimum budget
-    if (minBudget == null || minBudget < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    // ============================================================
+    // MIN BUDGET VALIDATION
+    // ============================================================
+
+    if (minBudget == null ||
+        minBudget < 0) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Please enter a valid minimum budget.',
           ),
         ),
       );
+
       return;
     }
 
-    // Validate maximum budget
+    // ============================================================
+    // MAX BUDGET VALIDATION
+    // ============================================================
+
     if (maxBudget != null &&
-        (maxBudget < 0 || maxBudget < minBudget)) {
-      ScaffoldMessenger.of(context).showSnackBar(
+        (maxBudget < 0 ||
+            maxBudget < minBudget)) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Maximum budget must be greater than or equal to minimum budget.',
           ),
         ),
       );
+
       return;
     }
 
-    // Validate radius
+    // ============================================================
+    // RADIUS VALIDATION
+    // ============================================================
+
     if (radius == null ||
-        radius <= 0 ||
-        radius > 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
+        radius < _minimumRadiusKm ||
+        radius > _maximumRadiusKm) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
-            'Travel radius must be between 1 and 200 km.',
+            'Travel radius must be between 1 and 50 km.',
           ),
         ),
       );
+
       return;
     }
 
-    // At least one interest must be selected
+    // ============================================================
+    // INTEREST VALIDATION
+    // ============================================================
+
     if (_interests.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Please select at least one interest.',
           ),
         ),
       );
+
       return;
     }
 
@@ -203,38 +295,55 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
     });
 
     try {
-      final updatedProfile = PreferenceProfile(
-        touristId: _profile!.touristId,
+      final updatedProfile =
+      PreferenceProfile(
+        touristId:
+        _profile!.touristId,
 
-        interests: _interests.toList()..sort(),
+        interests:
+        _interests.toList()
+          ..sort(),
 
-        minBudgetMyr: minBudget,
-        maxBudgetMyr: maxBudget,
+        minBudgetMyr:
+        minBudget,
+
+        maxBudgetMyr:
+        maxBudget,
 
         preferredLocation:
-        _profile!.preferredLocation,
+        _profile!
+            .preferredLocation,
 
         preferredLatitude:
-        _profile!.preferredLatitude,
+        _profile!
+            .preferredLatitude,
 
         preferredLongitude:
-        _profile!.preferredLongitude,
+        _profile!
+            .preferredLongitude,
 
-        travelRadiusKm: radius,
+        travelRadiusKm:
+        radius,
 
-        preferredCrowdLevel: _crowd,
+        preferredCrowdLevel:
+        _crowd,
 
         preferredVisitStart:
-        _profile!.preferredVisitStart,
+        _profile!
+            .preferredVisitStart,
 
         preferredVisitEnd:
-        _profile!.preferredVisitEnd,
+        _profile!
+            .preferredVisitEnd,
 
         requiredFacilities:
-        _facilities.toList()..sort(),
+        _facilities.toList()
+          ..sort(),
 
         accessibilityNeeds:
-        _accessibilityNeeds.toList()..sort(),
+        _accessibilityNeeds
+            .toList()
+          ..sort(),
 
         environmentPreference:
         _environment,
@@ -243,17 +352,20 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
         _travellingType,
       );
 
-      await _service.savePreferences(
+      await _service
+          .savePreferences(
         updatedProfile,
       );
 
-      _profile = updatedProfile;
+      _profile =
+          updatedProfile;
 
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Discovery preferences saved successfully.',
@@ -261,10 +373,14 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
         ),
       );
 
-      Navigator.pop(context, true);
+      Navigator.pop(
+        context,
+        true,
+      );
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           SnackBar(
             content: Text(
               'Could not save preferences: $error',
@@ -281,58 +397,88 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
     }
   }
 
-  Widget _sectionTitle(String title) {
+  // ==============================================================
+  // SECTION TITLE
+  // ==============================================================
+
+  Widget _sectionTitle(
+      String title,
+      ) {
     return Padding(
-      padding: const EdgeInsets.only(
+      padding:
+      const EdgeInsets.only(
         top: 8,
         bottom: 8,
       ),
       child: Text(
         title,
-        style: const TextStyle(
+        style:
+        const TextStyle(
           fontSize: 17,
-          fontWeight: FontWeight.w800,
+          fontWeight:
+          FontWeight.w800,
         ),
       ),
     );
   }
 
+  // ==============================================================
+  // PAGE
+  // ==============================================================
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Discovery Preferences',
         ),
       ),
+
       body: _loading
           ? const Center(
-        child: CircularProgressIndicator(),
+        child:
+        CircularProgressIndicator(),
       )
           : _error != null
           ? Center(
         child: Padding(
           padding:
-          const EdgeInsets.all(24),
+          const EdgeInsets
+              .all(
+            24,
+          ),
           child: Text(
             'Sign in with a tourist account before '
                 'saving preferences.\n\n$_error',
-            textAlign: TextAlign.center,
+            textAlign:
+            TextAlign.center,
           ),
         ),
       )
           : ListView(
         padding:
-        const EdgeInsets.all(16),
+        const EdgeInsets
+            .all(
+          16,
+        ),
         children: [
-          if (_service.isDemoMode)
+          // =============================================
+          // DEMO MODE
+          // =============================================
+
+          if (_service
+              .isDemoMode)
             const Card(
               color: Color(
                 0xFFFFE7C2,
               ),
               child: ListTile(
                 leading: Icon(
-                  Icons.science_outlined,
+                  Icons
+                      .science_outlined,
                 ),
                 title: Text(
                   'Demo preferences',
@@ -343,9 +489,10 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
               ),
             ),
 
-          //
+          // =============================================
           // INTERESTS
-          //
+          // =============================================
+
           _sectionTitle(
             'Interests',
           ),
@@ -354,13 +501,16 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             'Select the types of attractions you are interested in.',
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(
+            height: 8,
+          ),
 
           Wrap(
             spacing: 7,
             runSpacing: 4,
             children:
-            interestOptions.map(
+            interestOptions
+                .map(
                   (value) {
                 return FilterChip(
                   label: Text(
@@ -369,18 +519,21 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
                     ),
                   ),
                   selected:
-                  _interests.contains(
+                  _interests
+                      .contains(
                     value,
                   ),
                   onSelected:
                       (selected) {
                     setState(() {
                       if (selected) {
-                        _interests.add(
+                        _interests
+                            .add(
                           value,
                         );
                       } else {
-                        _interests.remove(
+                        _interests
+                            .remove(
                           value,
                         );
                       }
@@ -395,9 +548,10 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             height: 18,
           ),
 
-          //
+          // =============================================
           // BUDGET
-          //
+          // =============================================
+
           _sectionTitle(
             'Budget Range',
           ),
@@ -405,7 +559,8 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child:
+                TextField(
                   controller:
                   _minBudget,
                   keyboardType:
@@ -430,7 +585,8 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
               ),
 
               Expanded(
-                child: TextField(
+                child:
+                TextField(
                   controller:
                   _maxBudget,
                   keyboardType:
@@ -458,15 +614,26 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             height: 18,
           ),
 
-          //
-          // DISTANCE
-          //
+          // =============================================
+          // TRAVEL DISTANCE
+          // =============================================
+
           _sectionTitle(
             'Preferred Travel Distance',
           ),
 
+          const Text(
+            'Set how far you normally want to travel '
+                'for nearby attractions.',
+          ),
+
+          const SizedBox(
+            height: 8,
+          ),
+
           TextField(
-            controller: _radius,
+            controller:
+            _radius,
             keyboardType:
             const TextInputType
                 .numberWithOptions(
@@ -477,7 +644,9 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
               labelText:
               'Travel radius (km)',
               hintText:
-              'Example: 10',
+              '1 - 50',
+              helperText:
+              'Nearby search supports a maximum of 50 km.',
               suffixText: 'km',
               border:
               OutlineInputBorder(),
@@ -488,16 +657,18 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             height: 18,
           ),
 
-          //
-          // CROWD LEVEL
-          //
+          // =============================================
+          // CROWD
+          // =============================================
+
           _sectionTitle(
             'Crowd Preference',
           ),
 
           DropdownButtonFormField<
               String>(
-            initialValue: _crowd,
+            initialValue:
+            _crowd,
             decoration:
             const InputDecoration(
               labelText:
@@ -508,27 +679,32 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             items: const [
               DropdownMenuItem(
                 value: 'low',
-                child: Text('Low'),
+                child:
+                Text('Low'),
               ),
               DropdownMenuItem(
-                value: 'moderate',
+                value:
+                'moderate',
                 child: Text(
                   'Moderate',
                 ),
               ),
               DropdownMenuItem(
                 value: 'high',
-                child: Text('High'),
+                child:
+                Text('High'),
               ),
               DropdownMenuItem(
-                value: 'critical',
+                value:
+                'critical',
                 child: Text(
                   'Critical',
                 ),
               ),
             ],
             onChanged: (value) {
-              if (value == null) {
+              if (value ==
+                  null) {
                 return;
               }
 
@@ -542,9 +718,10 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             height: 18,
           ),
 
-          //
+          // =============================================
           // ENVIRONMENT
-          //
+          // =============================================
+
           _sectionTitle(
             'Environment Preference',
           ),
@@ -562,26 +739,28 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             ),
             items: const [
               DropdownMenuItem(
-                value: 'indoor',
+                value:
+                'indoor',
                 child: Text(
                   'Indoor',
                 ),
               ),
               DropdownMenuItem(
-                value: 'outdoor',
+                value:
+                'outdoor',
                 child: Text(
                   'Outdoor',
                 ),
               ),
               DropdownMenuItem(
                 value: 'both',
-                child: Text(
-                  'Both',
-                ),
+                child:
+                Text('Both'),
               ),
             ],
             onChanged: (value) {
-              if (value == null) {
+              if (value ==
+                  null) {
                 return;
               }
 
@@ -596,9 +775,10 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             height: 18,
           ),
 
-          //
+          // =============================================
           // TRAVELLING TYPE
-          //
+          // =============================================
+
           _sectionTitle(
             'Travelling Type',
           ),
@@ -617,25 +797,25 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             items: const [
               DropdownMenuItem(
                 value: 'solo',
-                child: Text(
-                  'Solo',
-                ),
+                child:
+                Text('Solo'),
               ),
               DropdownMenuItem(
-                value: 'family',
-                child: Text(
-                  'Family',
-                ),
+                value:
+                'family',
+                child:
+                Text('Family'),
               ),
               DropdownMenuItem(
-                value: 'group',
-                child: Text(
-                  'Group',
-                ),
+                value:
+                'group',
+                child:
+                Text('Group'),
               ),
             ],
             onChanged: (value) {
-              if (value == null) {
+              if (value ==
+                  null) {
                 return;
               }
 
@@ -650,9 +830,10 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             height: 18,
           ),
 
-          //
+          // =============================================
           // ACCESSIBILITY
-          //
+          // =============================================
+
           _sectionTitle(
             'Accessibility Needs',
           ),
@@ -705,9 +886,10 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             height: 18,
           ),
 
-          //
+          // =============================================
           // FACILITIES
-          //
+          // =============================================
+
           _sectionTitle(
             'Required Facilities',
           ),
@@ -716,7 +898,8 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             spacing: 7,
             runSpacing: 4,
             children:
-            facilityOptions.map(
+            facilityOptions
+                .map(
                   (value) {
                 return FilterChip(
                   label:
@@ -730,11 +913,13 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
                       (selected) {
                     setState(() {
                       if (selected) {
-                        _facilities.add(
+                        _facilities
+                            .add(
                           value,
                         );
                       } else {
-                        _facilities.remove(
+                        _facilities
+                            .remove(
                           value,
                         );
                       }
@@ -749,23 +934,28 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
             height: 28,
           ),
 
-          //
+          // =============================================
           // SAVE
-          //
+          // =============================================
+
           FilledButton.icon(
             onPressed:
-            _saving ? null : _save,
+            _saving
+                ? null
+                : _save,
             icon: _saving
                 ? const SizedBox(
               width: 18,
               height: 18,
               child:
               CircularProgressIndicator(
-                strokeWidth: 2,
+                strokeWidth:
+                2,
               ),
             )
                 : const Icon(
-              Icons.save_outlined,
+              Icons
+                  .save_outlined,
             ),
             label: Text(
               _saving
@@ -773,9 +963,11 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
                   : 'Save Preferences',
             ),
             style:
-            FilledButton.styleFrom(
+            FilledButton
+                .styleFrom(
               padding:
-              const EdgeInsets.all(
+              const EdgeInsets
+                  .all(
                 16,
               ),
             ),
@@ -789,6 +981,10 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
     );
   }
 
+  // ==============================================================
+  // CAPITALIZE
+  // ==============================================================
+
   static String _capitalize(
       String value,
       ) {
@@ -796,6 +992,7 @@ class _DiscoveryPreferencesPageState extends State<DiscoveryPreferencesPage> {
       return value;
     }
 
-    return '${value[0].toUpperCase()}${value.substring(1)}';
+    return '${value[0].toUpperCase()}'
+        '${value.substring(1)}';
   }
 }
