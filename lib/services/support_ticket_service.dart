@@ -114,22 +114,27 @@ class SupportTicketService {
     if (photo.bytes.isEmpty || photo.bytes.length > 5 * 1024 * 1024) {
       throw const FormatException('The image must be 5 MB or smaller.');
     }
-    if (!const {'image/jpeg', 'image/png', 'image/webp'}.contains(photo.mimeType)) {
-      throw const FormatException('Only JPEG, PNG, or WebP images are allowed.');
+    if (!const {
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    }.contains(photo.mimeType)) {
+      throw const FormatException(
+        'Only JPEG, PNG, or WebP images are allowed.',
+      );
     }
 
-    final safeName = photo.fileName.replaceAll(
-      RegExp(r'[^A-Za-z0-9._-]'),
-      '_',
-    );
+    final safeName = photo.fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final path =
         '$_userId/$ticketId/${DateTime.now().microsecondsSinceEpoch}_$safeName';
 
-    await _client.storage.from(_bucket).uploadBinary(
-      path,
-      photo.bytes,
-      fileOptions: FileOptions(contentType: photo.mimeType, upsert: false),
-    );
+    await _client.storage
+        .from(_bucket)
+        .uploadBinary(
+          path,
+          photo.bytes,
+          fileOptions: FileOptions(contentType: photo.mimeType, upsert: false),
+        );
 
     try {
       await _client.rpc(
@@ -157,9 +162,8 @@ class SupportTicketService {
         .order('name', ascending: true);
     return rows
         .map(
-          (row) => SupportAttractionOption.fromMap(
-            Map<String, dynamic>.from(row),
-          ),
+          (row) =>
+              SupportAttractionOption.fromMap(Map<String, dynamic>.from(row)),
         )
         .toList();
   }
@@ -176,9 +180,7 @@ class SupportTicketService {
         .limit(30);
     return rows
         .map(
-          (row) => SupportBookingOption.fromMap(
-            Map<String, dynamic>.from(row),
-          ),
+          (row) => SupportBookingOption.fromMap(Map<String, dynamic>.from(row)),
         )
         .toList();
   }
@@ -188,6 +190,7 @@ class SupportTicketService {
         .from('support_tickets')
         .select(_ticketColumns)
         .eq('user_id', _userId)
+        .isFilter('legacy_issue_report_id', null)
         .order('created_at', ascending: false);
     return _ticketList(rows);
   }
@@ -197,6 +200,7 @@ class SupportTicketService {
     final rows = await _client
         .from('support_tickets')
         .select(_ticketColumns)
+        .isFilter('legacy_issue_report_id', null)
         .order('created_at', ascending: false);
     return _ticketList(rows);
   }
@@ -207,6 +211,7 @@ class SupportTicketService {
         .from('support_tickets')
         .select(_ticketColumns)
         .eq('id', ticketId)
+        .isFilter('legacy_issue_report_id', null)
         .single();
     final relatedRows = await Future.wait([
       _client
@@ -229,30 +234,30 @@ class SupportTicketService {
     final eventRows = relatedRows[0];
     final attachmentRows = relatedRows[1];
 
-    final attachments = await Future.wait(attachmentRows.map((raw) async {
-      final row = Map<String, dynamic>.from(raw);
-      final bucket = row['storage_bucket'] as String? ?? _bucket;
-      final signedUrl = await _client.storage
-          .from(bucket)
-          .createSignedUrl(row['storage_path'] as String, 3600);
-      return SupportTicketAttachment(
-        id: row['id'] as String,
-        fileName: row['file_name'] as String,
-        mimeType: row['mime_type'] as String,
-        sizeBytes: (row['size_bytes'] as num).toInt(),
-        createdAt: DateTime.parse(row['created_at'] as String).toLocal(),
-        signedUrl: signedUrl,
-        storageBucket: bucket,
-      );
-    }));
+    final attachments = await Future.wait(
+      attachmentRows.map((raw) async {
+        final row = Map<String, dynamic>.from(raw);
+        final bucket = row['storage_bucket'] as String? ?? _bucket;
+        final signedUrl = await _client.storage
+            .from(bucket)
+            .createSignedUrl(row['storage_path'] as String, 3600);
+        return SupportTicketAttachment(
+          id: row['id'] as String,
+          fileName: row['file_name'] as String,
+          mimeType: row['mime_type'] as String,
+          sizeBytes: (row['size_bytes'] as num).toInt(),
+          createdAt: DateTime.parse(row['created_at'] as String).toLocal(),
+          signedUrl: signedUrl,
+          storageBucket: bucket,
+        );
+      }),
+    );
 
     return SupportTicketDetailsData(
       ticket: SupportTicket.fromMap(Map<String, dynamic>.from(ticketRow)),
       events: eventRows
           .map(
-            (row) => SupportTicketEvent.fromMap(
-              Map<String, dynamic>.from(row),
-            ),
+            (row) => SupportTicketEvent.fromMap(Map<String, dynamic>.from(row)),
           )
           .toList(),
       attachments: attachments,
@@ -300,7 +305,8 @@ class SupportTicketService {
       return const TicketDeletionResult();
     } catch (error) {
       return TicketDeletionResult(
-        cleanupWarning: 'The ticket was deleted, but an attachment could not '
+        cleanupWarning:
+            'The ticket was deleted, but an attachment could not '
             'be removed: ${_message(error)}',
       );
     }

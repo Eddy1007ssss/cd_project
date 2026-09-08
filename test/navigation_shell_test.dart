@@ -141,6 +141,18 @@ void main() {
     await tester.tap(find.text('Slots'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('tab-2')), findsOneWidget);
+
+    await tester.tap(find.text('Reports'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('tab-3')), findsOneWidget);
+
+    await tester.tap(find.text('Support'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('tab-4')), findsOneWidget);
+
+    await tester.tap(find.text('Analytics'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('tab-5')), findsOneWidget);
     expect(find.byType(OperatorBottomNavigationBar), findsOneWidget);
   });
 }

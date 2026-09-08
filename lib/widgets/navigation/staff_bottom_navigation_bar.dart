@@ -22,6 +22,12 @@ const List<TourFlowNavigationItem> operatorNavigationItems = [
   ),
 
   TourFlowNavigationItem(
+    label: 'Reports',
+    icon: Icons.report_outlined,
+    selectedIcon: Icons.report_rounded,
+  ),
+
+  TourFlowNavigationItem(
     label: 'Support',
     icon: Icons.support_agent_outlined,
     selectedIcon: Icons.support_agent_rounded,

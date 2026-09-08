@@ -11,6 +11,7 @@ import 'screens/staff/attraction_configuration_page.dart';
 import 'screens/staff/attraction_details_page.dart';
 import 'screens/staff/operator_dashboard_page.dart';
 import 'screens/staff/operator_registration_page.dart';
+import 'screens/staff/resolve_report_page.dart';
 import 'screens/staff/slot_manager_page.dart';
 import 'screens/staff/staff_support_ticket_details_page.dart';
 import 'screens/staff/support_ticket_management_page.dart';
@@ -32,6 +33,8 @@ import 'screens/user/discovery_preferences_page.dart';
 import 'screens/user/profile_security_page.dart';
 import 'screens/user/password_recovery_page.dart';
 import 'screens/user/reschedule_booking_page.dart';
+import 'screens/user/report_issue_page.dart';
+import 'screens/user/report_status_page.dart';
 import 'screens/user/sign_in_page.dart';
 import 'screens/user/smart_recommendations_page.dart';
 import 'screens/user/support_ticket_details_page.dart';
@@ -174,8 +177,8 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
         FeedbackCentrePage.routeName: (_) => const FeedbackCentrePage(),
         SubmitFeedbackPage.routeName: (_) => const SubmitFeedbackPage(),
         MyFeedbackPage.routeName: (_) => const MyFeedbackPage(),
-        '/report-issue': (_) => const SupportTicketFormPage(),
-        '/report-status': (_) => const SupportTicketListPage(),
+        ReportIssuePage.routeName: (_) => const ReportIssuePage(),
+        ReportStatusPage.routeName: (_) => const ReportStatusPage(),
         GeofencePage.routeName: (_) => const GeofencePage(),
         OperatorRegistrationPage.routeName: (_) =>
             const OperatorRegistrationPage(),
@@ -188,7 +191,7 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
               navigationRole: TourFlowNavigationRole.operator,
             ),
         TourFlowRoutes.operatorSupportTickets: (_) =>
-            const OperatorNavigationShell(initialIndex: 3),
+            const OperatorNavigationShell(initialIndex: 4),
         OperatorDashboardPage.routeName: (_) => const OperatorNavigationShell(),
         AttractionDetailsPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 1),
@@ -222,11 +225,12 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
             const OperatorLiveCrowdDetailsPage(),
         TourFlowRoutes.operatorReports: (_) =>
             const OperatorNavigationShell(initialIndex: 3),
+        ResolveReportPage.routeName: (_) => const ResolveReportPage(),
         RevenuePromotionPage.routeName: (_) => const RevenuePromotionPage(),
         PromotionSuggestionPage.routeName: (_) =>
             const PromotionSuggestionPage(),
         VisitorStatisticsPage.routeName: (_) =>
-            const OperatorNavigationShell(initialIndex: 4),
+            const OperatorNavigationShell(initialIndex: 5),
         TourFlowRoutes.adminAnalyticsDashboard: (context) =>
             const AdminNavigationShell(initialIndex: 0),
         AdminGenerateReportPage.routeName: (context) =>

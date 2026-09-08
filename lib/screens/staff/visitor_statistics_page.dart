@@ -10,12 +10,10 @@ class VisitorStatisticsPage extends StatefulWidget {
   static const routeName = '/visitor-statistics';
 
   @override
-  State<VisitorStatisticsPage> createState() =>
-      _VisitorStatisticsPageState();
+  State<VisitorStatisticsPage> createState() => _VisitorStatisticsPageState();
 }
 
-class _VisitorStatisticsPageState
-    extends State<VisitorStatisticsPage> {
+class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
   final _repository = EngagementRepository();
 
   late Future<List<VisitorTrendEntry>> _visitorTrends;
@@ -27,13 +25,10 @@ class _VisitorStatisticsPageState
   void initState() {
     super.initState();
 
-    _visitorTrends =
-        _repository.fetchOperatorVisitorTrends();
+    _visitorTrends = _repository.fetchOperatorVisitorTrends();
   }
 
-  List<VisitorTrendEntry> _filterByPeriod(
-      List<VisitorTrendEntry> entries,
-      ) {
+  List<VisitorTrendEntry> _filterByPeriod(List<VisitorTrendEntry> entries) {
     final now = DateTime.now();
 
     if (_period == 'daily') {
@@ -47,29 +42,15 @@ class _VisitorStatisticsPageState
     }
 
     if (_period == 'weekly') {
-      final today = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      );
+      final today = DateTime(now.year, now.month, now.day);
 
-      final startOfWeek = today.subtract(
-        Duration(
-          days: now.weekday - 1,
-        ),
-      );
+      final startOfWeek = today.subtract(Duration(days: now.weekday - 1));
 
-      final endOfWeek = startOfWeek.add(
-        const Duration(days: 7),
-      );
+      final endOfWeek = startOfWeek.add(const Duration(days: 7));
 
       return entries.where((entry) {
-        return !entry.checkedInAt.isBefore(
-          startOfWeek,
-        ) &&
-            entry.checkedInAt.isBefore(
-              endOfWeek,
-            );
+        return !entry.checkedInAt.isBefore(startOfWeek) &&
+            entry.checkedInAt.isBefore(endOfWeek);
       }).toList();
     }
 
@@ -77,8 +58,7 @@ class _VisitorStatisticsPageState
       return entries.where((entry) {
         final date = entry.checkedInAt;
 
-        return date.year == now.year &&
-            date.month == now.month;
+        return date.year == now.year && date.month == now.month;
       }).toList();
     }
 
@@ -86,14 +66,12 @@ class _VisitorStatisticsPageState
   }
 
   List<VisitorTrendEntry> _filterPreviousPeriod(
-      List<VisitorTrendEntry> entries,
-      ) {
+    List<VisitorTrendEntry> entries,
+  ) {
     final now = DateTime.now();
 
     if (_period == 'daily') {
-      final yesterday = now.subtract(
-        const Duration(days: 1),
-      );
+      final yesterday = now.subtract(const Duration(days: 1));
 
       return entries.where((entry) {
         final date = entry.checkedInAt;
@@ -105,36 +83,22 @@ class _VisitorStatisticsPageState
     }
 
     if (_period == 'weekly') {
-      final today = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      );
+      final today = DateTime(now.year, now.month, now.day);
 
-      final currentWeekStart = today.subtract(
-        Duration(days: now.weekday - 1),
-      );
+      final currentWeekStart = today.subtract(Duration(days: now.weekday - 1));
 
-      final previousWeekStart =
-      currentWeekStart.subtract(
+      final previousWeekStart = currentWeekStart.subtract(
         const Duration(days: 7),
       );
 
       return entries.where((entry) {
-        return !entry.checkedInAt.isBefore(
-          previousWeekStart,
-        ) &&
-            entry.checkedInAt.isBefore(
-              currentWeekStart,
-            );
+        return !entry.checkedInAt.isBefore(previousWeekStart) &&
+            entry.checkedInAt.isBefore(currentWeekStart);
       }).toList();
     }
 
     if (_period == 'monthly') {
-      final previousMonth = DateTime(
-        now.year,
-        now.month - 1,
-      );
+      final previousMonth = DateTime(now.year, now.month - 1);
 
       return entries.where((entry) {
         final date = entry.checkedInAt;
@@ -147,9 +111,7 @@ class _VisitorStatisticsPageState
     return const [];
   }
 
-  Map<String, int> _buildTrendData(
-      List<VisitorTrendEntry> entries,
-      ) {
+  Map<String, int> _buildTrendData(List<VisitorTrendEntry> entries) {
     if (entries.isEmpty) {
       return {};
     }
@@ -162,37 +124,23 @@ class _VisitorStatisticsPageState
 
       for (final entry in entries) {
         final hour = entry.checkedInAt.hour;
-        final label =
-            '${hour.toString().padLeft(2, '0')}:00';
+        final label = '${hour.toString().padLeft(2, '0')}:00';
 
-        data[label] =
-            data[label]! + entry.visitorCount;
+        data[label] = data[label]! + entry.visitorCount;
       }
 
       return data;
     }
 
     if (_period == 'weekly') {
-      const days = [
-        'Mon',
-        'Tue',
-        'Wed',
-        'Thu',
-        'Fri',
-        'Sat',
-        'Sun',
-      ];
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-      final data = {
-        for (final day in days) day: 0,
-      };
+      final data = {for (final day in days) day: 0};
 
       for (final entry in entries) {
-        final label =
-        days[entry.checkedInAt.weekday - 1];
+        final label = days[entry.checkedInAt.weekday - 1];
 
-        data[label] =
-            data[label]! + entry.visitorCount;
+        data[label] = data[label]! + entry.visitorCount;
       }
 
       return data;
@@ -201,23 +149,16 @@ class _VisitorStatisticsPageState
     if (_period == 'monthly') {
       final now = DateTime.now();
 
-      final daysInMonth = DateTime(
-        now.year,
-        now.month + 1,
-        0,
-      ).day;
+      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
 
       final data = <String, int>{
-        for (var day = 1; day <= daysInMonth; day++)
-          '$day': 0,
+        for (var day = 1; day <= daysInMonth; day++) '$day': 0,
       };
 
       for (final entry in entries) {
-        final label =
-            '${entry.checkedInAt.day}';
+        final label = '${entry.checkedInAt.day}';
 
-        data[label] =
-            data[label]! + entry.visitorCount;
+        data[label] = data[label]! + entry.visitorCount;
       }
 
       return data;
@@ -228,8 +169,7 @@ class _VisitorStatisticsPageState
 
   void _refresh() {
     setState(() {
-      _visitorTrends =
-          _repository.fetchOperatorVisitorTrends();
+      _visitorTrends = _repository.fetchOperatorVisitorTrends();
     });
   }
 
@@ -238,22 +178,16 @@ class _VisitorStatisticsPageState
     return TourFlowPage(
       title: 'Visitor Statistics',
       role: 'TOURFLOW · OPERATOR',
-      navigationRole:
-      TourFlowNavigationRole.operator,
+      navigationRole: TourFlowNavigationRole.operator,
       pageLevel: TourFlowPageLevel.topLevel,
-      selectedNavigationIndex: 4,
+      selectedNavigationIndex: 5,
       child: FutureBuilder<List<VisitorTrendEntry>>(
         future: _visitorTrends,
         builder: (context, snapshot) {
-          if (snapshot.connectionState !=
-              ConnectionState.done) {
+          if (snapshot.connectionState != ConnectionState.done) {
             return const Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: 50,
-              ),
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+              padding: EdgeInsets.symmetric(vertical: 50),
+              child: Center(child: CircularProgressIndicator()),
             );
           }
 
@@ -288,28 +222,20 @@ class _VisitorStatisticsPageState
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: _refresh,
-                    icon: const Icon(
-                      Icons.refresh_rounded,
-                    ),
-                    label: const Text(
-                      'Try Again',
-                    ),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Try Again'),
                   ),
                 ],
               ),
             );
           }
 
-          final allEntries =
-              snapshot.data ??
-                  const <VisitorTrendEntry>[];
+          final allEntries = snapshot.data ?? const <VisitorTrendEntry>[];
 
           if (allEntries.isEmpty) {
             return const ModuleCard(
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: 24,
-                ),
+                padding: EdgeInsets.symmetric(vertical: 24),
                 child: Column(
                   children: [
                     Icon(
@@ -332,48 +258,30 @@ class _VisitorStatisticsPageState
             );
           }
 
-          final attractionNames = allEntries
-              .map(
-                (entry) =>
-            entry.attractionName,
-          )
-              .toSet()
-              .toList()
-            ..sort();
+          final attractionNames =
+              allEntries.map((entry) => entry.attractionName).toSet().toList()
+                ..sort();
 
-          final attractionFilteredEntries =
-          _attractionFilter == null
+          final attractionFilteredEntries = _attractionFilter == null
               ? allEntries
               : allEntries
-              .where(
-                (entry) =>
-            entry.attractionName ==
-                _attractionFilter,
-          )
-              .toList();
+                    .where((entry) => entry.attractionName == _attractionFilter)
+                    .toList();
 
-          final filteredEntries =
-          _filterByPeriod(
+          final filteredEntries = _filterByPeriod(attractionFilteredEntries);
+
+          final previousEntries = _filterPreviousPeriod(
             attractionFilteredEntries,
           );
 
-          final previousEntries =
-          _filterPreviousPeriod(
-            attractionFilteredEntries,
+          final totalVisitors = filteredEntries.fold<int>(
+            0,
+            (sum, entry) => sum + entry.visitorCount,
           );
 
-          final totalVisitors =
-          filteredEntries.fold<int>(
+          final previousTotalVisitors = previousEntries.fold<int>(
             0,
-                (sum, entry) =>
-            sum + entry.visitorCount,
-          );
-
-          final previousTotalVisitors =
-          previousEntries.fold<int>(
-            0,
-                (sum, entry) =>
-            sum + entry.visitorCount,
+            (sum, entry) => sum + entry.visitorCount,
           );
 
           double? visitorChangePercentage;
@@ -382,53 +290,38 @@ class _VisitorStatisticsPageState
             visitorChangePercentage =
                 ((totalVisitors - previousTotalVisitors) /
                     previousTotalVisitors) *
-                    100;
+                100;
           }
 
-          final trendData =
-          _buildTrendData(
-            filteredEntries,
-          );
+          final trendData = _buildTrendData(filteredEntries);
 
-          final averageVisitors =
-          trendData.isEmpty
+          final averageVisitors = trendData.isEmpty
               ? 0.0
-              : totalVisitors /
-              trendData.length;
+              : totalVisitors / trendData.length;
 
           MapEntry<String, int>? peakEntry;
 
           if (trendData.isNotEmpty) {
-            peakEntry =
-                trendData.entries.reduce(
-                      (current, next) =>
-                  next.value >
-                      current.value
-                      ? next
-                      : current,
-                );
+            peakEntry = trendData.entries.reduce(
+              (current, next) => next.value > current.value ? next : current,
+            );
           }
 
           return Column(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: double.infinity,
-                padding:
-                const EdgeInsets.all(15),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  color:
-                  const Color(0xFFFFF4E5),
-                  borderRadius:
-                  BorderRadius.circular(14),
+                  color: const Color(0xFFFFF4E5),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Row(
                   children: [
                     Icon(
                       Icons.insights_outlined,
-                      color:
-                      Color(0xFFFF9800),
+                      color: Color(0xFFFF9800),
                       size: 22,
                     ),
                     SizedBox(width: 10),
@@ -436,12 +329,10 @@ class _VisitorStatisticsPageState
                       child: Text(
                         'View visitor trends based on actual attraction check-ins.',
                         style: TextStyle(
-                          color:
-                          Color(0xFF8A5A00),
+                          color: Color(0xFF8A5A00),
                           fontSize: 11,
                           height: 1.5,
-                          fontWeight:
-                          FontWeight.w600,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -454,11 +345,9 @@ class _VisitorStatisticsPageState
               const Text(
                 'Attraction',
                 style: TextStyle(
-                  color:
-                  TourFlowColors.muted,
+                  color: TourFlowColors.muted,
                   fontSize: 10,
-                  fontWeight:
-                  FontWeight.w600,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
 
@@ -466,71 +355,42 @@ class _VisitorStatisticsPageState
 
               Container(
                 width: double.infinity,
-                padding:
-                const EdgeInsets.symmetric(
-                  horizontal: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius:
-                  BorderRadius.circular(12),
-                  border: Border.all(
-                    color:
-                    const Color(
-                      0xFFE1E5EB,
-                    ),
-                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE1E5EB)),
                 ),
-                child:
-                DropdownButtonHideUnderline(
-                  child:
-                  DropdownButton<String?>(
-                    value:
-                    _attractionFilter,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String?>(
+                    value: _attractionFilter,
                     isExpanded: true,
                     hint: const Text(
                       'All Attractions',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color:
-                        Color(
-                          0xFF667085,
-                        ),
-                      ),
+                      style: TextStyle(fontSize: 11, color: Color(0xFF667085)),
                     ),
                     items: [
-                      const DropdownMenuItem<
-                          String?>(
+                      const DropdownMenuItem<String?>(
                         value: null,
                         child: Text(
                           'All Attractions',
-                          style: TextStyle(
-                            fontSize: 11,
-                          ),
+                          style: TextStyle(fontSize: 11),
                         ),
                       ),
                       ...attractionNames.map(
-                            (name) =>
-                            DropdownMenuItem<
-                                String?>(
-                              value: name,
-                              child: Text(
-                                name,
-                                overflow:
-                                TextOverflow
-                                    .ellipsis,
-                                style:
-                                const TextStyle(
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ),
+                        (name) => DropdownMenuItem<String?>(
+                          value: name,
+                          child: Text(
+                            name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ),
                       ),
                     ],
                     onChanged: (value) {
                       setState(() {
-                        _attractionFilter =
-                            value;
+                        _attractionFilter = value;
                       });
                     },
                   ),
@@ -542,11 +402,9 @@ class _VisitorStatisticsPageState
               const Text(
                 'Period',
                 style: TextStyle(
-                  color:
-                  TourFlowColors.muted,
+                  color: TourFlowColors.muted,
                   fontSize: 10,
-                  fontWeight:
-                  FontWeight.w600,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
 
@@ -554,43 +412,25 @@ class _VisitorStatisticsPageState
 
               SizedBox(
                 width: double.infinity,
-                child:
-                SegmentedButton<String>(
+                child: SegmentedButton<String>(
                   segments: const [
                     ButtonSegment<String>(
                       value: 'daily',
-                      label: Text(
-                        'Daily',
-                        style: TextStyle(
-                          fontSize: 10,
-                        ),
-                      ),
+                      label: Text('Daily', style: TextStyle(fontSize: 10)),
                     ),
                     ButtonSegment<String>(
                       value: 'weekly',
-                      label: Text(
-                        'Weekly',
-                        style: TextStyle(
-                          fontSize: 10,
-                        ),
-                      ),
+                      label: Text('Weekly', style: TextStyle(fontSize: 10)),
                     ),
                     ButtonSegment<String>(
                       value: 'monthly',
-                      label: Text(
-                        'Monthly',
-                        style: TextStyle(
-                          fontSize: 10,
-                        ),
-                      ),
+                      label: Text('Monthly', style: TextStyle(fontSize: 10)),
                     ),
                   ],
                   selected: {_period},
-                  onSelectionChanged:
-                      (selection) {
+                  onSelectionChanged: (selection) {
                     setState(() {
-                      _period =
-                          selection.first;
+                      _period = selection.first;
                     });
                   },
                 ),
@@ -625,55 +465,32 @@ class _VisitorStatisticsPageState
                     Container(
                       width: 42,
                       height: 42,
-                      decoration:
-                      BoxDecoration(
-                        color:
-                        const Color(
-                          0xFFFFF4E5,
-                        ),
-                        borderRadius:
-                        BorderRadius
-                            .circular(
-                          11,
-                        ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF4E5),
+                        borderRadius: BorderRadius.circular(11),
                       ),
                       child: const Icon(
-                        Icons
-                            .groups_outlined,
-                        color:
-                        Color(
-                          0xFFFF9800,
-                        ),
+                        Icons.groups_outlined,
+                        color: Color(0xFFFF9800),
                         size: 22,
                       ),
                     ),
 
-                    const SizedBox(
-                      width: 12,
-                    ),
+                    const SizedBox(width: 12),
 
                     Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
                             'Total Visitors',
-                            style:
-                            TextStyle(
-                              color:
-                              TourFlowColors
-                                  .heading,
+                            style: TextStyle(
+                              color: TourFlowColors.heading,
                               fontSize: 12,
-                              fontWeight:
-                              FontWeight
-                                  .w700,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(
-                            height: 3,
-                          ),
+                          const SizedBox(height: 3),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -698,16 +515,10 @@ class _VisitorStatisticsPageState
 
                     Text(
                       '$totalVisitors',
-                      style:
-                      const TextStyle(
-                        color:
-                        Color(
-                          0xFF8A5A00,
-                        ),
+                      style: const TextStyle(
+                        color: Color(0xFF8A5A00),
                         fontSize: 22,
-                        fontWeight:
-                        FontWeight
-                            .w800,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
@@ -723,27 +534,20 @@ class _VisitorStatisticsPageState
                       height: 105,
                       child: ModuleCard(
                         child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Row(
                               children: [
                                 Icon(
                                   Icons.analytics_outlined,
                                   size: 17,
-                                  color: Color(
-                                    0xFF2563EB,
-                                  ),
+                                  color: Color(0xFF2563EB),
                                 ),
-                                SizedBox(
-                                  width: 6,
-                                ),
+                                SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     'Average Visitors',
-                                    style:
-                                    TextStyle(
+                                    style: TextStyle(
                                       color: TourFlowColors.muted,
                                       fontSize: 9,
                                       fontWeight: FontWeight.w600,
@@ -754,16 +558,14 @@ class _VisitorStatisticsPageState
                             ),
                             const Spacer(),
                             Text(
-                              averageVisitors.toStringAsFixed(1,
-                              ),
-                              style:
-                              const TextStyle(
+                              averageVisitors.toStringAsFixed(1),
+                              style: const TextStyle(
                                 color: TourFlowColors.heading,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const SizedBox(height: 2,),
+                            const SizedBox(height: 2),
                             Text(
                               _averageLabel(_period),
                               style: const TextStyle(
@@ -784,37 +586,23 @@ class _VisitorStatisticsPageState
                       height: 105,
                       child: ModuleCard(
                         child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Row(
                               children: [
                                 Icon(
-                                  Icons
-                                      .trending_up_rounded,
+                                  Icons.trending_up_rounded,
                                   size: 17,
-                                  color:
-                                  Color(
-                                    0xFFFF9800,
-                                  ),
+                                  color: Color(0xFFFF9800),
                                 ),
-                                SizedBox(
-                                  width: 6,
-                                ),
+                                SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     'Peak Period',
-                                    style:
-                                    TextStyle(
-                                      color:
-                                      TourFlowColors
-                                          .muted,
-                                      fontSize:
-                                      9,
-                                      fontWeight:
-                                      FontWeight
-                                          .w600,
+                                    style: TextStyle(
+                                      color: TourFlowColors.muted,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
@@ -824,28 +612,20 @@ class _VisitorStatisticsPageState
                             Text(
                               peakEntry == null
                                   ? '-'
-                                  : _peakPeriodLabel(
-                                _period,
-                                peakEntry.key,
-                              ),
+                                  : _peakPeriodLabel(_period, peakEntry.key),
                               style: const TextStyle(
                                 color: TourFlowColors.heading,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const SizedBox(
-                              height: 2,
-                            ),
+                            const SizedBox(height: 2),
                             Text(
                               peakEntry == null
                                   ? 'No visitors'
                                   : '${peakEntry.value} visitors',
-                              style:
-                              const TextStyle(
-                                color:
-                                TourFlowColors
-                                    .muted,
+                              style: const TextStyle(
+                                color: TourFlowColors.muted,
                                 fontSize: 8,
                               ),
                             ),
@@ -859,39 +639,27 @@ class _VisitorStatisticsPageState
 
               const SizedBox(height: 14),
 
-              _VisitorTrendChart(
-                data: trendData,
-              ),
+              _VisitorTrendChart(data: trendData),
 
-              if (filteredEntries
-                  .isEmpty) ...[
+              if (filteredEntries.isEmpty) ...[
                 const SizedBox(height: 12),
 
                 const ModuleCard(
                   child: Padding(
-                    padding:
-                    EdgeInsets.symmetric(
-                      vertical: 15,
-                    ),
+                    padding: EdgeInsets.symmetric(vertical: 15),
                     child: Row(
                       children: [
                         Icon(
-                          Icons
-                              .info_outline_rounded,
-                          color:
-                          TourFlowColors
-                              .muted,
+                          Icons.info_outline_rounded,
+                          color: TourFlowColors.muted,
                           size: 19,
                         ),
                         SizedBox(width: 9),
                         Expanded(
                           child: Text(
                             'No check-ins were recorded for the selected period.',
-                            style:
-                            TextStyle(
-                              color:
-                              TourFlowColors
-                                  .muted,
+                            style: TextStyle(
+                              color: TourFlowColors.muted,
                               fontSize: 10,
                             ),
                           ),
@@ -924,14 +692,10 @@ class _VisitorChangeIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (previousTotal == 0 ||
-        percentage == null) {
+    if (previousTotal == 0 || percentage == null) {
       return Text(
         'No ${_comparisonLabel(period)} data',
-        style: const TextStyle(
-          color: TourFlowColors.muted,
-          fontSize: 8,
-        ),
+        style: const TextStyle(color: TourFlowColors.muted, fontSize: 8),
       );
     }
 
@@ -952,15 +716,11 @@ class _VisitorChangeIndicator extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 11,
-          color: color,
-        ),
+        Icon(icon, size: 11, color: color),
         const SizedBox(width: 3),
         Text(
           '${percentage!.abs().toStringAsFixed(1)}% '
-              'vs ${_comparisonLabel(period)}',
+          'vs ${_comparisonLabel(period)}',
           style: TextStyle(
             color: color,
             fontSize: 8,
@@ -973,9 +733,7 @@ class _VisitorChangeIndicator extends StatelessWidget {
 }
 
 class _VisitorTrendChart extends StatelessWidget {
-  const _VisitorTrendChart({
-    required this.data,
-  });
+  const _VisitorTrendChart({required this.data});
 
   final Map<String, int> data;
 
@@ -985,22 +743,18 @@ class _VisitorTrendChart extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final entries =
-    data.entries.toList();
+    final entries = data.entries.toList();
 
     return ModuleCard(
       child: Column(
-        crossAxisAlignment:
-        CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Visitor Trend',
             style: TextStyle(
-              color:
-              TourFlowColors.heading,
+              color: TourFlowColors.heading,
               fontSize: 13,
-              fontWeight:
-              FontWeight.w800,
+              fontWeight: FontWeight.w800,
             ),
           ),
 
@@ -1008,11 +762,7 @@ class _VisitorTrendChart extends StatelessWidget {
 
           const Text(
             'Visitors recorded during the selected period.',
-            style: TextStyle(
-              color:
-              TourFlowColors.muted,
-              fontSize: 9,
-            ),
+            style: TextStyle(color: TourFlowColors.muted, fontSize: 9),
           ),
 
           const SizedBox(height: 18),
@@ -1021,10 +771,7 @@ class _VisitorTrendChart extends StatelessWidget {
             height: 190,
             width: double.infinity,
             child: CustomPaint(
-              painter:
-              _VisitorLineChartPainter(
-                entries: entries,
-              ),
+              painter: _VisitorLineChartPainter(entries: entries),
             ),
           ),
         ],
@@ -1033,20 +780,13 @@ class _VisitorTrendChart extends StatelessWidget {
   }
 }
 
-class _VisitorLineChartPainter
-    extends CustomPainter {
-  const _VisitorLineChartPainter({
-    required this.entries,
-  });
+class _VisitorLineChartPainter extends CustomPainter {
+  const _VisitorLineChartPainter({required this.entries});
 
-  final List<MapEntry<String, int>>
-  entries;
+  final List<MapEntry<String, int>> entries;
 
   @override
-  void paint(
-      Canvas canvas,
-      Size size,
-      ) {
+  void paint(Canvas canvas, Size size) {
     if (entries.isEmpty) {
       return;
     }
@@ -1056,179 +796,86 @@ class _VisitorLineChartPainter
     const topPadding = 18.0;
     const bottomPadding = 30.0;
 
-    final chartWidth =
-        size.width -
-            leftPadding -
-            rightPadding;
+    final chartWidth = size.width - leftPadding - rightPadding;
 
-    final chartHeight =
-        size.height -
-            topPadding -
-            bottomPadding;
+    final chartHeight = size.height - topPadding - bottomPadding;
 
     final maxValue = entries
-        .map(
-          (entry) => entry.value,
-    )
-        .fold<int>(
-      0,
-          (max, value) =>
-      value > max
-          ? value
-          : max,
-    );
+        .map((entry) => entry.value)
+        .fold<int>(0, (max, value) => value > max ? value : max);
 
-    final safeMax =
-    maxValue == 0
-        ? 1
-        : maxValue;
+    final safeMax = maxValue == 0 ? 1 : maxValue;
 
     final gridPaint = Paint()
-      ..color =
-      const Color(0xFFE9EDF2)
+      ..color = const Color(0xFFE9EDF2)
       ..strokeWidth = 1;
 
     final linePaint = Paint()
-      ..color =
-      const Color(0xFFFF9800)
+      ..color = const Color(0xFFFF9800)
       ..strokeWidth = 2.5
-      ..style =
-          PaintingStyle.stroke
-      ..strokeCap =
-          StrokeCap.round
-      ..strokeJoin =
-          StrokeJoin.round;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     final pointPaint = Paint()
-      ..color =
-      const Color(0xFFFF9800)
-      ..style =
-          PaintingStyle.fill;
+      ..color = const Color(0xFFFF9800)
+      ..style = PaintingStyle.fill;
 
-    final pointBorderPaint =
-    Paint()
+    final pointBorderPaint = Paint()
       ..color = Colors.white
       ..strokeWidth = 2
-      ..style =
-          PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke;
 
-    for (var i = 0;
-    i <= 4;
-    i++) {
-      final y =
-          topPadding +
-              chartHeight *
-                  i /
-                  4;
+    for (var i = 0; i <= 4; i++) {
+      final y = topPadding + chartHeight * i / 4;
 
       canvas.drawLine(
-        Offset(
-          leftPadding,
-          y,
-        ),
-        Offset(
-          size.width -
-              rightPadding,
-          y,
-        ),
+        Offset(leftPadding, y),
+        Offset(size.width - rightPadding, y),
         gridPaint,
       );
 
-      final value =
-      (safeMax *
-          (4 - i) /
-          4)
-          .round();
+      final value = (safeMax * (4 - i) / 4).round();
 
-      final painter =
-      TextPainter(
+      final painter = TextPainter(
         text: TextSpan(
           text: '$value',
-          style:
-          const TextStyle(
-            color:
-            Color(
-              0xFF98A2B3,
-            ),
-            fontSize: 7,
-          ),
+          style: const TextStyle(color: Color(0xFF98A2B3), fontSize: 7),
         ),
-        textDirection:
-        TextDirection.ltr,
+        textDirection: TextDirection.ltr,
       )..layout();
 
       painter.paint(
         canvas,
-        Offset(
-          leftPadding -
-              painter.width -
-              6,
-          y -
-              painter.height /
-                  2,
-        ),
+        Offset(leftPadding - painter.width - 6, y - painter.height / 2),
       );
     }
 
     final points = <Offset>[];
 
-    final isDaily =
-        entries.length == 24;
+    final isDaily = entries.length == 24;
 
-    for (var i = 0;
-    i < entries.length;
-    i++) {
-      final x =
-      entries.length == 1
-          ? leftPadding +
-          chartWidth /
-              2
-          : leftPadding +
-          chartWidth *
-              i /
-              (isDaily
-                  ? 24
-                  : entries
-                  .length -
-                  1);
+    for (var i = 0; i < entries.length; i++) {
+      final x = entries.length == 1
+          ? leftPadding + chartWidth / 2
+          : leftPadding + chartWidth * i / (isDaily ? 24 : entries.length - 1);
 
-      final ratio =
-          entries[i].value /
-              safeMax;
+      final ratio = entries[i].value / safeMax;
 
-      final y =
-          topPadding +
-              chartHeight *
-                  (1 - ratio);
+      final y = topPadding + chartHeight * (1 - ratio);
 
-      points.add(
-        Offset(
-          x,
-          y,
-        ),
-      );
+      points.add(Offset(x, y));
     }
 
     if (points.length > 1) {
-      final path = Path()
-        ..moveTo(
-          points.first.dx,
-          points.first.dy,
-        );
+      final path = Path()..moveTo(points.first.dx, points.first.dy);
 
-      for (var i = 1;
-      i < points.length;
-      i++) {
-        final previous =
-        points[i - 1];
+      for (var i = 1; i < points.length; i++) {
+        final previous = points[i - 1];
 
-        final current =
-        points[i];
+        final current = points[i];
 
-        final controlX =
-            (previous.dx +
-                current.dx) /
-                2;
+        final controlX = (previous.dx + current.dx) / 2;
 
         path.cubicTo(
           controlX,
@@ -1240,135 +887,75 @@ class _VisitorLineChartPainter
         );
       }
 
-      canvas.drawPath(
-        path,
-        linePaint,
-      );
+      canvas.drawPath(path, linePaint);
     }
 
-    for (var i = 0;
-    i < points.length;
-    i++) {
-      final point =
-      points[i];
+    for (var i = 0; i < points.length; i++) {
+      final point = points[i];
 
-      if (entries[i].value >
-          0) {
-        canvas.drawCircle(
-          point,
-          4,
-          pointPaint,
-        );
+      if (entries[i].value > 0) {
+        canvas.drawCircle(point, 4, pointPaint);
 
-        canvas.drawCircle(
-          point,
-          4,
-          pointBorderPaint,
-        );
+        canvas.drawCircle(point, 4, pointBorderPaint);
       }
     }
 
-    for (var i = 0;
-    i < entries.length;
-    i++) {
-      if (!_showLabel(
-        i,
-        entries.length,
-      )) {
+    for (var i = 0; i < entries.length; i++) {
+      if (!_showLabel(i, entries.length)) {
         continue;
       }
 
-      final point =
-      points[i];
+      final point = points[i];
 
-      final painter =
-      TextPainter(
+      final painter = TextPainter(
         text: TextSpan(
-          text:
-          entries[i].key,
-          style:
-          const TextStyle(
-            color:
-            Color(
-              0xFF98A2B3,
-            ),
+          text: entries[i].key,
+          style: const TextStyle(
+            color: Color(0xFF98A2B3),
             fontSize: 7,
-            fontWeight:
-            FontWeight.w500,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        textDirection:
-        TextDirection.ltr,
+        textDirection: TextDirection.ltr,
       )..layout();
 
-      var x =
-          point.dx -
-              painter.width /
-                  2;
+      var x = point.dx - painter.width / 2;
 
-      if (x <
-          leftPadding) {
+      if (x < leftPadding) {
         x = leftPadding;
       }
 
-      if (x +
-          painter.width >
-          size.width -
-              rightPadding) {
-        x = size.width -
-            rightPadding -
-            painter.width;
+      if (x + painter.width > size.width - rightPadding) {
+        x = size.width - rightPadding - painter.width;
       }
 
-      painter.paint(
-        canvas,
-        Offset(
-          x,
-          size.height -
-              bottomPadding +
-              8,
-        ),
-      );
+      painter.paint(canvas, Offset(x, size.height - bottomPadding + 8));
     }
 
     if (isDaily) {
-      final painter =
-      TextPainter(
-        text:
-        const TextSpan(
+      final painter = TextPainter(
+        text: const TextSpan(
           text: '24:00',
           style: TextStyle(
-            color:
-            Color(
-              0xFF98A2B3,
-            ),
+            color: Color(0xFF98A2B3),
             fontSize: 7,
-            fontWeight:
-            FontWeight.w500,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        textDirection:
-        TextDirection.ltr,
+        textDirection: TextDirection.ltr,
       )..layout();
 
       painter.paint(
         canvas,
         Offset(
-          size.width -
-              rightPadding -
-              painter.width,
-          size.height -
-              bottomPadding +
-              8,
+          size.width - rightPadding - painter.width,
+          size.height - bottomPadding + 8,
         ),
       );
     }
   }
 
-  bool _showLabel(
-      int index,
-      int total,
-      ) {
+  bool _showLabel(int index, int total) {
     if (total <= 7) {
       return true;
     }
@@ -1377,24 +964,16 @@ class _VisitorLineChartPainter
       return index % 4 == 0;
     }
 
-    return index == 0 ||
-        index % 5 == 0 ||
-        index == total - 1;
+    return index == 0 || index % 5 == 0 || index == total - 1;
   }
 
   @override
-  bool shouldRepaint(
-      covariant _VisitorLineChartPainter
-      oldDelegate,
-      ) {
-    return oldDelegate.entries !=
-        entries;
+  bool shouldRepaint(covariant _VisitorLineChartPainter oldDelegate) {
+    return oldDelegate.entries != entries;
   }
 }
 
-String _periodLabel(
-    String period,
-    ) {
+String _periodLabel(String period) {
   return switch (period) {
     'daily' => 'Today',
     'weekly' => 'This week',
@@ -1412,10 +991,7 @@ String _averageLabel(String period) {
   };
 }
 
-String _peakPeriodLabel(
-    String period,
-    String value,
-    ) {
+String _peakPeriodLabel(String period, String value) {
   if (period == 'daily') {
     return value;
   }
@@ -1480,19 +1056,11 @@ String _periodDateLabel(String period) {
   }
 
   if (period == 'weekly') {
-    final today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    );
+    final today = DateTime(now.year, now.month, now.day);
 
-    final start = today.subtract(
-      Duration(days: now.weekday - 1),
-    );
+    final start = today.subtract(Duration(days: now.weekday - 1));
 
-    final end = start.add(
-      const Duration(days: 6),
-    );
+    final end = start.add(const Duration(days: 6));
 
     if (start.month == end.month) {
       return '${start.day} - ${end.day} '

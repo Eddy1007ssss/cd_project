@@ -100,7 +100,7 @@ class _OperatorFeedbackPageState extends State<OperatorFeedbackPage> {
       title: 'Tourist Feedback',
       role: 'TOURFLOW · OPERATOR',
       navigationRole: TourFlowNavigationRole.operator,
-      selectedNavigationIndex: 5,
+      selectedNavigationIndex: 6,
       child: FutureBuilder<List<OperatorFeedbackEntry>>(
         future: _feedback,
         builder: (context, snapshot) {

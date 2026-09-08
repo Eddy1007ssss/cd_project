@@ -96,6 +96,7 @@ void main() {
       'Dashboard',
       'Attractions',
       'Slots',
+      'Reports',
       'Support',
       'Analytics',
     ]);

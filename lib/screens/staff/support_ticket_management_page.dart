@@ -101,7 +101,11 @@ class _SupportTicketManagementPageState
       navigationRole: widget.navigationRole,
       pageLevel: TourFlowPageLevel.topLevel,
       selectedNavigationIndex:
-          widget.navigationRole == TourFlowNavigationRole.staff ? 0 : 3,
+          widget.navigationRole == TourFlowNavigationRole.operator
+          ? 4
+          : widget.navigationRole == TourFlowNavigationRole.administrator
+          ? 3
+          : 0,
       actions: [
         IconButton(
           tooltip: 'Refresh',

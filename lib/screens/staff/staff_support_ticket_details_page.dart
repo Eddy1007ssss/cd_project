@@ -129,9 +129,11 @@ class _StaffSupportTicketDetailsPageState
           ? 'TOURFLOW · OPERATOR'
           : 'TOURFLOW · STAFF',
       navigationRole: navigationRole,
-      selectedNavigationIndex: navigationRole == TourFlowNavigationRole.staff
-          ? 0
-          : 3,
+      selectedNavigationIndex: navigationRole == TourFlowNavigationRole.operator
+          ? 4
+          : navigationRole == TourFlowNavigationRole.administrator
+          ? 3
+          : 0,
       actions: [
         IconButton(
           tooltip: 'Refresh',

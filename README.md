@@ -43,9 +43,10 @@ in this repository.
   recommendations use shared attraction services.
 - Booking, cancellation, rescheduling, and itinerary operations use database
   functions that enforce atomic capacity changes where required.
-- Feedback, support tickets, geofence check-in, crowd data, and operator ticket
-  responses use shared database-backed services. Legacy issue reports are
-  migrated into the support-ticket workflow by the latest migration.
+- Feedback and Module 5 issue reports use the engagement workflow for
+  attraction incidents and operator resolution. Module 6 support tickets use a
+  separate helpdesk workflow for tourist questions and staff responses;
+  imported report copies are retained only as hidden audit records.
 - Some administration, attraction configuration, QR verification, profile,
   and support-ticket screens remain UI demonstrations for their assigned
   modules to complete.
