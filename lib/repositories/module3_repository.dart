@@ -16,7 +16,7 @@ const _bookingSelection =
 
 class Module3Repository {
   Module3Repository({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
 
@@ -49,26 +49,34 @@ class Module3Repository {
   }
 
   Future<List<AttractionSlot>> fetchRescheduleSlots(
-      TourBooking booking,
-      ) async {
+    TourBooking booking, {
+    String? attractionId,
+  }) async {
     final rows = await _client
         .from('attraction_slots')
         .select(_slotSelection)
-        .eq('attraction_id', booking.slot.attractionId)
+        .eq('attraction_id', attractionId ?? booking.slot.attractionId)
+        .eq('status', 'open')
         .neq('id', booking.slot.id)
         .gt('starts_at', DateTime.now().toUtc().toIso8601String())
         .order('starts_at')
-        .limit(20);
+        .limit(1000);
 
     return rows
         .map(AttractionSlot.fromMap)
         .where(
           (slot) =>
-      slot.isBookable &&
-          slot.remainingCapacity >= booking.visitorCount,
-    )
+              slot.isBookable && slot.remainingCapacity >= booking.visitorCount,
+        )
         .toList();
   }
+
+  Future<List<Map<String, dynamic>>> fetchRescheduleAttractions() async =>
+      await _client
+          .from('attractions')
+          .select('id, name')
+          .eq('listing_status', 'approved')
+          .order('name');
 
   Future<TourBooking> createBooking({
     required String slotId,
@@ -76,10 +84,7 @@ class Module3Repository {
   }) async {
     final result = await _client.rpc(
       'create_booking',
-      params: {
-        'target_slot_id': slotId,
-        'requested_visitors': visitors,
-      },
+      params: {'target_slot_id': slotId, 'requested_visitors': visitors},
     );
 
     final map = _singleMap(result);
@@ -111,9 +116,7 @@ class Module3Repository {
   Future<TourBooking> cancelBooking(String bookingId) async {
     await _client.rpc(
       'cancel_booking',
-      params: {
-        'target_booking_id': bookingId,
-      },
+      params: {'target_booking_id': bookingId},
     );
 
     return fetchBooking(bookingId);
@@ -125,10 +128,7 @@ class Module3Repository {
   }) async {
     await _client.rpc(
       'reschedule_booking',
-      params: {
-        'target_booking_id': bookingId,
-        'new_slot_id': newSlotId,
-      },
+      params: {'target_booking_id': bookingId, 'new_slot_id': newSlotId},
     );
 
     return fetchBooking(bookingId);
@@ -145,15 +145,13 @@ class Module3Repository {
     final itinerary = await _client
         .from('itineraries')
         .insert({
-      'tourist_id': _userId,
-      'title': title.trim(),
-      'itinerary_date': plan.bookings.first.slot.startsAt
-          .toIso8601String()
-          .substring(0, 10),
-      'status': plan.hasConflict
-          ? 'conflict_detected'
-          : 'conflict_free',
-    })
+          'tourist_id': _userId,
+          'title': title.trim(),
+          'itinerary_date': plan.bookings.first.slot.startsAt
+              .toIso8601String()
+              .substring(0, 10),
+          'status': plan.hasConflict ? 'conflict_detected' : 'conflict_free',
+        })
         .select('id')
         .single();
 
@@ -187,15 +185,11 @@ class Module3Repository {
       return result.cast<String, dynamic>();
     }
 
-    if (result is List &&
-        result.isNotEmpty &&
-        result.first is Map) {
+    if (result is List && result.isNotEmpty && result.first is Map) {
       return (result.first as Map).cast<String, dynamic>();
     }
 
-    throw const FormatException(
-      'The server returned an invalid booking.',
-    );
+    throw const FormatException('The server returned an invalid booking.');
   }
 }
 

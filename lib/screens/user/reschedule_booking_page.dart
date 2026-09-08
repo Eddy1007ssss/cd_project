@@ -17,6 +17,8 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
   late Future<List<AttractionSlot>> _slots;
   AttractionSlot? _selected;
   bool _busy = false;
+  late Future<List<Map<String, dynamic>>> _attractions;
+  String? _attractionId;
 
   @override
   void didChangeDependencies() {
@@ -25,6 +27,8 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
       return;
     }
     _booking = ModalRoute.of(context)?.settings.arguments as TourBooking?;
+    _attractionId = _booking?.slot.attractionId;
+    _attractions = _repository.fetchRescheduleAttractions();
     _slots = _booking == null
         ? Future.value([])
         : _repository.fetchRescheduleSlots(_booking!);
@@ -42,15 +46,17 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: TourFlowText('Booking rescheduled. Old capacity was released.'),
+          content: TourFlowText(
+            'Booking rescheduled. Old capacity was released.',
+          ),
         ),
       );
       Navigator.pop(context, booking);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: TourFlowText(bookingErrorMessage(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: TourFlowText(bookingErrorMessage(error))),
+        );
       }
     } finally {
       if (mounted) {
@@ -77,8 +83,58 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: TourFlowText(
-                'Current: ${shortDate(booking.slot.startsAt)} · ${slotTime(booking.slot)}',
+                'Current: ${booking.slot.attractionName}\n${shortDate(booking.slot.startsAt)} · ${slotTime(booking.slot)}',
               ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _attractions,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return TextButton(
+                    onPressed: () => setState(() {
+                      _attractions = _repository.fetchRescheduleAttractions();
+                    }),
+                    child: const Text('Could not load attractions. Retry'),
+                  );
+                }
+                final rows = snapshot.data ?? [];
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const LinearProgressIndicator();
+                }
+                return DropdownButtonFormField<String>(
+                  initialValue: rows.any((row) => row['id'] == _attractionId)
+                      ? _attractionId
+                      : null,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Replacement attraction',
+                  ),
+                  items: rows
+                      .map(
+                        (row) => DropdownMenuItem(
+                          value: row['id'] as String,
+                          child: Text(row['name'] as String),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: _busy
+                      ? null
+                      : (id) {
+                          if (id == null) return;
+                          setState(() {
+                            _attractionId = id;
+                            _selected = null;
+                            _slots = _repository.fetchRescheduleSlots(
+                              booking,
+                              attractionId: id,
+                            );
+                          });
+                        },
+                );
+              },
             ),
           ),
           Expanded(
@@ -96,7 +152,9 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
                 final slots = snapshot.data ?? const [];
                 if (slots.isEmpty) {
                   return const Center(
-                    child: TourFlowText('No suitable alternative slots are available.'),
+                    child: TourFlowText(
+                      'No suitable alternative slots are available.',
+                    ),
                   );
                 }
                 return ListView.builder(
@@ -105,7 +163,9 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
                   itemBuilder: (_, index) => Card(
                     color: Colors.white,
                     child: ListTile(
-                      onTap: () => setState(() => _selected = slots[index]),
+                      onTap: _busy
+                          ? null
+                          : () => setState(() => _selected = slots[index]),
                       leading: Icon(
                         _selected?.id == slots[index].id
                             ? Icons.radio_button_checked
@@ -116,7 +176,7 @@ class _RescheduleBookingPageState extends State<RescheduleBookingPage> {
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       subtitle: TourFlowText(
-                        '${slots[index].remainingCapacity} spaces remaining',
+                        '${slots[index].attractionName} · ${slots[index].remainingCapacity} spaces remaining',
                       ),
                     ),
                   ),

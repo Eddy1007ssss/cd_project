@@ -1,226 +1,76 @@
 import 'package:flutter/material.dart';
-
-import '../../widgets/tourflow_widgets.dart';
+import '../../repositories/management_repository.dart';
 import '../../widgets/navigation/navigation_routes.dart';
+import '../../widgets/tourflow_widgets.dart';
 import 'attraction_configuration_page.dart';
+import 'management_ui.dart';
 
-class AttractionDetailsPage extends StatelessWidget {
+class AttractionDetailsPage extends StatefulWidget {
   const AttractionDetailsPage({super.key});
-
   static const routeName = TourFlowRoutes.attractionDetails;
-
   @override
-  Widget build(BuildContext context) {
-    return TourFlowPage(
-      title: 'Attraction Details',
-      role: 'TOURFLOW · OPERATOR',
-      navigationRole: TourFlowNavigationRole.operator,
-      pageLevel: TourFlowPageLevel.topLevel,
-      selectedNavigationIndex: 1,
-      child: Column(
-        children: [
-          const ModuleCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionTitle(
-                  'Core Details',
-                  subtitle:
-                      'Provide clear public information for tourists discovering this attraction.',
-                ),
-                SizedBox(height: 18),
-                StaticField(
-                  label: 'Attraction Name',
-                  value: 'Old Town Square',
-                  icon: Icons.place_outlined,
-                ),
-                SizedBox(height: 14),
-                StaticField(
-                  label: 'Category',
-                  value: 'Historical Landmark',
-                  icon: Icons.category_outlined,
-                  trailing: Icon(Icons.keyboard_arrow_down_rounded),
-                ),
-                SizedBox(height: 14),
-                StaticField(
-                  label: 'Description',
-                  value:
-                      'A historic square in the Old Town quarter of Kuala Lumpur. Visitors can explore heritage buildings, local culture and guided walking routes.',
-                  maxLines: 5,
-                ),
-                SizedBox(height: 14),
-                StaticField(
-                  label: 'Location Tag',
-                  value: 'Kuala Lumpur, Malaysia',
-                  icon: Icons.location_on_outlined,
-                ),
-                SizedBox(height: 14),
-                StaticField(
-                  label: 'Entrance Price',
-                  value: 'RM 25.00 per adult · RM 12.00 per child',
-                  icon: Icons.payments_outlined,
-                ),
-                SizedBox(height: 14),
-                StaticField(
-                  label: 'Facilities',
-                  value: 'Accessible toilets · Prayer room · Café · Parking',
-                  icon: Icons.accessible_forward_outlined,
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          ModuleCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionTitle('Geographic Data'),
-                const SizedBox(height: 14),
-                Container(
-                  height: 170,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8EFE5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.map_rounded,
-                        size: 92,
-                        color: Color(0xFF8BA17E),
-                      ),
-                      Icon(
-                        Icons.location_pin,
-                        size: 44,
-                        color: TourFlowColors.danger,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlineActionButton(
-                    label: 'Set Coordinates',
-                    icon: Icons.my_location_rounded,
-                    onPressed: () {},
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          ModuleCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SectionTitle('Media Gallery'),
-                    StatusChip(
-                      label: '4/10 SLOTS',
-                      color: TourFlowColors.primaryText,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.25,
-                  children: const [
-                    _GalleryTile(icon: Icons.account_balance_rounded),
-                    _GalleryTile(icon: Icons.location_city_rounded),
-                    _GalleryTile(icon: Icons.groups_rounded),
-                    _GalleryTile(
-                      icon: Icons.add_photo_alternate_outlined,
-                      add: true,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          const ModuleCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionTitle('Visitor Information'),
-                SizedBox(height: 16),
-                StaticField(
-                  label: 'Visitor Guidelines',
-                  value:
-                      'Arrive 15 minutes before your registered slot. Keep walkways clear and follow staff instructions.',
-                  maxLines: 4,
-                ),
-                SizedBox(height: 14),
-                StaticField(
-                  label: 'Attraction Rules',
-                  value:
-                      'No smoking, restricted equipment or unattended children inside the attraction area.',
-                  maxLines: 4,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          PrimaryButton(
-            label: 'Continue to Configuration',
-            icon: Icons.arrow_forward_rounded,
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                AttractionConfigurationPage.routeName,
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlineActionButton(
-              label: 'Save as Draft',
-              icon: Icons.save_outlined,
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Attraction draft saved.')),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  State<AttractionDetailsPage> createState() => _AttractionDetailsPageState();
 }
 
-class _GalleryTile extends StatelessWidget {
-  const _GalleryTile({required this.icon, this.add = false});
-
-  final IconData icon;
-  final bool add;
-
+class _AttractionDetailsPageState extends State<AttractionDetailsPage> {
+  final _repository = ManagementRepository();
+  late Future<List<ManagementRow>> _rows;
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: add ? TourFlowColors.background : TourFlowColors.lavenderStrong,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: add
-              ? TourFlowColors.primaryText
-              : TourFlowColors.border.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Icon(
-        icon,
-        size: 38,
-        color: add ? TourFlowColors.primaryText : TourFlowColors.body,
+  void initState() {
+    super.initState();
+    _rows = _repository.attractions();
+  }
+
+  void _refresh() => setState(() => _rows = _repository.attractions());
+  Future<void> _edit([ManagementRow? row]) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => AttractionConfigurationPage(attraction: row),
       ),
     );
+    if (mounted) _refresh();
   }
+
+  @override
+  Widget build(BuildContext context) => TourFlowPage(
+    title: 'Attraction Details',
+    role: 'TOURFLOW · OPERATOR',
+    navigationRole: TourFlowNavigationRole.operator,
+    pageLevel: TourFlowPageLevel.topLevel,
+    selectedNavigationIndex: 1,
+    child: Column(
+      children: [
+        FilledButton.icon(
+          onPressed: () => _edit(),
+          icon: const Icon(Icons.add),
+          label: const Text('Register Attraction'),
+        ),
+        TextButton(onPressed: _refresh, child: const Text('Refresh')),
+        ManagementRows(
+          future: _rows,
+          retry: _refresh,
+          builder: (rows) => Column(
+            children: [
+              if (rows.isEmpty)
+                const Text(
+                  'No attractions yet. Register your first attraction.',
+                ),
+              for (final row in rows)
+                Card(
+                  child: ListTile(
+                    title: Text(row['name'] as String),
+                    subtitle: Text(
+                      '${row['listing_status']} · ${row['attraction_type']}\n${row['review_note'] ?? ''}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _edit(row),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }

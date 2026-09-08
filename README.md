@@ -37,7 +37,7 @@ in this repository.
 ## Current functional areas
 
 - Tourist, operator, and administrator navigation use role-specific persistent
-  tab shells; staff currently has a dedicated Support Tickets landing page.
+  tab shells; staff lands on QR scanning with a separate profile route.
 - Tourist authentication and registration use Supabase Auth.
 - Attraction discovery, filters, nearby results, preferences, and
   recommendations use shared attraction services.
@@ -47,9 +47,12 @@ in this repository.
   attraction incidents and operator resolution. Module 6 support tickets use a
   separate helpdesk workflow for tourist questions and staff responses;
   imported report copies are retained only as hidden audit records.
-- Some administration, attraction configuration, QR verification, profile,
-  and support-ticket screens remain UI demonstrations for their assigned
-  modules to complete.
+- Module 1 management screens now call Supabase for operator applications,
+  account/listing review, attraction editing, hours, slots and maintenance.
+  Migration `202609080003_management_integration.sql` supplies the required
+  attraction, slot and maintenance RPCs.
+- Rescheduling supports another approved attraction. Itinerary travel remains
+  a distance-based estimate, not road routing or an optimisation service.
 
 ## Development workflow
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/tourflow_widgets.dart';
-import 'support_ticket_form_page.dart';
-import 'support_ticket_list_page.dart';
+import 'report_issue_page.dart';
+import 'report_status_page.dart';
 
 class FeedbackCentrePage extends StatelessWidget {
   const FeedbackCentrePage({super.key});
@@ -93,7 +93,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'Report Issue',
             subtitle: 'Let us know the problem',
             onTap: () {
-              Navigator.pushNamed(context, SupportTicketFormPage.routeName);
+              Navigator.pushNamed(context, ReportIssuePage.routeName);
             },
           ),
 
@@ -108,7 +108,7 @@ class FeedbackCentrePage extends StatelessWidget {
             title: 'View Report Status',
             subtitle: 'Track your reports',
             onTap: () {
-              Navigator.pushNamed(context, SupportTicketListPage.routeName);
+              Navigator.pushNamed(context, ReportStatusPage.routeName);
             },
           ),
         ],

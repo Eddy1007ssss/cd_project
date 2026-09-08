@@ -1,322 +1,216 @@
 import 'package:flutter/material.dart';
-
-import '../../widgets/tourflow_widgets.dart';
+import '../../repositories/management_repository.dart';
+import '../../widgets/navigation/navigation_routes.dart';
+import '../user/tourist_registration_page.dart';
+import 'management_ui.dart';
 
 class OperatorRegistrationPage extends StatefulWidget {
   const OperatorRegistrationPage({super.key});
-
   static const routeName = '/operator-registration';
-
   @override
   State<OperatorRegistrationPage> createState() =>
       _OperatorRegistrationPageState();
 }
 
 class _OperatorRegistrationPageState extends State<OperatorRegistrationPage> {
-  bool _accepted = true;
-  bool _licenceUploaded = false;
+  static const _labels = {
+    'representative_name': 'Representative name',
+    'job_title': 'Job title',
+    'contact_email': 'Contact email',
+    'contact_phone': 'Contact phone',
+    'business_name': 'Business name',
+    'registration_number': 'Registration number',
+    'business_email': 'Business email',
+    'business_phone': 'Business phone',
+    'business_address': 'Business address',
+  };
+  static const _documents = {
+    'registration_certificate_path': 'Registration certificate',
+    'identity_document_path': 'Identity document',
+    'operating_licence_path': 'Operating licence',
+  };
+  final _repository = ManagementRepository();
+  final _form = GlobalKey<FormState>();
+  final _fields = {
+    for (final key in _labels.keys) key: TextEditingController(),
+  };
+  final Map<String, String> _paths = {};
+  Future<List<ManagementRow>>? _applications;
+  bool _busy = false;
+  bool _accepted = false;
+  @override
+  void initState() {
+    super.initState();
+    if (_repository.client.auth.currentUser != null) {
+      _applications = _repository.applications();
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: TourFlowColors.background,
-      appBar: AppBar(
-        backgroundColor: TourFlowColors.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 1,
-        shadowColor: const Color(0x140F172A),
-        title: const Text(
-          'Operator Registration',
-          style: TextStyle(
-            color: TourFlowColors.heading,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
-          child: Column(
+  void dispose() {
+    for (final controller in _fields.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _upload(String key) async {
+    setState(() => _busy = true);
+    try {
+      final path = await pickManagementImage(
+        _repository,
+        bucket: 'operator-documents',
+        folder: _repository.userId,
+      );
+      if (path != null && mounted) setState(() => _paths[key] = path);
+    } catch (error) {
+      if (mounted) managementMessage(context, managementError(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _submit() async {
+    if (!_form.currentState!.validate()) return;
+    if (!_accepted || _paths.length != 3) {
+      managementMessage(
+        context,
+        'Upload all three documents and accept the declaration.',
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await _repository.submitApplication({
+        for (final e in _fields.entries) e.key: e.value.text.trim(),
+        ..._paths,
+      });
+      if (mounted) {
+        setState(() => _applications = _repository.applications());
+        managementMessage(
+          context,
+          'Application saved. Await administrator review.',
+        );
+      }
+    } catch (error) {
+      if (mounted) managementMessage(context, managementError(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Operator Registration')),
+    body: _applications == null
+        ? Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                const Text(
+                  'Create a tourist account and sign in first. Then open Operator Application from your profile. '
+                  'Administrator approval upgrades that account to an operator.',
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    TouristRegistrationPage.routeName,
+                  ),
+                  child: const Text('Create Account'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    TourFlowRoutes.signIn,
+                    (_) => false,
+                  ),
+                  child: const Text('Sign In'),
+                ),
+              ],
+            ),
+          )
+        : ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              const ModuleCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ManagementRows(
+                future: _applications!,
+                retry: () =>
+                    setState(() => _applications = _repository.applications()),
+                builder: (rows) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SectionTitle(
-                      'Representative Details',
-                      subtitle: 'Tell us who will manage the operator account.',
-                    ),
-                    SizedBox(height: 18),
-                    StaticField(
-                      label: 'Full Legal Name',
-                      value: 'Johnathan Doe',
-                    ),
-                    SizedBox(height: 14),
-                    StaticField(
-                      label: 'Job Title / Role',
-                      value: 'Operations Manager',
-                    ),
-                    SizedBox(height: 14),
-                    StaticField(
-                      label: 'Direct Contact Email',
-                      value: 'j.doe@business.com',
-                      icon: Icons.email_outlined,
-                    ),
-                    SizedBox(height: 14),
-                    StaticField(
-                      label: 'Primary Phone Number',
-                      value: '+60 12-345 6789',
-                      icon: Icons.phone_outlined,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              ModuleCard(
-                color: TourFlowColors.lavender,
-                child: const Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: TourFlowColors.primary,
-                      child: Text('AT'),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Alex Thompson',
-                            style: TextStyle(
-                              color: TourFlowColors.heading,
-                              fontWeight: FontWeight.w700,
-                            ),
+                    for (final row in rows)
+                      Card(
+                        child: ListTile(
+                          title: Text(
+                            '${row['business_name']} · ${row['status']}',
                           ),
-                          Text(
-                            'Lead Operator Account',
-                            style: TextStyle(
-                              color: TourFlowColors.muted,
-                              fontSize: 11,
-                            ),
+                          subtitle: Text(
+                            '${row['review_note'] ?? 'Awaiting review. Sign in again after approval.'}',
                           ),
-                        ],
-                      ),
-                    ),
-                    StatusChip(
-                      label: 'VERIFIED IDENTITY REQUIRED',
-                      color: TourFlowColors.warning,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const ModuleCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SectionTitle('Business Information'),
-                    SizedBox(height: 18),
-                    StaticField(
-                      label: 'Registered Business Name',
-                      value: 'Heritage Experiences Sdn. Bhd.',
-                      icon: Icons.business_outlined,
-                    ),
-                    SizedBox(height: 14),
-                    StaticField(
-                      label: 'Business Registration Number',
-                      value: '202401023456',
-                    ),
-                    SizedBox(height: 14),
-                    StaticField(
-                      label: 'Business Email',
-                      value: 'hello@heritageexperiences.my',
-                      icon: Icons.email_outlined,
-                    ),
-                    SizedBox(height: 14),
-                    StaticField(
-                      label: 'Business Phone',
-                      value: '+603-2181 8899',
-                      icon: Icons.phone_outlined,
-                    ),
-                    SizedBox(height: 14),
-                    StaticField(
-                      label: 'Business Address',
-                      value:
-                          'Level 12, Menara Sentral, Jalan Tun Sambanthan, Kuala Lumpur',
-                      icon: Icons.location_on_outlined,
-                      maxLines: 3,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              ModuleCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SectionTitle(
-                      'Verification Documents',
-                      subtitle:
-                          'Documents are reviewed by an administrator before access is granted.',
-                    ),
-                    const SizedBox(height: 16),
-                    _DocumentRow(
-                      title: 'Business Registration Certificate',
-                      fileName: 'ssm_certificate.pdf',
-                      complete: true,
-                      onTap: () {},
-                    ),
-                    const SizedBox(height: 10),
-                    _DocumentRow(
-                      title: 'Representative Identity Document',
-                      fileName: 'identity_document.pdf',
-                      complete: true,
-                      onTap: () {},
-                    ),
-                    const SizedBox(height: 10),
-                    _DocumentRow(
-                      title: 'Business Operating Licence',
-                      fileName: _licenceUploaded
-                          ? 'operating_licence.pdf'
-                          : 'Tap to upload document',
-                      complete: _licenceUploaded,
-                      onTap: () =>
-                          setState(() => _licenceUploaded = !_licenceUploaded),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              CheckboxListTile(
-                value: _accepted,
-                contentPadding: EdgeInsets.zero,
-                activeColor: TourFlowColors.primaryText,
-                controlAffinity: ListTileControlAffinity.leading,
-                title: const Text(
-                  'I confirm that the information provided is accurate and complete.',
-                  style: TextStyle(fontSize: 11),
-                ),
-                onChanged: (value) =>
-                    setState(() => _accepted = value ?? false),
-              ),
-              PrimaryButton(
-                label: 'Submit for Admin Review',
-                icon: Icons.send_rounded,
-                onPressed: () {
-                  if (!_accepted || !_licenceUploaded) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Upload all documents and confirm the declaration first.',
                         ),
                       ),
-                    );
-                    return;
-                  }
-                  showDialog<void>(
-                    context: context,
-                    builder: (dialogContext) => AlertDialog(
-                      icon: const Icon(
-                        Icons.hourglass_top_rounded,
-                        color: TourFlowColors.warning,
-                      ),
-                      title: const Text('Application Submitted'),
-                      content: const Text(
-                        'Application OP-2026-0142 is pending administrator review. You will be notified when its status changes.',
-                      ),
-                      actions: [
-                        FilledButton(
-                          onPressed: () => Navigator.pop(dialogContext),
-                          child: const Text('Done'),
+                    if (!rows.any(
+                      (row) =>
+                          row['status'] == 'pending' ||
+                          row['status'] == 'approved',
+                    ))
+                      Form(
+                        key: _form,
+                        child: AbsorbPointer(
+                          absorbing: _busy,
+                          child: Column(
+                            children: [
+                              for (final e in _labels.entries)
+                                managementField(
+                                  e.value,
+                                  _fields[e.key]!,
+                                  validator: e.key.endsWith('email')
+                                      ? (value) =>
+                                            RegExp(
+                                              r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                                            ).hasMatch((value ?? '').trim())
+                                            ? null
+                                            : 'Enter a valid email'
+                                      : null,
+                                ),
+                              const Text(
+                                'Upload clear JPG, PNG or WebP scans (up to 10 MB each). Documents remain private.',
+                              ),
+                              for (final e in _documents.entries)
+                                ListTile(
+                                  title: Text(e.value),
+                                  subtitle: Text(
+                                    _paths.containsKey(e.key)
+                                        ? 'Uploaded'
+                                        : 'Required',
+                                  ),
+                                  trailing: IconButton(
+                                    onPressed: () => _upload(e.key),
+                                    icon: const Icon(Icons.upload_file),
+                                  ),
+                                ),
+                              CheckboxListTile(
+                                value: _accepted,
+                                title: const Text(
+                                  'I confirm these details are accurate.',
+                                ),
+                                onChanged: (value) =>
+                                    setState(() => _accepted = value ?? false),
+                              ),
+                              FilledButton(
+                                onPressed: _busy ? null : _submit,
+                                child: const Text('Submit for Admin Review'),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Applications normally take 1–3 working days to review.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: TourFlowColors.muted, fontSize: 11),
-              ),
+              if (_busy) const LinearProgressIndicator(),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DocumentRow extends StatelessWidget {
-  const _DocumentRow({
-    required this.title,
-    required this.fileName,
-    required this.complete,
-    required this.onTap,
-  });
-
-  final String title;
-  final String fileName;
-  final bool complete;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: TourFlowColors.background,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: TourFlowColors.border.withValues(alpha: 0.6),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              complete ? Icons.description_rounded : Icons.upload_file_rounded,
-              color: complete
-                  ? TourFlowColors.success
-                  : TourFlowColors.primaryText,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: TourFlowColors.heading,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    fileName,
-                    style: const TextStyle(
-                      color: TourFlowColors.muted,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              complete ? Icons.check_circle_rounded : Icons.add_circle_outline,
-              color: complete
-                  ? TourFlowColors.success
-                  : TourFlowColors.primaryText,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  );
 }

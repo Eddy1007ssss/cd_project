@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/user_profile.dart';
+import '../staff/operator_registration_page.dart';
 import '../../repositories/auth_repository.dart';
 import '../../repositories/profile_security_gateway.dart';
 import '../../widgets/navigation/navigation_routes.dart';
@@ -362,6 +363,15 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
       key: _formKey,
       child: Column(
         children: [
+          if (profile.role == UserRole.tourist)
+            TextButton.icon(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                OperatorRegistrationPage.routeName,
+              ),
+              icon: const Icon(Icons.business_outlined),
+              label: const TourFlowText('Operator Application'),
+            ),
           ModuleCard(
             color: TourFlowColors.lavender,
             child: Row(
