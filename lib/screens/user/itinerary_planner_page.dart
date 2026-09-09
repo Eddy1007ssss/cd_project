@@ -29,6 +29,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
   bool _savedError = false;
   bool _busy = false;
   bool _routing = false;
+  bool _builderOpen = false;
   String? _editingId;
   ItineraryPlan? _roadPlan;
   DateTime? _day;
@@ -79,6 +80,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
     final valid = available.map((booking) => booking.id).toSet();
     final ids = itinerary?.bookingIds ?? const <String>[];
     setState(() {
+      _builderOpen = true;
       _editingId = itinerary?.id;
       _title.text = itinerary?.title ?? 'My Day Trip';
       _day = itinerary == null ? null : _date(itinerary.date);
@@ -351,6 +353,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (!_builderOpen) ...[
             Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
               const TourFlowText(
                   'Saved itineraries',
@@ -417,6 +420,26 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                 ),
               )),
             const SizedBox(height: 16),
+            ] else ...[
+              Row(children: [
+                IconButton(
+                  tooltip: 'Back to my itineraries',
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: _busy || _routing ? null : () => setState(() {
+                    _builderOpen = false;
+                    _editingId = null;
+                    _selectedIds.clear();
+                    _roadPlan = null;
+                  }),
+                ),
+                Expanded(child: TourFlowText(
+                  _editingId == null ? 'Create itinerary' : 'Edit itinerary',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                )),
+              ]),
+              const SizedBox(height: 8),
+            ],
+            if (_builderOpen) ...[
             const TourFlowText('Build a single-day or multi-day trip. Visits stay in booking-time order. Overnight transfers and accommodation are not included.'),
             const SizedBox(height: 12),
             TextField(
@@ -583,6 +606,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                           : 'Update Itinerary',
                 ),
               ),
+            ],
             ],
           ],
         );
