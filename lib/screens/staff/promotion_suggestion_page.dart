@@ -17,7 +17,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
   final _repository = EngagementRepository();
 
   late Future<List<VisitorTrendEntry>> _visitorTrends;
-  String? _selectedAttractionId;
+  String? _selectedAttractionKey;
 
   @override
   void initState() {
@@ -25,25 +25,37 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
     _visitorTrends = _repository.fetchOperatorVisitorTrends();
   }
 
+  String _attractionKey(String name) => name.trim().toLowerCase();
+
   List<_AttractionOption> _buildAttractions(List<VisitorTrendEntry> entries) {
     final attractions = <String, _AttractionOption>{};
 
     for (final entry in entries) {
-      if (entry.attractionId.isEmpty) continue;
-      attractions[entry.attractionId] = _AttractionOption(
-        id: entry.attractionId,
-        name: entry.attractionName,
+      final name = entry.attractionName.trim();
+      if (name.isEmpty) continue;
+
+      final key = _attractionKey(name);
+
+      attractions.putIfAbsent(
+        key,
+            () => _AttractionOption(
+          key: key,
+          name: name,
+        ),
       );
     }
 
     final result = attractions.values.toList();
-    result.sort((a, b) => a.name.compareTo(b.name));
+    result.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+
     return result;
   }
 
   _PromotionSuggestionData? _buildSuggestion(
       List<VisitorTrendEntry> entries,
-      String attractionId,
+      String attractionKey,
       ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -51,7 +63,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
     final endDate = today.add(const Duration(days: 1));
 
     final recentEntries = entries.where((entry) {
-      return entry.attractionId == attractionId &&
+      return _attractionKey(entry.attractionName) == attractionKey &&
           !entry.checkedInAt.isBefore(startDate) &&
           entry.checkedInAt.isBefore(endDate);
     }).toList();
@@ -68,6 +80,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
       );
 
       final startHour = (entry.checkedInAt.hour ~/ 2) * 2;
+
       final key =
           '${date.year}-${date.month}-${date.day}-${date.weekday}-$startHour';
 
@@ -94,6 +107,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
 
     for (final total in dailyPeriodTotals.values) {
       final key = '${total.weekday}-${total.startHour}';
+
       groupedPeriods.putIfAbsent(key, () => []);
       groupedPeriods[key]!.add(total.visitors);
     }
@@ -121,11 +135,13 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
 
     if (buckets.isEmpty) return null;
 
-    final repeatedBuckets =
-    buckets.where((bucket) => bucket.observations >= 2).toList();
+    final repeatedBuckets = buckets
+        .where((bucket) => bucket.observations >= 2)
+        .toList();
 
-    final candidates =
-    repeatedBuckets.isNotEmpty ? repeatedBuckets : buckets;
+    final candidates = repeatedBuckets.isNotEmpty
+        ? repeatedBuckets
+        : buckets;
 
     candidates.sort(
           (a, b) => a.averageVisitors.compareTo(b.averageVisitors),
@@ -153,7 +169,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
     }
 
     return _PromotionSuggestionData(
-      attractionName: recentEntries.first.attractionName,
+      attractionName: recentEntries.first.attractionName.trim(),
       weekday: lowest.weekday,
       startHour: lowest.startHour,
       averageVisitors: lowest.averageVisitors,
@@ -213,9 +229,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const SizedBox(
               height: 300,
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: Center(child: CircularProgressIndicator()),
             );
           }
 
@@ -296,12 +310,12 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
             );
           }
 
-          final selectedAttractionId =
-              _selectedAttractionId ?? attractions.first.id;
+          final selectedAttractionKey =
+              _selectedAttractionKey ?? attractions.first.key;
 
           final suggestion = _buildSuggestion(
             entries,
-            selectedAttractionId,
+            selectedAttractionKey,
           );
 
           return Column(
@@ -386,7 +400,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                     Expanded(
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
-                          value: selectedAttractionId,
+                          value: selectedAttractionKey,
                           isExpanded: true,
                           icon: const Icon(
                             Icons.keyboard_arrow_down_rounded,
@@ -394,7 +408,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                           ),
                           items: attractions.map((attraction) {
                             return DropdownMenuItem<String>(
-                              value: attraction.id,
+                              value: attraction.key,
                               child: Text(
                                 attraction.name,
                                 maxLines: 1,
@@ -411,7 +425,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                             if (value == null) return;
 
                             setState(() {
-                              _selectedAttractionId = value;
+                              _selectedAttractionKey = value;
                             });
                           },
                         ),
@@ -803,11 +817,11 @@ class _InfoCard extends StatelessWidget {
 
 class _AttractionOption {
   const _AttractionOption({
-    required this.id,
+    required this.key,
     required this.name,
   });
 
-  final String id;
+  final String key;
   final String name;
 }
 
