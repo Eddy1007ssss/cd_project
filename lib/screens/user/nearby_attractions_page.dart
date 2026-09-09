@@ -7,50 +7,42 @@ import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
 import 'attraction_details_page.dart';
 
-class NearbyAttractionsPage
-    extends StatefulWidget {
+class NearbyAttractionsPage extends StatefulWidget {
   const NearbyAttractionsPage({
     super.key,
   });
 
-  static const routeName =
-      '/nearby-attractions';
+  static const routeName = '/nearby-attractions';
 
   @override
-  State<NearbyAttractionsPage>
-  createState() =>
+  State<NearbyAttractionsPage> createState() =>
       _NearbyAttractionsPageState();
 }
 
-class _NearbyAttractionsPageState
-    extends State<NearbyAttractionsPage> {
-  final _service =
-  AttractionService();
+class _NearbyAttractionsPageState extends State<NearbyAttractionsPage> {
+  final _service = AttractionService();
 
-  final _locationService =
-  LocationService();
+  final _locationService = LocationService();
 
-  final _transportService =
-  const _NearbyTransportService();
+  final _transportService = const _NearbyTransportService();
 
-  static const double
-  _minimumRadiusKm = 1;
+  static const double _minimumRadiusKm = 1;
+  static const double _maximumRadiusKm = 50;
 
-  static const double
-  _maximumRadiusKm = 50;
+  late Future<(LocationPoint, List<Attraction>)> _nearby;
 
-  late Future<
-      (
-      LocationPoint,
-      List<Attraction>,
-      BookingLocationAnchor?,
-      )> _nearby;
+  // ==============================================================
+  // RADIUS
+  // ==============================================================
 
   double _radiusKm = 10;
-
   double _savedRadiusKm = 10;
 
   bool _radiusLoaded = false;
+
+  // ==============================================================
+  // MANUAL LOCATION
+  // ==============================================================
 
   LocationPoint? _manualLocation;
 
@@ -64,93 +56,86 @@ class _NearbyAttractionsPageState
   }
 
   // ==============================================================
-  // LOAD
+  // LOAD NEARBY ATTRACTIONS
   // ==============================================================
 
-  Future<
-      (
-      LocationPoint,
-      List<Attraction>,
-      BookingLocationAnchor?,
-      )> _load({
+  Future<(LocationPoint, List<Attraction>)> _load({
     bool loadSavedRadius = false,
   }) async {
-    final anchor =
-    await _service
-        .getUpcomingBookingAnchor();
+    // ============================================================
+    // LOCATION PRIORITY
+    //
+    // 1. Manual location, if user selected one
+    // 2. Phone GPS
+    //
+    // Upcoming booking location DOES NOT override Nearby anymore.
+    // ============================================================
 
     late LocationPoint location;
 
-    if (anchor != null) {
-      location = anchor.location;
-    } else if (_manualLocation !=
-        null) {
+    if (_manualLocation != null) {
       location = _manualLocation!;
     } else {
-      location =
-      await _locationService
-          .currentLocation();
+      location = await _locationService.currentLocation();
     }
 
-    if (loadSavedRadius ||
-        !_radiusLoaded) {
-      final preferences =
-      await _service
-          .getPreferences(
+    // ============================================================
+    // LOAD SAVED RADIUS
+    // ============================================================
+
+    if (loadSavedRadius || !_radiusLoaded) {
+      final preferences = await _service.getPreferences(
         defaultOrigin: location,
       );
 
-      _savedRadiusKm =
-          preferences.travelRadiusKm
-              .clamp(
-            _minimumRadiusKm,
-            _maximumRadiusKm,
-          )
-              .toDouble();
+      _savedRadiusKm = preferences.travelRadiusKm
+          .clamp(
+        _minimumRadiusKm,
+        _maximumRadiusKm,
+      )
+          .toDouble();
 
-      _radiusKm =
-          _savedRadiusKm;
+      _radiusKm = _savedRadiusKm;
 
       _radiusLoaded = true;
     }
 
-    var attractions =
-    await _service.getNearby(
+    // ============================================================
+    // GET ALL APPROVED ATTRACTIONS WITH DISTANCE
+    // ============================================================
+
+    var attractions = await _service.getNearby(
       location,
     );
 
-    attractions =
-        attractions.where(
-              (attraction) {
-            final distance =
-                attraction.distanceKm;
+    // ============================================================
+    // FILTER ONLY BY SELECTED RADIUS
+    // ============================================================
 
-            if (distance == null) {
-              return false;
-            }
+    attractions = attractions.where(
+          (attraction) {
+        final distance = attraction.distanceKm;
 
-            return distance <=
-                _radiusKm;
-          },
-        ).toList();
+        if (distance == null) {
+          return false;
+        }
 
-    if (anchor != null) {
-      attractions =
-          attractions.where(
-                (attraction) {
-              return _service
-                  .fitsAfterBooking(
-                attraction,
-                anchor,
-              );
-            },
-          ).toList();
-    }
+        return distance <= _radiusKm;
+      },
+    ).toList();
+
+    // ============================================================
+    // IMPORTANT:
+    //
+    // We DO NOT call fitsAfterBooking() here anymore.
+    //
+    // Normal Nearby Attractions should show attractions around the
+    // tourist's current/manual location.
+    // ============================================================
 
     return (
     location,
     attractions,
-    anchor,
     );
   }
 
@@ -165,11 +150,12 @@ class _NearbyAttractionsPageState
   }
 
   // ==============================================================
-  // GPS
+  // USE GPS AGAIN
   // ==============================================================
 
   void _retryGps() {
     setState(() {
+      // Remove manual location so phone GPS becomes active.
       _manualLocation = null;
 
       _nearby = _load();
@@ -177,28 +163,45 @@ class _NearbyAttractionsPageState
   }
 
   // ==============================================================
-  // SAVED RADIUS
+  // RESET SEARCH RADIUS
   // ==============================================================
 
   void _resetToSavedRadius() {
     setState(() {
-      _radiusKm =
-          _savedRadiusKm;
+      _radiusKm = _savedRadiusKm;
 
       _nearby = _load();
     });
   }
 
   // ==============================================================
-  // MAP ATTRACTION
+  // MAP ZOOM BASED ON RADIUS
+  // ==============================================================
+
+  double _mapZoomForRadius() {
+    if (_radiusKm <= 5) {
+      return 13;
+    }
+
+    if (_radiusKm <= 15) {
+      return 12;
+    }
+
+    if (_radiusKm <= 30) {
+      return 11;
+    }
+
+    return 10;
+  }
+
+  // ==============================================================
+  // OPEN ATTRACTION FROM MAP
   // ==============================================================
 
   void _showMapAttraction(
       Attraction attraction,
       ) {
-    final transport =
-    _transportService
-        .recommendedForDistance(
+    final transport = _transportService.recommendedForDistance(
       attraction.distanceKm,
     );
 
@@ -208,86 +211,66 @@ class _NearbyAttractionsPageState
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding:
-            const EdgeInsets
-                .fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               20,
               4,
               20,
               24,
             ),
             child: Column(
-              mainAxisSize:
-              MainAxisSize.min,
-              crossAxisAlignment:
-              CrossAxisAlignment
-                  .start,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   attraction.name,
-                  style:
-                  const TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
-                    fontWeight:
-                    FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
 
-                const SizedBox(
-                  height: 4,
-                ),
+                const SizedBox(height: 4),
 
                 Text(
                   '${attraction.category} · '
                       '${attraction.locationName}',
                 ),
 
-                const SizedBox(
-                  height: 14,
-                ),
+                const SizedBox(height: 14),
 
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     _MapInfoChip(
-                      icon: Icons
-                          .payments_outlined,
-                      label: attraction
-                          .entrancePriceMyr ==
-                          0
+                      icon: Icons.payments_outlined,
+                      label: attraction.entrancePriceMyr == 0
                           ? 'Free'
                           : 'RM ${attraction.entrancePriceMyr.toStringAsFixed(0)}',
                     ),
 
-                    if (attraction
-                        .distanceKm !=
-                        null)
+                    if (attraction.distanceKm != null)
                       _MapInfoChip(
-                        icon: Icons
-                            .location_on_outlined,
+                        icon: Icons.location_on_outlined,
                         label:
                         '${attraction.distanceKm!.toStringAsFixed(1)} km away',
                       ),
 
+                    // Keep friend's new live crowd value.
                     _MapInfoChip(
-                      icon: Icons
-                          .groups_outlined,
-                      label:
-                      '${attraction.crowdLevel} live crowd',
+                      icon: Icons.groups_outlined,
+                      label: '${attraction.crowdLevel} live crowd',
                     ),
 
                     _MapInfoChip(
-                      icon: Icons
-                          .calendar_month_outlined,
+                      icon: Icons.calendar_month_outlined,
                       label:
                       '${attraction.availableSlots.length} slots',
                     ),
 
                     if (transport != null)
                       _MapInfoChip(
-                        icon:
-                        _nearbyTransportIcon(
+                        icon: _nearbyTransportIcon(
                           transport.mode,
                         ),
                         label:
@@ -296,42 +279,30 @@ class _NearbyAttractionsPageState
                   ],
                 ),
 
-                const SizedBox(
-                  height: 18,
-                ),
+                const SizedBox(height: 18),
 
                 SizedBox(
-                  width:
-                  double.infinity,
-                  child:
-                  FilledButton.icon(
+                  width: double.infinity,
+                  child: FilledButton.icon(
                     onPressed: () {
                       Navigator.pop(
                         sheetContext,
                       );
 
-                      Navigator
-                          .pushNamed(
+                      Navigator.pushNamed(
                         context,
-                        AttractionDetailsPage
-                            .routeName,
-                        arguments:
-                        attraction.id,
+                        AttractionDetailsPage.routeName,
+                        arguments: attraction.id,
                       );
                     },
-                    icon:
-                    const Icon(
+                    icon: const Icon(
                       Icons.info_outline,
                     ),
-                    label:
-                    const Text(
+                    label: const Text(
                       'View Attraction Details',
                     ),
-                    style:
-                    FilledButton
-                        .styleFrom(
-                      backgroundColor:
-                      const Color(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(
                         0xFF79571E,
                       ),
                     ),
@@ -346,20 +317,17 @@ class _NearbyAttractionsPageState
   }
 
   // ==============================================================
-  // MAP
+  // REAL OPENSTREETMAP
   // ==============================================================
 
   Widget _buildMap(
       LocationPoint location,
       List<Attraction> attractions,
       ) {
-    final mappableAttractions =
-    attractions.where(
+    final mappableAttractions = attractions.where(
           (attraction) {
-        return attraction.latitude !=
-            null &&
-            attraction.longitude !=
-                null;
+        return attraction.latitude != null &&
+            attraction.longitude != null;
       },
     ).toList();
 
@@ -369,31 +337,36 @@ class _NearbyAttractionsPageState
     );
 
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           height: 280,
-          decoration:
-          BoxDecoration(
-            borderRadius:
-            BorderRadius.circular(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(
               18,
             ),
             border: Border.all(
-              color:
-              Colors.grey.shade300,
+              color: Colors.grey.shade300,
             ),
           ),
-          clipBehavior:
-          Clip.antiAlias,
+          clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
+              // ==================================================
+              // MAP
+              // ==================================================
+
               FlutterMap(
+                // Key makes the map recenter when GPS/manual
+                // location changes.
+                key: ValueKey(
+                  '${location.latitude}-'
+                      '${location.longitude}-'
+                      '${_radiusKm.toStringAsFixed(0)}',
+                ),
                 options: MapOptions(
-                  initialCenter:
-                  center,
-                  initialZoom: 12,
+                  initialCenter: center,
+                  initialZoom: _mapZoomForRadius(),
                 ),
                 children: [
                   TileLayer(
@@ -406,7 +379,7 @@ class _NearbyAttractionsPageState
                   MarkerLayer(
                     markers: [
                       // ===========================================
-                      // USER LOCATION
+                      // CURRENT / MANUAL USER LOCATION
                       // ===========================================
 
                       Marker(
@@ -414,40 +387,27 @@ class _NearbyAttractionsPageState
                         width: 58,
                         height: 58,
                         child: Tooltip(
-                          message:
-                          location.label,
+                          message: location.label,
                           child: Container(
-                            decoration:
-                            BoxDecoration(
-                              color:
-                              Colors.blue,
-                              shape:
-                              BoxShape.circle,
-                              border:
-                              Border.all(
-                                color:
-                                Colors.white,
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
                                 width: 3,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors
-                                      .black
-                                      .withValues(
-                                    alpha:
-                                    .25,
+                                  color: Colors.black.withValues(
+                                    alpha: .25,
                                   ),
-                                  blurRadius:
-                                  5,
+                                  blurRadius: 5,
                                 ),
                               ],
                             ),
-                            child:
-                            const Icon(
-                              Icons
-                                  .my_location,
-                              color:
-                              Colors.white,
+                            child: const Icon(
+                              Icons.my_location,
+                              color: Colors.white,
                               size: 25,
                             ),
                           ),
@@ -455,40 +415,30 @@ class _NearbyAttractionsPageState
                       ),
 
                       // ===========================================
-                      // ATTRACTIONS
+                      // ATTRACTION PINS
                       // ===========================================
 
-                      ...mappableAttractions
-                          .map(
+                      ...mappableAttractions.map(
                             (attraction) {
                           return Marker(
                             point: LatLng(
-                              attraction
-                                  .latitude!,
-                              attraction
-                                  .longitude!,
+                              attraction.latitude!,
+                              attraction.longitude!,
                             ),
                             width: 55,
                             height: 55,
-                            child:
-                            GestureDetector(
+                            child: GestureDetector(
                               onTap: () {
                                 _showMapAttraction(
                                   attraction,
                                 );
                               },
-                              child:
-                              Tooltip(
-                                message:
-                                attraction
-                                    .name,
-                                child:
-                                const Icon(
-                                  Icons
-                                      .location_pin,
+                              child: Tooltip(
+                                message: attraction.name,
+                                child: const Icon(
+                                  Icons.location_pin,
                                   size: 48,
-                                  color:
-                                  Color(
+                                  color: Color(
                                     0xFF79571E,
                                   ),
                                 ),
@@ -502,71 +452,54 @@ class _NearbyAttractionsPageState
                 ],
               ),
 
-              // ================================================
-              // LOCATION LABEL
-              // ================================================
+              // ==================================================
+              // CURRENT LOCATION LABEL
+              // ==================================================
 
               Positioned(
                 left: 10,
                 right: 10,
                 top: 10,
                 child: Container(
-                  padding:
-                  const EdgeInsets
-                      .symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 7,
                   ),
-                  decoration:
-                  BoxDecoration(
-                    color: Colors.white
-                        .withValues(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(
                       alpha: .92,
                     ),
-                    borderRadius:
-                    BorderRadius
-                        .circular(
+                    borderRadius: BorderRadius.circular(
                       20,
                     ),
                   ),
                   child: Row(
                     children: [
                       const Icon(
-                        Icons
-                            .my_location_outlined,
+                        Icons.my_location_outlined,
                         size: 16,
-                        color:
-                        Colors.blue,
+                        color: Colors.blue,
                       ),
 
-                      const SizedBox(
-                        width: 6,
-                      ),
+                      const SizedBox(width: 6),
 
                       Expanded(
                         child: Text(
                           location.label,
                           maxLines: 1,
-                          overflow:
-                          TextOverflow
-                              .ellipsis,
-                          style:
-                          const TextStyle(
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
                             fontSize: 11,
-                            fontWeight:
-                            FontWeight
-                                .w700,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
 
                       Text(
                         '${attractions.length} nearby',
-                        style:
-                        const TextStyle(
+                        style: const TextStyle(
                           fontSize: 10,
-                          color:
-                          Color(
+                          color: Color(
                             0xFF64748B,
                           ),
                         ),
@@ -576,37 +509,29 @@ class _NearbyAttractionsPageState
                 ),
               ),
 
-              // ================================================
-              // MAP CREDIT
-              // ================================================
+              // ==================================================
+              // OPENSTREETMAP CREDIT
+              // ==================================================
 
               Positioned(
                 right: 6,
                 bottom: 6,
                 child: Container(
-                  padding:
-                  const EdgeInsets
-                      .symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 6,
                     vertical: 3,
                   ),
-                  decoration:
-                  BoxDecoration(
-                    color: Colors.white
-                        .withValues(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(
                       alpha: .88,
                     ),
-                    borderRadius:
-                    BorderRadius
-                        .circular(
+                    borderRadius: BorderRadius.circular(
                       5,
                     ),
                   ),
-                  child:
-                  const Text(
+                  child: const Text(
                     '© OpenStreetMap contributors',
-                    style:
-                    TextStyle(
+                    style: TextStyle(
                       fontSize: 8,
                     ),
                   ),
@@ -616,9 +541,7 @@ class _NearbyAttractionsPageState
           ),
         ),
 
-        const SizedBox(
-          height: 8,
-        ),
+        const SizedBox(height: 8),
 
         Row(
           children: [
@@ -628,39 +551,30 @@ class _NearbyAttractionsPageState
               color: Colors.blue,
             ),
 
-            const SizedBox(
-              width: 4,
-            ),
+            const SizedBox(width: 4),
 
             const Text(
               'Your location',
-              style:
-              TextStyle(
+              style: TextStyle(
                 fontSize: 10,
               ),
             ),
 
-            const SizedBox(
-              width: 14,
-            ),
+            const SizedBox(width: 14),
 
             const Icon(
               Icons.location_pin,
               size: 17,
-              color:
-              Color(
+              color: Color(
                 0xFF79571E,
               ),
             ),
 
-            const SizedBox(
-              width: 2,
-            ),
+            const SizedBox(width: 2),
 
             const Text(
               'Attraction',
-              style:
-              TextStyle(
+              style: TextStyle(
                 fontSize: 10,
               ),
             ),
@@ -669,11 +583,9 @@ class _NearbyAttractionsPageState
 
             Text(
               'Tap a pin for details',
-              style:
-              TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: Colors
-                    .grey.shade600,
+                color: Colors.grey.shade600,
               ),
             ),
           ],
@@ -687,20 +599,16 @@ class _NearbyAttractionsPageState
   // ==============================================================
 
   Future<void> _showManualLocation() async {
-    final labelController =
-    TextEditingController();
+    final labelController = TextEditingController();
 
-    final latitudeController =
-    TextEditingController();
+    final latitudeController = TextEditingController();
 
-    final longitudeController =
-    TextEditingController();
+    final longitudeController = TextEditingController();
 
     String? validationMessage;
 
     final result =
-    await showModalBottomSheet<
-        LocationPoint>(
+    await showModalBottomSheet<LocationPoint>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -712,73 +620,57 @@ class _NearbyAttractionsPageState
               ) {
             return SafeArea(
               child: Padding(
-                padding:
-                EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   20,
                   4,
                   20,
                   20 +
-                      MediaQuery.of(
-                        context,
-                      ).viewInsets.bottom,
+                      MediaQuery.of(context)
+                          .viewInsets
+                          .bottom,
                 ),
-                child:
-                SingleChildScrollView(
+                child: SingleChildScrollView(
                   child: Column(
-                    mainAxisSize:
-                    MainAxisSize.min,
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
+                    CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Enter Location Manually',
-                        style:
-                        TextStyle(
+                        style: TextStyle(
                           fontSize: 21,
-                          fontWeight:
-                          FontWeight
-                              .w800,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
 
-                      const SizedBox(
-                        height: 6,
-                      ),
+                      const SizedBox(height: 6),
 
                       const Text(
                         'Enter a location name and its coordinates. '
                             'Nearby attractions will be calculated from '
                             'this location instead of your phone GPS.',
-                        style:
-                        TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color:
-                          Color(
+                          color: Color(
                             0xFF64748B,
                           ),
                           height: 1.4,
                         ),
                       ),
 
-                      const SizedBox(
-                        height: 18,
-                      ),
+                      const SizedBox(height: 18),
 
                       TextField(
-                        controller:
-                        labelController,
+                        controller: labelController,
                         textCapitalization:
-                        TextCapitalization
-                            .words,
+                        TextCapitalization.words,
                         decoration:
                         const InputDecoration(
                           labelText:
                           'Location name',
                           hintText:
                           'Example: George Town',
-                          prefixIcon:
-                          Icon(
+                          prefixIcon: Icon(
                             Icons
                                 .location_city_outlined,
                           ),
@@ -787,9 +679,7 @@ class _NearbyAttractionsPageState
                         ),
                       ),
 
-                      const SizedBox(
-                        height: 14,
-                      ),
+                      const SizedBox(height: 14),
 
                       TextField(
                         controller:
@@ -802,23 +692,18 @@ class _NearbyAttractionsPageState
                         ),
                         decoration:
                         const InputDecoration(
-                          labelText:
-                          'Latitude',
+                          labelText: 'Latitude',
                           hintText:
                           'Example: 5.4141',
-                          prefixIcon:
-                          Icon(
-                            Icons
-                                .north_outlined,
+                          prefixIcon: Icon(
+                            Icons.north_outlined,
                           ),
                           border:
                           OutlineInputBorder(),
                         ),
                       ),
 
-                      const SizedBox(
-                        height: 14,
-                      ),
+                      const SizedBox(height: 14),
 
                       TextField(
                         controller:
@@ -831,14 +716,11 @@ class _NearbyAttractionsPageState
                         ),
                         decoration:
                         const InputDecoration(
-                          labelText:
-                          'Longitude',
+                          labelText: 'Longitude',
                           hintText:
                           'Example: 100.3288',
-                          prefixIcon:
-                          Icon(
-                            Icons
-                                .east_outlined,
+                          prefixIcon: Icon(
+                            Icons.east_outlined,
                           ),
                           border:
                           OutlineInputBorder(),
@@ -852,67 +734,51 @@ class _NearbyAttractionsPageState
                         ),
 
                         Container(
-                          width:
-                          double.infinity,
+                          width: double.infinity,
                           padding:
-                          const EdgeInsets
-                              .all(
+                          const EdgeInsets.all(
                             12,
                           ),
-                          decoration:
-                          BoxDecoration(
-                            color:
-                            const Color(
+                          decoration: BoxDecoration(
+                            color: const Color(
                               0xFFFFEDEA,
                             ),
                             borderRadius:
-                            BorderRadius
-                                .circular(
+                            BorderRadius.circular(
                               10,
                             ),
                           ),
                           child: Text(
                             validationMessage!,
-                            style:
-                            const TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
-                              color:
-                              Colors.red,
+                              color: Colors.red,
                             ),
                           ),
                         ),
                       ],
 
-                      const SizedBox(
-                        height: 18,
-                      ),
+                      const SizedBox(height: 18),
 
                       SizedBox(
-                        width:
-                        double.infinity,
-                        child:
-                        FilledButton.icon(
+                        width: double.infinity,
+                        child: FilledButton.icon(
                           onPressed: () {
                             final latitude =
                             double.tryParse(
-                              latitudeController
-                                  .text
+                              latitudeController.text
                                   .trim(),
                             );
 
                             final longitude =
                             double.tryParse(
-                              longitudeController
-                                  .text
+                              longitudeController.text
                                   .trim(),
                             );
 
-                            if (latitude ==
-                                null ||
-                                latitude <
-                                    -90 ||
-                                latitude >
-                                    90) {
+                            if (latitude == null ||
+                                latitude < -90 ||
+                                latitude > 90) {
                               setSheetState(
                                     () {
                                   validationMessage =
@@ -923,12 +789,9 @@ class _NearbyAttractionsPageState
                               return;
                             }
 
-                            if (longitude ==
-                                null ||
-                                longitude <
-                                    -180 ||
-                                longitude >
-                                    180) {
+                            if (longitude == null ||
+                                longitude < -180 ||
+                                longitude > 180) {
                               setSheetState(
                                     () {
                                   validationMessage =
@@ -939,69 +802,57 @@ class _NearbyAttractionsPageState
                               return;
                             }
 
-                            final label =
-                            labelController
-                                .text
+                            final enteredLabel =
+                            labelController.text
                                 .trim();
 
                             Navigator.pop(
                               sheetContext,
                               LocationPoint(
-                                latitude:
-                                latitude,
-                                longitude:
-                                longitude,
-                                label: label
-                                    .isEmpty
+                                latitude: latitude,
+                                longitude: longitude,
+                                label:
+                                enteredLabel.isEmpty
                                     ? 'Manual location'
-                                    : label,
+                                    : enteredLabel,
                               ),
                             );
                           },
-                          icon:
-                          const Icon(
+                          icon: const Icon(
                             Icons
                                 .location_on_outlined,
                           ),
-                          label:
-                          const Text(
+                          label: const Text(
                             'Use This Location',
                           ),
                           style:
-                          FilledButton
-                              .styleFrom(
+                          FilledButton.styleFrom(
                             backgroundColor:
                             const Color(
                               0xFF79571E,
                             ),
                             padding:
-                            const EdgeInsets
-                                .all(
+                            const EdgeInsets.all(
                               15,
                             ),
                           ),
                         ),
                       ),
 
-                      const SizedBox(
-                        height: 8,
-                      ),
+                      const SizedBox(height: 8),
 
                       SizedBox(
-                        width:
-                        double.infinity,
+                        width: double.infinity,
                         child:
                         OutlinedButton.icon(
                           onPressed: () {
                             setSheetState(
                                   () {
-                                labelController
-                                    .text =
+                                labelController.text =
                                 'George Town, Penang';
 
                                 latitudeController
-                                    .text =
-                                '5.4141';
+                                    .text = '5.4141';
 
                                 longitudeController
                                     .text =
@@ -1012,13 +863,11 @@ class _NearbyAttractionsPageState
                               },
                             );
                           },
-                          icon:
-                          const Icon(
+                          icon: const Icon(
                             Icons
                                 .edit_location_alt_outlined,
                           ),
-                          label:
-                          const Text(
+                          label: const Text(
                             'Fill Penang Example',
                           ),
                         ),
@@ -1037,8 +886,7 @@ class _NearbyAttractionsPageState
     latitudeController.dispose();
     longitudeController.dispose();
 
-    if (result == null ||
-        !mounted) {
+    if (result == null || !mounted) {
       return;
     }
 
@@ -1057,18 +905,15 @@ class _NearbyAttractionsPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-        const Text(
+        title: const Text(
           'Nearby Attractions',
         ),
         actions: [
           IconButton(
             tooltip:
-            'Refresh GPS',
-            onPressed:
-            _retryGps,
-            icon:
-            const Icon(
+            'Refresh current location',
+            onPressed: _retryGps,
+            icon: const Icon(
               Icons.my_location,
             ),
           ),
@@ -1083,22 +928,18 @@ class _NearbyAttractionsPageState
         },
 
         child: FutureBuilder<
-            (
-            LocationPoint,
-            List<Attraction>,
-            BookingLocationAnchor?,
-            )>(
+            (LocationPoint, List<Attraction>)>(
           future: _nearby,
-          builder:
-              (context, snapshot) {
+          builder: (
+              context,
+              snapshot,
+              ) {
             // ====================================================
             // LOADING
             // ====================================================
 
-            if (snapshot
-                .connectionState ==
-                ConnectionState
-                    .waiting) {
+            if (snapshot.connectionState ==
+                ConnectionState.waiting) {
               return const Center(
                 child:
                 CircularProgressIndicator(),
@@ -1114,14 +955,11 @@ class _NearbyAttractionsPageState
                 physics:
                 const AlwaysScrollableScrollPhysics(),
                 padding:
-                const EdgeInsets
-                    .all(
+                const EdgeInsets.all(
                   20,
                 ),
                 children: [
-                  const SizedBox(
-                    height: 120,
-                  ),
+                  const SizedBox(height: 120),
 
                   const Icon(
                     Icons
@@ -1129,30 +967,22 @@ class _NearbyAttractionsPageState
                     size: 50,
                   ),
 
-                  const SizedBox(
-                    height: 12,
-                  ),
+                  const SizedBox(height: 12),
 
                   Text(
                     'Could not load nearby attractions.\n\n'
                         '${snapshot.error}',
-                    textAlign:
-                    TextAlign.center,
+                    textAlign: TextAlign.center,
                   ),
 
-                  const SizedBox(
-                    height: 16,
-                  ),
+                  const SizedBox(height: 16),
 
                   FilledButton.icon(
-                    onPressed:
-                    _reload,
-                    icon:
-                    const Icon(
+                    onPressed: _reload,
+                    icon: const Icon(
                       Icons.refresh,
                     ),
-                    label:
-                    const Text(
+                    label: const Text(
                       'Try Again',
                     ),
                   ),
@@ -1160,35 +990,24 @@ class _NearbyAttractionsPageState
               );
             }
 
-            final data =
-            snapshot.data!;
+            final data = snapshot.data!;
 
-            final location =
-                data.$1;
+            final location = data.$1;
 
-            final attractions =
-                data.$2;
-
-            final anchor =
-                data.$3;
+            final attractions = data.$2;
 
             final usingManualLocation =
-                anchor == null &&
-                    _manualLocation !=
-                        null;
+                _manualLocation != null;
 
             final usingFallbackLocation =
-                anchor == null &&
-                    _manualLocation ==
-                        null &&
+                _manualLocation == null &&
                     location.isFallback;
 
             return ListView(
               physics:
               const AlwaysScrollableScrollPhysics(),
               padding:
-              const EdgeInsets
-                  .all(
+              const EdgeInsets.all(
                 16,
               ),
               children: [
@@ -1201,18 +1020,15 @@ class _NearbyAttractionsPageState
                   attractions,
                 ),
 
-                const SizedBox(
-                  height: 16,
-                ),
+                const SizedBox(height: 16),
 
                 // ==================================================
-                // LOCATION
+                // LOCATION INFORMATION
                 // ==================================================
 
                 Row(
                   crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
+                  CrossAxisAlignment.start,
                   children: [
                     Icon(
                       usingManualLocation
@@ -1223,30 +1039,23 @@ class _NearbyAttractionsPageState
                       size: 20,
                     ),
 
-                    const SizedBox(
-                      width: 8,
-                    ),
+                    const SizedBox(width: 8),
 
                     Expanded(
                       child: Column(
                         crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                        CrossAxisAlignment.start,
                         children: [
                           Text(
-                            anchor !=
-                                null
-                                ? 'Starting Location'
-                                : usingManualLocation
+                            usingManualLocation
                                 ? 'Manual Location'
                                 : usingFallbackLocation
-                                ? 'Demo Location'
+                                ? 'Fallback Location'
                                 : 'Your Current Location',
                             style:
                             const TextStyle(
                               fontWeight:
-                              FontWeight
-                                  .w800,
+                              FontWeight.w800,
                             ),
                           ),
 
@@ -1255,10 +1064,7 @@ class _NearbyAttractionsPageState
                           ),
 
                           Text(
-                            anchor != null
-                                ? 'After ${anchor.attractionName}'
-                                : location
-                                .label,
+                            location.label,
                           ),
 
                           const SizedBox(
@@ -1271,8 +1077,7 @@ class _NearbyAttractionsPageState
                             style:
                             const TextStyle(
                               fontSize: 11,
-                              color:
-                              Color(
+                              color: Color(
                                 0xFF64748B,
                               ),
                             ),
@@ -1284,29 +1089,24 @@ class _NearbyAttractionsPageState
                 ),
 
                 // ==================================================
-                // GPS FALLBACK
+                // GPS FALLBACK WARNING
                 // ==================================================
 
                 if (usingFallbackLocation) ...[
-                  const SizedBox(
-                    height: 12,
-                  ),
+                  const SizedBox(height: 12),
 
                   Card(
-                    color:
-                    const Color(
+                    color: const Color(
                       0xFFFFE7C2,
                     ),
                     child: Padding(
                       padding:
-                      const EdgeInsets
-                          .all(
+                      const EdgeInsets.all(
                         14,
                       ),
                       child: Column(
                         crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                        CrossAxisAlignment.start,
                         children: [
                           const Row(
                             children: [
@@ -1317,13 +1117,11 @@ class _NearbyAttractionsPageState
                                 Colors.orange,
                               ),
 
-                              SizedBox(
-                                width: 8,
-                              ),
+                              SizedBox(width: 8),
 
                               Expanded(
                                 child: Text(
-                                  'Current location unavailable',
+                                  'Phone location unavailable',
                                   style:
                                   TextStyle(
                                     fontWeight:
@@ -1335,39 +1133,32 @@ class _NearbyAttractionsPageState
                             ],
                           ),
 
-                          const SizedBox(
-                            height: 8,
-                          ),
+                          const SizedBox(height: 8),
 
                           const Text(
-                            'The app could not access your phone location. '
-                                'You can enter another location manually.',
-                            style:
-                            TextStyle(
+                            'The app could not get your real GPS location. '
+                                'The Penang fallback location is being used. '
+                                'Turn on Location/GPS and allow location permission, '
+                                'then tap Try GPS Again.',
+                            style: TextStyle(
                               fontSize: 12,
                               height: 1.4,
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
 
                           SizedBox(
-                            width:
-                            double.infinity,
+                            width: double.infinity,
                             child:
                             FilledButton.icon(
                               onPressed:
-                              _showManualLocation,
-                              icon:
-                              const Icon(
-                                Icons
-                                    .edit_location_alt_outlined,
+                              _retryGps,
+                              icon: const Icon(
+                                Icons.my_location,
                               ),
-                              label:
-                              const Text(
-                                'Enter Location Manually',
+                              label: const Text(
+                                'Try GPS Again',
                               ),
                               style:
                               FilledButton
@@ -1380,25 +1171,20 @@ class _NearbyAttractionsPageState
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 8,
-                          ),
+                          const SizedBox(height: 8),
 
                           SizedBox(
-                            width:
-                            double.infinity,
+                            width: double.infinity,
                             child:
                             OutlinedButton.icon(
                               onPressed:
-                              _retryGps,
-                              icon:
-                              const Icon(
+                              _showManualLocation,
+                              icon: const Icon(
                                 Icons
-                                    .my_location,
+                                    .edit_location_alt_outlined,
                               ),
-                              label:
-                              const Text(
-                                'Try GPS Again',
+                              label: const Text(
+                                'Enter Location Manually',
                               ),
                             ),
                           ),
@@ -1409,29 +1195,24 @@ class _NearbyAttractionsPageState
                 ],
 
                 // ==================================================
-                // MANUAL LOCATION
+                // MANUAL LOCATION ACTIVE
                 // ==================================================
 
                 if (usingManualLocation) ...[
-                  const SizedBox(
-                    height: 12,
-                  ),
+                  const SizedBox(height: 12),
 
                   Card(
-                    color:
-                    const Color(
+                    color: const Color(
                       0xFFE8F5E9,
                     ),
                     child: Padding(
                       padding:
-                      const EdgeInsets
-                          .all(
+                      const EdgeInsets.all(
                         14,
                       ),
                       child: Column(
                         crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                        CrossAxisAlignment.start,
                         children: [
                           const Row(
                             children: [
@@ -1442,9 +1223,7 @@ class _NearbyAttractionsPageState
                                 Colors.green,
                               ),
 
-                              SizedBox(
-                                width: 8,
-                              ),
+                              SizedBox(width: 8),
 
                               Expanded(
                                 child: Text(
@@ -1460,22 +1239,17 @@ class _NearbyAttractionsPageState
                             ],
                           ),
 
-                          const SizedBox(
-                            height: 6,
-                          ),
+                          const SizedBox(height: 6),
 
                           Text(
                             'Nearby attractions are being calculated '
                                 'from ${location.label}.',
-                            style:
-                            const TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 10,
-                          ),
+                          const SizedBox(height: 10),
 
                           Row(
                             children: [
@@ -1484,12 +1258,10 @@ class _NearbyAttractionsPageState
                                 OutlinedButton.icon(
                                   onPressed:
                                   _showManualLocation,
-                                  icon:
-                                  const Icon(
+                                  icon: const Icon(
                                     Icons.edit,
                                   ),
-                                  label:
-                                  const Text(
+                                  label: const Text(
                                     'Change',
                                   ),
                                 ),
@@ -1504,13 +1276,10 @@ class _NearbyAttractionsPageState
                                 OutlinedButton.icon(
                                   onPressed:
                                   _retryGps,
-                                  icon:
-                                  const Icon(
-                                    Icons
-                                        .my_location,
+                                  icon: const Icon(
+                                    Icons.my_location,
                                   ),
-                                  label:
-                                  const Text(
+                                  label: const Text(
                                     'Use GPS',
                                   ),
                                 ),
@@ -1523,12 +1292,10 @@ class _NearbyAttractionsPageState
                   ),
                 ],
 
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
 
                 // ==================================================
-                // SEARCH RADIUS
+                // SEARCH RADIUS TITLE
                 // ==================================================
 
                 Row(
@@ -1536,26 +1303,21 @@ class _NearbyAttractionsPageState
                     const Expanded(
                       child: Text(
                         'Search Radius',
-                        style:
-                        TextStyle(
+                        style: TextStyle(
                           fontSize: 17,
                           fontWeight:
-                          FontWeight
-                              .w800,
+                          FontWeight.w800,
                         ),
                       ),
                     ),
 
                     Text(
                       '${_radiusKm.toStringAsFixed(0)} km',
-                      style:
-                      const TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight:
-                        FontWeight
-                            .w800,
-                        color:
-                        Color(
+                        FontWeight.w800,
+                        color: Color(
                           0xFF79571E,
                         ),
                       ),
@@ -1563,24 +1325,23 @@ class _NearbyAttractionsPageState
                   ],
                 ),
 
-                const SizedBox(
-                  height: 4,
-                ),
+                const SizedBox(height: 4),
 
                 Text(
                   'Saved preference: '
                       '${_savedRadiusKm.toStringAsFixed(0)} km',
-                  style:
-                  TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Colors
-                        .grey.shade600,
+                    color:
+                    Colors.grey.shade600,
                   ),
                 ),
 
-                const SizedBox(
-                  height: 8,
-                ),
+                const SizedBox(height: 8),
+
+                // ==================================================
+                // RADIUS SLIDER
+                // ==================================================
 
                 Slider(
                   value: _radiusKm
@@ -1589,36 +1350,28 @@ class _NearbyAttractionsPageState
                     _maximumRadiusKm,
                   )
                       .toDouble(),
-                  min:
-                  _minimumRadiusKm,
-                  max:
-                  _maximumRadiusKm,
+                  min: _minimumRadiusKm,
+                  max: _maximumRadiusKm,
                   divisions: 49,
                   label:
                   '${_radiusKm.toStringAsFixed(0)} km',
-                  onChanged:
-                      (value) {
+                  onChanged: (value) {
                     setState(() {
-                      _radiusKm =
-                          value;
+                      _radiusKm = value;
                     });
                   },
-                  onChangeEnd:
-                      (value) {
+                  onChangeEnd: (value) {
                     setState(() {
-                      _radiusKm =
-                          value;
+                      _radiusKm = value;
 
-                      _nearby =
-                          _load();
+                      _nearby = _load();
                     });
                   },
                 ),
 
                 Row(
                   mainAxisAlignment:
-                  MainAxisAlignment
-                      .spaceBetween,
+                  MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
                       '1 km',
@@ -1633,13 +1386,11 @@ class _NearbyAttractionsPageState
                           _savedRadiusKm
                           ? null
                           : _resetToSavedRadius,
-                      icon:
-                      const Icon(
+                      icon: const Icon(
                         Icons.restore,
                         size: 17,
                       ),
-                      label:
-                      const Text(
+                      label: const Text(
                         'Use Saved Radius',
                       ),
                     ),
@@ -1654,29 +1405,23 @@ class _NearbyAttractionsPageState
                   ],
                 ),
 
-                const SizedBox(
-                  height: 10,
-                ),
+                const SizedBox(height: 10),
 
                 // ==================================================
-                // COUNT
+                // RESULT COUNT
                 // ==================================================
 
                 Container(
                   padding:
-                  const EdgeInsets
-                      .all(
+                  const EdgeInsets.all(
                     12,
                   ),
-                  decoration:
-                  BoxDecoration(
-                    color:
-                    const Color(
+                  decoration: BoxDecoration(
+                    color: const Color(
                       0xFFF5F5F5,
                     ),
                     borderRadius:
-                    BorderRadius
-                        .circular(
+                    BorderRadius.circular(
                       10,
                     ),
                   ),
@@ -1688,9 +1433,7 @@ class _NearbyAttractionsPageState
                         size: 20,
                       ),
 
-                      const SizedBox(
-                        width: 8,
-                      ),
+                      const SizedBox(width: 8),
 
                       Expanded(
                         child: Text(
@@ -1701,8 +1444,7 @@ class _NearbyAttractionsPageState
                           style:
                           const TextStyle(
                             fontWeight:
-                            FontWeight
-                                .w700,
+                            FontWeight.w700,
                           ),
                         ),
                       ),
@@ -1710,44 +1452,18 @@ class _NearbyAttractionsPageState
                   ),
                 ),
 
-                // ==================================================
-                // BOOKING ANCHOR
-                // ==================================================
-
-                if (anchor != null) ...[
-                  const SizedBox(
-                    height: 10,
-                  ),
-
-                  Text(
-                    'Your upcoming visit to '
-                        '${anchor.attractionName} ends at '
-                        '${_clock(anchor.endsAt)}. '
-                        'Only attractions with a suitable same-day '
-                        'slot are shown.',
-                    style:
-                    const TextStyle(
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-
-                const SizedBox(
-                  height: 14,
-                ),
+                const SizedBox(height: 14),
 
                 // ==================================================
-                // EMPTY
+                // NO RESULTS
                 // ==================================================
 
                 if (attractions.isEmpty)
                   Card(
-                    color:
-                    Colors.white,
+                    color: Colors.white,
                     child: Padding(
                       padding:
-                      const EdgeInsets
-                          .all(
+                      const EdgeInsets.all(
                         20,
                       ),
                       child: Column(
@@ -1766,13 +1482,11 @@ class _NearbyAttractionsPageState
                             'No attractions found within '
                                 '${_radiusKm.toStringAsFixed(0)} km.',
                             textAlign:
-                            TextAlign
-                                .center,
+                            TextAlign.center,
                             style:
                             const TextStyle(
                               fontWeight:
-                              FontWeight
-                                  .w700,
+                              FontWeight.w700,
                             ),
                           ),
 
@@ -1784,8 +1498,7 @@ class _NearbyAttractionsPageState
                             'Try increasing the search radius '
                                 'or changing your location.',
                             textAlign:
-                            TextAlign
-                                .center,
+                            TextAlign.center,
                           ),
 
                           const SizedBox(
@@ -1795,13 +1508,11 @@ class _NearbyAttractionsPageState
                           OutlinedButton.icon(
                             onPressed:
                             _showManualLocation,
-                            icon:
-                            const Icon(
+                            icon: const Icon(
                               Icons
                                   .edit_location_alt_outlined,
                             ),
-                            label:
-                            const Text(
+                            label: const Text(
                               'Change Location',
                             ),
                           ),
@@ -1811,14 +1522,13 @@ class _NearbyAttractionsPageState
                   ),
 
                 // ==================================================
-                // ATTRACTIONS
+                // ATTRACTION LIST
                 // ==================================================
 
                 ...attractions.map(
                       (attraction) {
                     final distance =
-                    attraction
-                        .distanceKm!;
+                    attraction.distanceKm!;
 
                     final transport =
                     _transportService
@@ -1827,29 +1537,23 @@ class _NearbyAttractionsPageState
                     );
 
                     return Card(
-                      color:
-                      Colors.white,
+                      color: Colors.white,
                       margin:
-                      const EdgeInsets
-                          .only(
+                      const EdgeInsets.only(
                         bottom: 10,
                       ),
-                      child:
-                      ListTile(
+                      child: ListTile(
                         onTap: () {
-                          Navigator
-                              .pushNamed(
+                          Navigator.pushNamed(
                             context,
                             AttractionDetailsPage
                                 .routeName,
                             arguments:
-                            attraction
-                                .id,
+                            attraction.id,
                           );
                         },
 
-                        leading:
-                        CircleAvatar(
+                        leading: CircleAvatar(
                           backgroundColor:
                           const Color(
                             0xFFE7F0E4,
@@ -1859,52 +1563,42 @@ class _NearbyAttractionsPageState
                                 ? Icons
                                 .place_outlined
                                 : _nearbyTransportIcon(
-                              transport
-                                  .mode,
+                              transport.mode,
                             ),
-                            color:
-                            const Color(
+                            color: const Color(
                               0xFF79571E,
                             ),
                           ),
                         ),
 
-                        title:
-                        Text(
-                          attraction
-                              .name,
+                        title: Text(
+                          attraction.name,
                           style:
                           const TextStyle(
                             fontWeight:
-                            FontWeight
-                                .w800,
+                            FontWeight.w800,
                           ),
                         ),
 
-                        subtitle:
-                        Text(
+                        subtitle: Text(
                           '${distance.toStringAsFixed(1)} km away\n'
                               '${transport == null ? 'Transport suggestion unavailable' : 'Suggested: ${transport.title} · ${transport.timeLabel}'}\n'
                               '${attraction.crowdLevel} live crowd · '
                               '${attraction.availableSlots.length} future slots',
                         ),
 
-                        isThreeLine:
-                        true,
+                        isThreeLine: true,
 
                         trailing:
                         const Icon(
-                          Icons
-                              .chevron_right,
+                          Icons.chevron_right,
                         ),
                       ),
                     );
                   },
                 ),
 
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
               ],
             );
           },
@@ -1912,57 +1606,31 @@ class _NearbyAttractionsPageState
       ),
     );
   }
-
-  // ==============================================================
-  // TIME
-  // ==============================================================
-
-  String _clock(DateTime value) {
-    final local =
-    value.toLocal();
-
-    final hour =
-    local.hour == 0
-        ? 12
-        : local.hour > 12
-        ? local.hour - 12
-        : local.hour;
-
-    return '${local.day}/${local.month} '
-        '$hour:'
-        '${local.minute.toString().padLeft(2, '0')} '
-        '${local.hour >= 12 ? 'PM' : 'AM'}';
-  }
 }
 
 // =================================================================
-// MAP INFO
+// MAP INFORMATION CHIP
 // =================================================================
 
-class _MapInfoChip
-    extends StatelessWidget {
+class _MapInfoChip extends StatelessWidget {
   const _MapInfoChip({
     required this.icon,
     required this.label,
   });
 
   final IconData icon;
-
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding:
-      const EdgeInsets
-          .symmetric(
+      const EdgeInsets.symmetric(
         horizontal: 9,
         vertical: 6,
       ),
-      decoration:
-      BoxDecoration(
-        color:
-        Colors.grey.shade100,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
         borderRadius:
         BorderRadius.circular(
           20,
@@ -1977,14 +1645,11 @@ class _MapInfoChip
             size: 15,
           ),
 
-          const SizedBox(
-            width: 4,
-          ),
+          const SizedBox(width: 4),
 
           Text(
             label,
-            style:
-            const TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               fontWeight:
               FontWeight.w600,
@@ -2023,13 +1688,11 @@ class _NearbyTransportSuggestion {
   final int maxMinutes;
 
   String get timeLabel {
-    if (minMinutes ==
-        maxMinutes) {
+    if (minMinutes == maxMinutes) {
       return '~$minMinutes min';
     }
 
-    return '$minMinutes–'
-        '$maxMinutes min';
+    return '$minMinutes–$maxMinutes min';
   }
 }
 
@@ -2071,13 +1734,10 @@ class _NearbyTransportService {
 
       return _NearbyTransportSuggestion(
         mode:
-        _NearbyTransportMode
-            .walking,
+        _NearbyTransportMode.walking,
         title: 'Walking',
-        minMinutes:
-        minMinutes,
-        maxMinutes:
-        maxMinutes,
+        minMinutes: minMinutes,
+        maxMinutes: maxMinutes,
       );
     }
 
@@ -2111,12 +1771,9 @@ class _NearbyTransportService {
       mode:
       _NearbyTransportMode
           .carEhailing,
-      title:
-      'Car / E-hailing',
-      minMinutes:
-      minMinutes,
-      maxMinutes:
-      maxMinutes,
+      title: 'Car / E-hailing',
+      minMinutes: minMinutes,
+      maxMinutes: maxMinutes,
     );
   }
 }
@@ -2129,11 +1786,9 @@ IconData _nearbyTransportIcon(
       return Icons.directions_walk;
 
     case _NearbyTransportMode.carEhailing:
-      return Icons
-          .local_taxi_outlined;
+      return Icons.local_taxi_outlined;
 
     case _NearbyTransportMode.publicTransport:
-      return Icons
-          .directions_bus_outlined;
+      return Icons.directions_bus_outlined;
   }
 }
