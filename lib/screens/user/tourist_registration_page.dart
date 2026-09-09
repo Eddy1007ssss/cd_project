@@ -108,6 +108,19 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
   String? _required(String? value) =>
       value == null || value.trim().isEmpty ? 'This field is required.' : null;
 
+  String? _validatePassword(String? value) {
+    final password = value ?? '';
+    if (password.length < 8) {
+      return 'Use at least 8 characters.';
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(password) ||
+        !RegExp(r'[a-z]').hasMatch(password) ||
+        !RegExp(r'\d').hasMatch(password)) {
+      return 'Include an uppercase letter, lowercase letter, and number.';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -243,9 +256,8 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                       const SizedBox(height: 14),
                       TextFormField(
                         controller: _passwordController,
-                        validator: (value) => (value?.length ?? 0) < 8
-                            ? 'Use at least 8 characters.'
-                            : null,
+                        validator: _validatePassword,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         obscureText: !_showPassword,
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
@@ -260,6 +272,16 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
                             ),
+                          ),
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6),
+                        child: TourFlowText(
+                          'Use 8 or more characters, including uppercase, lowercase, and a number.',
+                          style: TextStyle(
+                            color: TourFlowColors.muted,
+                            fontSize: 11,
                           ),
                         ),
                       ),

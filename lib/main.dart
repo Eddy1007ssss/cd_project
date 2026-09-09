@@ -11,6 +11,7 @@ import 'screens/staff/attraction_configuration_page.dart';
 import 'screens/staff/attraction_details_page.dart';
 import 'screens/staff/operator_dashboard_page.dart';
 import 'screens/staff/operator_registration_page.dart';
+import 'screens/staff/operator_support_ticket_history_page.dart';
 import 'screens/staff/resolve_report_page.dart';
 import 'screens/staff/slot_manager_page.dart';
 import 'screens/staff/staff_support_ticket_details_page.dart';
@@ -190,10 +191,8 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
             const AdminNavigationShell(initialIndex: 4),
         TourFlowRoutes.adminComplaints: (context) =>
             const AdminNavigationShell(initialIndex: 3),
-        TourFlowRoutes.staffSupportTickets: (_) =>
-            const OperatorNavigationShell(initialIndex: 4),
         TourFlowRoutes.operatorSupportTickets: (_) =>
-            const OperatorNavigationShell(initialIndex: 4),
+            const OperatorSupportTicketHistoryPage(),
         OperatorDashboardPage.routeName: (_) => const OperatorNavigationShell(),
         AttractionDetailsPage.routeName: (_) =>
             const OperatorNavigationShell(initialIndex: 1),

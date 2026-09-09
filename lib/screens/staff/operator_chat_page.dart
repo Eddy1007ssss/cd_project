@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../../services/gemini_chat_service.dart';
 import '../../services/support_ticket_service.dart';
 import '../../widgets/tourflow_widgets.dart';
+import '../../widgets/navigation/navigation_routes.dart';
 
-/// A separate operator-only assistant. It deliberately does not expose the
-/// tourist booking, complaint, or support-ticket actions from ChatSupportPage.
+/// A separate operator-only assistant. It deliberately does not expose tourist
+/// booking or complaint actions from ChatSupportPage.
 class OperatorChatPage extends StatefulWidget {
   const OperatorChatPage({super.key});
 
@@ -17,6 +18,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
   final _chatService = GeminiChatService();
   final _messageController = TextEditingController();
   final _ticketService = SupportTicketService();
+  final _messageScrollController = ScrollController();
   final List<_OperatorChatMessage> _messages = [];
 
   String _language = 'English';
@@ -33,7 +35,19 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
   @override
   void dispose() {
     _messageController.dispose();
+    _messageScrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToLatestMessage() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_messageScrollController.hasClients) return;
+      _messageScrollController.animateTo(
+        _messageScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   Future<void> _loadOperatorContext() async {
@@ -50,6 +64,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
           ),
         );
       });
+      _scrollToLatestMessage();
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -61,6 +76,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
           ),
         );
       });
+      _scrollToLatestMessage();
     }
   }
 
@@ -73,6 +89,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
       _messages.add(_OperatorChatMessage(message, isUser: true));
       _messageController.clear();
     });
+    _scrollToLatestMessage();
 
     try {
       final response = await _chatService.sendMessage(
@@ -85,6 +102,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
         _conversationId = response.conversationId;
         _messages.add(_OperatorChatMessage(response.reply, isUser: false));
       });
+      _scrollToLatestMessage();
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -95,6 +113,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
           ),
         );
       });
+      _scrollToLatestMessage();
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -142,69 +161,101 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
     navigationRole: TourFlowNavigationRole.operator,
     pageLevel: TourFlowPageLevel.topLevel,
     selectedNavigationIndex: 4,
-    child: Column(
+    scrollable: false,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SectionTitle(
           'Operations chat',
           subtitle:
-              'Ask about attraction management, approved slots, visitor capacity or reports. This assistant cannot make tourist bookings.',
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _quickQuestions
-              .map(
-                (message) => ActionChip(
-                  label: Text(message),
-                  onPressed: _isSending ? null : () => _send(message),
-                ),
-              )
-              .toList(),
+              'Ask about attraction operations, capacity, slots or reports.',
         ),
         const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: OutlinedButton.icon(
-            onPressed: _isSending ? null : _reportTechnicalProblem,
-            icon: const Icon(Icons.bug_report_outlined),
-            label: const Text('Report technical problem'),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _quickQuestions
+                .map(
+                  (message) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ActionChip(
+                      label: Text(message),
+                      onPressed: _isSending ? null : () => _send(message),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ),
-        const SizedBox(height: 16),
-        if (!_loaded)
-          const Center(child: CircularProgressIndicator())
-        else
-          SizedBox(
-            height: 330,
-            child: ListView(
-              children: _messages.map(
-            (message) => Align(
-              alignment: message.isUser
-                  ? Alignment.centerRight
-                  : Alignment.centerLeft,
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(12),
-                constraints: const BoxConstraints(maxWidth: 420),
-                decoration: BoxDecoration(
-                  color: message.isUser
-                      ? TourFlowColors.primary
-                      : TourFlowColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(message.text),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _isSending ? null : _reportTechnicalProblem,
+              icon: const Icon(Icons.bug_report_outlined),
+              label: const Text('Report problem'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                TourFlowRoutes.operatorSupportTickets,
               ),
+              icon: const Icon(Icons.history_rounded),
+              label: const Text('My reports'),
             ),
-          ).toList(),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: TourFlowColors.surface,
+              border: Border.all(
+                color: TourFlowColors.border.withValues(alpha: 0.55),
+              ),
+              borderRadius: BorderRadius.circular(14),
             ),
+            child: !_loaded
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    controller: _messageScrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return Align(
+                        alignment: message.isUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(12),
+                          constraints: const BoxConstraints(maxWidth: 420),
+                          decoration: BoxDecoration(
+                            color: message.isUser
+                                ? TourFlowColors.primary
+                                : TourFlowColors.lavender,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(message.text),
+                        ),
+                      );
+                    },
+                  ),
           ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: _messageController,
           minLines: 1,
-          maxLines: 4,
+          maxLines: 3,
+          textInputAction: TextInputAction.send,
           onSubmitted: (_) => _send(),
           decoration: InputDecoration(
             labelText: 'Ask the Operator Assistant',
@@ -217,6 +268,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
           ),
         ),
       ],
+      ),
     ),
   );
 }

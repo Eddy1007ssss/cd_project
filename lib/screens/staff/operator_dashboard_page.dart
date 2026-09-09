@@ -216,12 +216,6 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
       navigationRole: TourFlowNavigationRole.operator,
       pageLevel: TourFlowPageLevel.topLevel,
       selectedNavigationIndex: 0,
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.notifications_none_rounded),
-        ),
-      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

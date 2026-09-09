@@ -40,6 +40,7 @@ class TourFlowPage extends StatelessWidget {
     this.navigationRole = TourFlowNavigationRole.tourist,
     this.pageLevel = TourFlowPageLevel.secondary,
     this.selectedNavigationIndex = 0,
+    this.scrollable = true,
     this.displayName = 'Alex Thompson',
     this.email = 'alex.thompson@tourflow.com',
     this.showMenuButton = true,
@@ -53,6 +54,7 @@ class TourFlowPage extends StatelessWidget {
   final TourFlowNavigationRole navigationRole;
   final TourFlowPageLevel pageLevel;
   final int selectedNavigationIndex;
+  final bool scrollable;
   final String displayName;
   final String email;
   final bool showMenuButton;
@@ -195,10 +197,12 @@ class TourFlowPage extends StatelessWidget {
 
       body: SafeArea(
         top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
-          child: child,
-        ),
+        child: scrollable
+            ? SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
+                child: child,
+              )
+            : child,
       ),
     );
   }

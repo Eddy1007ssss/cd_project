@@ -53,6 +53,7 @@ class AttractionDiscoveryPage extends StatefulWidget {
 class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
   final _service = AttractionService();
   final _locationService = LocationService();
+  final _localeController = TourFlowLocaleController.instance;
   final _search = TextEditingController();
 
   final Set<String> _selectedForComparison = {};
@@ -78,12 +79,17 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
   @override
   void initState() {
     super.initState();
-
+    _localeController.addListener(_onLanguageChanged);
     _results = _initialize();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _localeController.removeListener(_onLanguageChanged);
     _debounce?.cancel();
     _search.dispose();
 
@@ -302,9 +308,9 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(20, 4, 20, 12),
-                  child: Text(
+                  child: TourFlowText(
                     'Discovery Filters',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
@@ -323,26 +329,26 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                           // ======================================
                           DropdownButtonFormField<double?>(
                             initialValue: price,
-                            decoration: const InputDecoration(
-                              labelText: 'Maximum price',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: context.tr('Maximum price'),
+                              border: const OutlineInputBorder(),
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem<double?>(
                                 value: null,
-                                child: Text('Any price'),
+                                child: const TourFlowText('Any price'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 10,
-                                child: Text('Up to RM10'),
+                                child: const TourFlowText('Up to RM10'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 25,
-                                child: Text('Up to RM25'),
+                                child: const TourFlowText('Up to RM25'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 50,
-                                child: Text('Up to RM50'),
+                                child: const TourFlowText('Up to RM50'),
                               ),
                             ],
                             onChanged: (value) {
@@ -359,26 +365,26 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                           // ======================================
                           DropdownButtonFormField<double?>(
                             initialValue: distance,
-                            decoration: const InputDecoration(
-                              labelText: 'Maximum distance',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: context.tr('Maximum distance'),
+                              border: const OutlineInputBorder(),
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem<double?>(
                                 value: null,
-                                child: Text('Any distance'),
+                                child: const TourFlowText('Any distance'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 3,
-                                child: Text('Within 3 km'),
+                                child: const TourFlowText('Within 3 km'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 10,
-                                child: Text('Within 10 km'),
+                                child: const TourFlowText('Within 10 km'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 25,
-                                child: Text('Within 25 km'),
+                                child: const TourFlowText('Within 25 km'),
                               ),
                             ],
                             onChanged: (value) {
@@ -395,26 +401,26 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                           // ======================================
                           DropdownButtonFormField<String?>(
                             initialValue: crowd,
-                            decoration: const InputDecoration(
-                              labelText: 'Live crowd',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: context.tr('Live crowd'),
+                              border: const OutlineInputBorder(),
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem<String?>(
                                 value: null,
-                                child: Text('Any crowd level'),
+                                child: const TourFlowText('Any crowd level'),
                               ),
                               DropdownMenuItem<String?>(
                                 value: 'Low',
-                                child: Text('Low'),
+                                child: const TourFlowText('Low'),
                               ),
                               DropdownMenuItem<String?>(
                                 value: 'Moderate',
-                                child: Text('Moderate'),
+                                child: const TourFlowText('Moderate'),
                               ),
                               DropdownMenuItem<String?>(
                                 value: 'High',
-                                child: Text('High'),
+                                child: const TourFlowText('High'),
                               ),
                             ],
                             onChanged: (value) {
@@ -428,26 +434,26 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
 
                           DropdownButtonFormField<double?>(
                             initialValue: minimumRating,
-                            decoration: const InputDecoration(
-                              labelText: 'Minimum visitor rating',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: context.tr('Minimum visitor rating'),
+                              border: const OutlineInputBorder(),
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem<double?>(
                                 value: null,
-                                child: Text('Any rating'),
+                                child: const TourFlowText('Any rating'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 3,
-                                child: Text('3.0 and above'),
+                                child: const TourFlowText('3.0 and above'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 4,
-                                child: Text('4.0 and above'),
+                                child: const TourFlowText('4.0 and above'),
                               ),
                               DropdownMenuItem<double?>(
                                 value: 4.5,
-                                child: Text('4.5 and above'),
+                                child: const TourFlowText('4.5 and above'),
                               ),
                             ],
                             onChanged: (value) {
@@ -463,8 +469,8 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                           SwitchListTile(
                             contentPadding: EdgeInsets.zero,
                             value: openNow,
-                            title: const Text('Open now'),
-                            subtitle: const Text(
+                            title: const TourFlowText('Open now'),
+                            subtitle: const TourFlowText(
                               'Only show attractions currently open',
                             ),
                             onChanged: (value) {
@@ -495,7 +501,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                                 );
                               },
                               icon: const Icon(Icons.check),
-                              label: const Text('Apply Filters'),
+                              label: const TourFlowText('Apply Filters'),
                             ),
                           ),
 
@@ -514,7 +520,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                                 );
                               },
                               icon: const Icon(Icons.filter_alt_off_outlined),
-                              label: const Text('Clear Filters'),
+                              label: const TourFlowText('Clear Filters'),
                             ),
                           ),
                         ],
@@ -561,9 +567,9 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                 // ================================================
                 // TITLE
                 // ================================================
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(20, 4, 20, 12),
-                  child: Text(
+                  child: TourFlowText(
                     'Sort Attractions',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                   ),
@@ -691,7 +697,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
     if (selected && _selectedForComparison.length >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You can compare up to three attractions.'),
+          content: TourFlowText('You can compare up to three attractions.'),
         ),
       );
 
@@ -1099,7 +1105,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                   child: OutlinedButton.icon(
                     onPressed: _showFilters,
                     icon: const Icon(Icons.filter_list),
-                    label: Text(
+                    label: TourFlowText(
                       _filters.isActive ? 'Filters active' : 'Filters',
                     ),
                   ),
@@ -1145,8 +1151,8 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                 const SizedBox(width: 5),
 
                 Expanded(
-                  child: Text(
-                    'Sorted by: $_sortLabel',
+                  child: TourFlowText(
+                    'Sorted by: ${context.tr(_sortLabel)}',
                     style: const TextStyle(
                       fontSize: 11,
                       color: Color(0xFF64748B),
@@ -1282,7 +1288,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                           ),
                         ),
 
-                        Text(
+                        TourFlowText(
                           _sortLabel,
                           style: const TextStyle(
                             fontSize: 11,
@@ -1353,7 +1359,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                 if (selected.length < 2) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text(
+                      content: TourFlowText(
                         'Please select at least two visible attractions to compare.',
                       ),
                     ),
@@ -1369,7 +1375,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                 );
               },
               icon: const Icon(Icons.compare_arrows),
-              label: Text('Compare ${_selectedForComparison.length}'),
+              label: Text('${context.tr('Compare')} ${_selectedForComparison.length}'),
             ),
     );
   }
@@ -1399,13 +1405,13 @@ class _SortTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: Icon(icon, color: selected ? const Color(0xFF79571E) : null),
-      title: Text(
+      title: TourFlowText(
         title,
         style: TextStyle(
           fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
         ),
       ),
-      subtitle: Text(subtitle),
+      subtitle: TourFlowText(subtitle),
       trailing: selected
           ? const Icon(Icons.check_circle, color: Color(0xFF79571E))
           : null,
@@ -1494,13 +1500,13 @@ class _AttractionCard extends StatelessWidget {
 
                     const SizedBox(height: 6),
 
-                    Text(
+                    TourFlowText(
                       attraction.entrancePriceMyr == 0
                           ? 'Free entry'
                           : 'RM ${attraction.entrancePriceMyr.toStringAsFixed(2)}',
                     ),
 
-                    Text(
+                    TourFlowText(
                       attraction.distanceKm == null
                           ? 'Distance unavailable'
                           : '${attraction.distanceKm!.toStringAsFixed(1)} km away',
@@ -1515,7 +1521,7 @@ class _AttractionCard extends StatelessWidget {
                       children: [
                         Chip(
                           label: Text(
-                            '${attraction.crowdLevel} · '
+                            '${context.tr(attraction.crowdLevel)} · '
                             '${attraction.currentVisitors}/${attraction.maximumCapacity}',
                             style: TextStyle(color: crowdColor, fontSize: 10),
                           ),
@@ -1534,7 +1540,7 @@ class _AttractionCard extends StatelessWidget {
 
                         Chip(
                           label: Text(
-                            '${attraction.availableSlots.length} slots',
+                            '${attraction.availableSlots.length} ${context.tr('slots')}',
                             style: const TextStyle(fontSize: 10),
                           ),
                           side: BorderSide.none,
@@ -1618,7 +1624,7 @@ class _ErrorCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const Text(
+            const TourFlowText(
               'Could not load approved attractions.',
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
@@ -1636,7 +1642,7 @@ class _ErrorCard extends StatelessWidget {
             TextButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try again'),
+              label: const TourFlowText('Try again'),
             ),
           ],
         ),
