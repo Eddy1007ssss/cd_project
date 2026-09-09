@@ -27,4 +27,5 @@ abstract final class TourFlowRoutes {
 
   static const staffScan = '/staff/scan';
   static const staffProfile = '/staff/profile';
+  static const staffSupportTickets = '/staff/support-tickets';
 }

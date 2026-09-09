@@ -218,6 +218,8 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
             const SupportTicketDetailsPage(),
         StaffSupportTicketDetailsPage.routeName: (_) =>
             const StaffSupportTicketDetailsPage(),
+        SupportTicketManagementPage.routeName: (_) =>
+            const SupportTicketManagementPage(),
         OperatorFeedbackPage.routeName: (_) => const OperatorFeedbackPage(),
         StaffQrScannerPage.routeName: (_) => const StaffQrScannerPage(),
         OperatorLiveCrowdPage.routeName: (_) => const OperatorLiveCrowdPage(),
