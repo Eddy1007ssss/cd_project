@@ -91,7 +91,7 @@ class TourBooking {
   const TourBooking({
     required this.id,
     required this.bookingCode,
-    required this.qrToken,
+    this.qrToken,
     required this.visitorCount,
     required this.status,
     required this.slot,
@@ -103,7 +103,7 @@ class TourBooking {
 
   final String id;
   final String bookingCode;
-  final String qrToken;
+  final String? qrToken;
   final int visitorCount;
   final BookingStatus status;
   final AttractionSlot slot;
@@ -167,7 +167,7 @@ class TourBooking {
       return TourBooking(
         id: map['id'] as String,
         bookingCode: map['booking_code'] as String,
-        qrToken: map['qr_token'] as String,
+        qrToken: map['qr_token'] as String?,
         visitorCount: (map['visitor_count'] as num).toInt(),
         status: BookingStatus.values.byName(map['status'] as String),
         slot: AttractionSlot.fromMap(rawSlot),
@@ -255,7 +255,7 @@ class ItineraryPlan {
           roadLegs[i - 1].travelMinutes) conflict = true;
     }
     return ItineraryPlan(bookings: bookings, legs: roadLegs,
-      hasConflict: conflict, usesRoadRoutes: true);
+        hasConflict: conflict, usesRoadRoutes: true);
   }
 
   static ItineraryPlan build(Iterable<TourBooking> selectedBookings) {

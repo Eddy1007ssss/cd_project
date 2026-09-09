@@ -28,9 +28,9 @@ const List<TourFlowNavigationItem> operatorNavigationItems = [
   ),
 
   TourFlowNavigationItem(
-    label: 'Support',
-    icon: Icons.support_agent_outlined,
-    selectedIcon: Icons.support_agent_rounded,
+    label: 'Chat',
+    icon: Icons.chat_outlined,
+    selectedIcon: Icons.chat_rounded,
   ),
 
   TourFlowNavigationItem(

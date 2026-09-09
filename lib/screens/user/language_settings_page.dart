@@ -100,7 +100,7 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
           const SectionTitle(
             'Preferred app language',
             subtitle:
-                'Navigation, pages, system messages and the chatbot will use the same language.',
+            'Navigation, pages, system messages and the chatbot will use the same language.',
           ),
           const SizedBox(height: 16),
           if (_isLoading)
@@ -140,11 +140,11 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
                           ),
                         ),
                       ),
-                      title: TourFlowText(
-                        context.tr(language.$2),
+                      title: Text(
+                        language.$2,
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
-                      subtitle: TourFlowText(language.$3),
+                      subtitle: Text(language.$3),
                       activeColor: TourFlowColors.primaryText,
                     );
                   }).toList(),
@@ -193,10 +193,10 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
               ),
               icon: _isSaving
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
                   : const Icon(Icons.check_rounded),
               label: TourFlowText(
                 context.tr(_isSaving ? 'Saving...' : 'Save Language'),

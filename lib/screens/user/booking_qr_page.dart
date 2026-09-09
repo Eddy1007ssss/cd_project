@@ -756,14 +756,13 @@ class _BookingQrPageState extends State<BookingQrPage>
       booking,
     );
 
-    final requiresLocation =
-        booking.slot.usesStaffScan &&
-            !_finished(booking) &&
-            !booking.isCancelled;
-
-    final showQr =
-        !requiresLocation ||
-            _locationVerified;
+    // Indoor entry tickets are valid as soon as a booking is confirmed.
+    // Geofence is never a condition for opening an indoor QR ticket.
+    final requiresLocation = false;
+    final showQr = booking.slot.usesStaffScan &&
+        booking.qrToken != null &&
+        !booking.isCancelled &&
+        !_finished(booking);
 
     return Scaffold(
       backgroundColor:
@@ -938,7 +937,7 @@ class _BookingQrPageState extends State<BookingQrPage>
                                     child:
                                     QrImageView(
                                       data:
-                                      booking.qrToken,
+                                      booking.qrToken!,
                                       backgroundColor:
                                       Colors.white,
                                       padding:
@@ -984,12 +983,7 @@ class _BookingQrPageState extends State<BookingQrPage>
                               height: 16,
                             ),
                             Text(
-                              showQr
-                                  ? _instructions(
-                                booking,
-                              )
-                                  : 'Move within 10 metres of the attraction '
-                                  'to access your QR code.',
+                              _instructions(booking),
                               textAlign:
                               TextAlign.center,
                               style:

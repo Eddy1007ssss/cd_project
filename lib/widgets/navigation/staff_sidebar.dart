@@ -34,10 +34,10 @@ const List<TourFlowSidebarItem> operatorSidebarItems = [
   ),
 
   TourFlowSidebarItem(
-    label: 'Support Tickets',
-    icon: Icons.support_agent_outlined,
+    label: 'Chat Support',
+    icon: Icons.chat_outlined,
     navigationIndex: 4,
-    routeName: TourFlowRoutes.operatorSupportTickets,
+    routeName: TourFlowRoutes.userChat,
   ),
 
   TourFlowSidebarItem(

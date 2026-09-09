@@ -50,7 +50,16 @@ class BookingConfirmationPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  QrImageView(data: value.qrToken, size: 180),
+                  if (value.slot.usesStaffScan && value.qrToken != null)
+                    QrImageView(data: value.qrToken!, size: 180)
+                  else
+                    const ListTile(
+                      leading: Icon(Icons.location_on_outlined),
+                      title: TourFlowText('Geofence check-in'),
+                      subtitle: TourFlowText(
+                        'This outdoor attraction uses location-based check-in. No QR code is required.',
+                      ),
+                    ),
                   const Divider(),
                   ListTile(
                     contentPadding: EdgeInsets.zero,

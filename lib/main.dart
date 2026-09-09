@@ -191,9 +191,7 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
         TourFlowRoutes.adminComplaints: (context) =>
         const AdminNavigationShell(initialIndex: 3),
         TourFlowRoutes.staffSupportTickets: (_) =>
-        const SupportTicketManagementPage(
-          navigationRole: TourFlowNavigationRole.operator,
-        ),
+        const OperatorNavigationShell(initialIndex: 4),
         TourFlowRoutes.operatorSupportTickets: (_) =>
         const OperatorNavigationShell(initialIndex: 4),
         OperatorDashboardPage.routeName: (_) => const OperatorNavigationShell(),

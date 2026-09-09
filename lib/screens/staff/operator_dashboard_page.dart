@@ -46,9 +46,9 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
     return entries
         .where(
           (entry) =>
-              !entry.completedAt.isBefore(start) &&
-              entry.completedAt.isBefore(end),
-        )
+      !entry.completedAt.isBefore(start) &&
+          entry.completedAt.isBefore(end),
+    )
         .fold<double>(0.0, (sum, entry) => sum + entry.revenue);
   }
 
@@ -78,9 +78,9 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
     return entries
         .where(
           (entry) =>
-              !entry.completedAt.isBefore(start) &&
-              entry.completedAt.isBefore(end),
-        )
+      !entry.completedAt.isBefore(start) &&
+          entry.completedAt.isBefore(end),
+    )
         .fold<double>(0.0, (sum, entry) => sum + entry.revenue);
   }
 
@@ -116,7 +116,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
 
     final total = entries.fold<int>(
       0,
-      (sum, entry) => sum + entry.overallRating,
+          (sum, entry) => sum + entry.overallRating,
     );
 
     return total / entries.length;
@@ -128,9 +128,9 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
     return entries
         .where(
           (entry) =>
-              entry.checkedInAt.year == now.year &&
-              entry.checkedInAt.month == now.month,
-        )
+      entry.checkedInAt.year == now.year &&
+          entry.checkedInAt.month == now.month,
+    )
         .fold<int>(0, (sum, entry) => sum + entry.visitorCount);
   }
 
@@ -139,8 +139,8 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
   }
 
   Map<String, int> _buildDashboardVisitorTrend(
-    List<VisitorTrendEntry> entries,
-  ) {
+      List<VisitorTrendEntry> entries,
+      ) {
     final now = DateTime.now();
 
     final today = DateTime(now.year, now.month, now.day);
@@ -187,14 +187,14 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
 
     return entries
         .where((entry) {
-          final date = DateTime(
-            entry.checkedInAt.year,
-            entry.checkedInAt.month,
-            entry.checkedInAt.day,
-          );
+      final date = DateTime(
+        entry.checkedInAt.year,
+        entry.checkedInAt.month,
+        entry.checkedInAt.day,
+      );
 
-          return !date.isBefore(startDate) && !date.isAfter(today);
-        })
+      return !date.isBefore(startDate) && !date.isAfter(today);
+    })
         .fold<int>(0, (sum, entry) => sum + entry.visitorCount);
   }
 
@@ -289,7 +289,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 112,
+                  height: 142,
                   child: GestureDetector(
                     onTap: () {
                       Navigator.pushNamed(context, '/revenue-promotion');
@@ -319,7 +319,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
 
               Expanded(
                 child: SizedBox(
-                  height: 112,
+                  height: 142,
                   child: FutureBuilder<List<VisitorTrendEntry>>(
                     future: _visitorTrends,
                     builder: (context, snapshot) {
@@ -349,7 +349,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 112,
+                  height: 142,
                   child: GestureDetector(
                     onTap: () async {
                       await Navigator.pushNamed(context, '/operator-feedback');
@@ -383,7 +383,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
 
               Expanded(
                 child: SizedBox(
-                  height: 112,
+                  height: 142,
                   child: GestureDetector(
                     onTap: () {
                       Navigator.pushNamed(
@@ -573,10 +573,10 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
               final filtered = _attractionStatus == 'all'
                   ? attractions
                   : attractions
-                        .where(
-                          (item) => item.listingStatus == _attractionStatus,
-                        )
-                        .toList();
+                  .where(
+                    (item) => item.listingStatus == _attractionStatus,
+              )
+                  .toList();
               final visible = _showAllAttractions
                   ? filtered
                   : filtered.take(3).toList();
@@ -591,7 +591,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                       if (filtered.length > 3)
                         TextButton(
                           onPressed: () => setState(
-                            () => _showAllAttractions = !_showAllAttractions,
+                                () => _showAllAttractions = !_showAllAttractions,
                           ),
                           child: Text(
                             _showAllAttractions ? 'Show less' : 'View all',
@@ -605,31 +605,31 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                     child: Row(
                       children: statuses
                           .where((status) {
-                            return status == 'all' ||
-                                attractions.any(
+                        return status == 'all' ||
+                            attractions.any(
                                   (item) => item.listingStatus == status,
-                                );
-                          })
-                          .map((status) {
-                            final count = status == 'all'
-                                ? attractions.length
-                                : attractions
-                                      .where(
-                                        (item) => item.listingStatus == status,
-                                      )
-                                      .length;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: ChoiceChip(
-                                label: Text('${_title(status)} ($count)'),
-                                selected: _attractionStatus == status,
-                                onSelected: (_) => setState(() {
-                                  _attractionStatus = status;
-                                  _showAllAttractions = false;
-                                }),
-                              ),
                             );
-                          })
+                      })
+                          .map((status) {
+                        final count = status == 'all'
+                            ? attractions.length
+                            : attractions
+                            .where(
+                              (item) => item.listingStatus == status,
+                        )
+                            .length;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text('${_title(status)} ($count)'),
+                            selected: _attractionStatus == status,
+                            onSelected: (_) => setState(() {
+                              _attractionStatus = status;
+                              _showAllAttractions = false;
+                            }),
+                          ),
+                        );
+                      })
                           .toList(),
                     ),
                   ),
@@ -640,7 +640,7 @@ class _OperatorDashboardPageState extends State<OperatorDashboardPage> {
                     )
                   else
                     ...visible.map(
-                      (attraction) => Padding(
+                          (attraction) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _AttractionSummaryCard(
                           name: attraction.name,
@@ -724,7 +724,7 @@ class _DashboardVisitorTrendPainter extends CustomPainter {
 
     final maxValue = entries.fold<int>(
       0,
-      (max, entry) => entry.value > max ? entry.value : max,
+          (max, entry) => entry.value > max ? entry.value : max,
     );
 
     final safeMax = maxValue == 0 ? 1 : maxValue;

@@ -19,7 +19,7 @@ const _bookingSelection =
 
 class Module3Repository {
   Module3Repository({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client;
+      : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
 
@@ -52,13 +52,12 @@ class Module3Repository {
   }
 
   Future<List<AttractionSlot>> fetchRescheduleSlots(
-    TourBooking booking, {
-    String? attractionId,
-  }) async {
+      TourBooking booking,
+      ) async {
     final rows = await _client
         .from('attraction_slots')
         .select(_slotSelection)
-        .eq('attraction_id', attractionId ?? booking.slot.attractionId)
+        .eq('attraction_id', booking.slot.attractionId)
         .eq('status', 'open')
         .neq('id', booking.slot.id)
         .gt('starts_at', DateTime.now().toUtc().toIso8601String())
@@ -69,17 +68,10 @@ class Module3Repository {
         .map(AttractionSlot.fromMap)
         .where(
           (slot) =>
-              slot.isBookable && slot.remainingCapacity >= booking.visitorCount,
-        )
+      slot.isBookable && slot.remainingCapacity >= booking.visitorCount,
+    )
         .toList();
   }
-
-  Future<List<Map<String, dynamic>>> fetchRescheduleAttractions() async =>
-      await _client
-          .from('attractions')
-          .select('id, name')
-          .eq('listing_status', 'approved')
-          .order('name');
 
   Future<TourBooking> createBooking({
     required String slotId,
@@ -147,15 +139,15 @@ class Module3Repository {
     final previous = bookings
         .where((booking) => !booking.slot.endsAt.isAfter(slot.startsAt))
         .fold<TourBooking?>(null, (latest, booking) => latest == null ||
-                booking.slot.endsAt.isAfter(latest.slot.endsAt)
-            ? booking
-            : latest);
+        booking.slot.endsAt.isAfter(latest.slot.endsAt)
+        ? booking
+        : latest);
     final next = bookings
         .where((booking) => !booking.slot.startsAt.isBefore(slot.endsAt))
         .fold<TourBooking?>(null, (earliest, booking) => earliest == null ||
-                booking.slot.startsAt.isBefore(earliest.slot.startsAt)
-            ? booking
-            : earliest);
+        booking.slot.startsAt.isBefore(earliest.slot.startsAt)
+        ? booking
+        : earliest);
     if (previous != null) {
       _addTravelIssue(
         issues,
@@ -183,11 +175,11 @@ class Module3Repository {
   }
 
   void _addTravelIssue(
-    List<BookingConflictIssue> issues, {
-    required AttractionSlot from,
-    required AttractionSlot to,
-    required int availableMinutes,
-  }) {
+      List<BookingConflictIssue> issues, {
+        required AttractionSlot from,
+        required AttractionSlot to,
+        required int availableMinutes,
+      }) {
     final requiredMinutes = _travelMinutes(from, to);
     if (availableMinutes >= requiredMinutes) return;
     issues.add(BookingConflictIssue(
@@ -211,9 +203,9 @@ class Module3Repository {
   }
 
   Future<List<AttractionSlot>> _fetchAlternativeSlots(
-    AttractionSlot selected,
-    int visitors,
-  ) async {
+      AttractionSlot selected,
+      int visitors,
+      ) async {
     final rows = await _client
         .from('attraction_slots')
         .select(_slotSelection)
@@ -240,7 +232,7 @@ class Module3Repository {
     return rows
         .map(
           (row) => TourBooking.tryFromMap(Map<String, dynamic>.from(row)),
-        )
+    )
         .whereType<TourBooking>()
         .toList();
   }
@@ -298,11 +290,11 @@ class Module3Repository {
     final rows = await _client
         .from('published_itineraries')
         .select('id, title, description, author_name, itinerary_date, '
-            'published_at, stops:published_itinerary_stops('
-            'position, starts_at, ends_at, travel_minutes_from_previous, '
-            'distance_km_from_previous, attraction:attractions!inner('
-            'id, name, category, location_name, cover_image_url, '
-            'attraction_images(storage_path, display_order)))')
+        'published_at, stops:published_itinerary_stops('
+        'position, starts_at, ends_at, travel_minutes_from_previous, '
+        'distance_km_from_previous, attraction:attractions!inner('
+        'id, name, category, location_name, cover_image_url, '
+        'attraction_images(storage_path, display_order)))')
         .order('published_at', ascending: false);
     return rows.map(PublishedItinerary.fromMap).toList();
   }
