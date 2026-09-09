@@ -10,6 +10,7 @@ import '../staff/operator_dashboard_page.dart';
 import '../staff/operator_registration_page.dart';
 import '../staff/staff_qr_scanner_page.dart';
 import 'tourist_registration_page.dart';
+import 'password_recovery_page.dart';
 
 enum _DemoRole { tourist, operator, staff, administrator }
 
@@ -87,7 +88,12 @@ class _SignInPageState extends State<SignInPage> {
     }
     try {
       await _authRepository.sendPasswordReset(email);
-      if (mounted) _showMessage('Password reset link sent to $email.');
+      if (!mounted) return;
+      await Navigator.pushNamed(
+        context,
+        PasswordRecoveryPage.routeName,
+        arguments: email,
+      );
     } on AuthException catch (error) {
       if (mounted) _showMessage(error.message);
     }

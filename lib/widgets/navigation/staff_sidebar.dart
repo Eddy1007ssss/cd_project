@@ -4,50 +4,6 @@ import 'user_sidebar.dart';
 import 'navigation_routes.dart';
 
 const List<TourFlowSidebarItem> operatorSidebarItems = [
-  // MAIN NAVIGATION
-  TourFlowSidebarItem(
-    label: 'Operator Dashboard',
-    icon: Icons.dashboard_outlined,
-    navigationIndex: 0,
-    routeName: TourFlowRoutes.operatorDashboard,
-  ),
-
-  TourFlowSidebarItem(
-    label: 'Attraction Details',
-    icon: Icons.attractions_outlined,
-    navigationIndex: 1,
-    routeName: TourFlowRoutes.attractionDetails,
-  ),
-
-  TourFlowSidebarItem(
-    label: 'Slot Manager',
-    icon: Icons.event_available_outlined,
-    navigationIndex: 2,
-    routeName: TourFlowRoutes.slotManager,
-  ),
-
-  TourFlowSidebarItem(
-    label: 'Reports',
-    icon: Icons.report_outlined,
-    navigationIndex: 3,
-    routeName: TourFlowRoutes.operatorReports,
-  ),
-
-  TourFlowSidebarItem(
-    label: 'Chat Support',
-    icon: Icons.chat_outlined,
-    navigationIndex: 4,
-    routeName: TourFlowRoutes.userChat,
-  ),
-
-  TourFlowSidebarItem(
-    label: 'Analytics',
-    icon: Icons.analytics_outlined,
-    navigationIndex: 5,
-    routeName: TourFlowRoutes.operatorAnalytics,
-  ),
-
-  // SIDEBAR ONLY
   TourFlowSidebarItem(
     label: 'Feedback',
     icon: Icons.rate_review_outlined,
@@ -56,53 +12,9 @@ const List<TourFlowSidebarItem> operatorSidebarItems = [
   ),
 ];
 
-const List<TourFlowSidebarItem> adminSidebarItems = [
-  TourFlowSidebarItem(
-    label: 'Dashboard',
-    icon: Icons.dashboard_outlined,
-    navigationIndex: 0,
-    routeName: TourFlowRoutes.adminAnalyticsDashboard,
-  ),
-  TourFlowSidebarItem(
-    label: 'User Management',
-    icon: Icons.manage_accounts_outlined,
-    navigationIndex: 1,
-    routeName: TourFlowRoutes.adminDashboard,
-  ),
-  TourFlowSidebarItem(
-    label: 'Attraction Review',
-    icon: Icons.fact_check_outlined,
-    navigationIndex: 2,
-    routeName: TourFlowRoutes.adminAttractionReview,
-  ),
-  TourFlowSidebarItem(
-    label: 'Complaints',
-    icon: Icons.report_problem_outlined,
-    navigationIndex: 3,
-    routeName: TourFlowRoutes.adminComplaints,
-  ),
-  TourFlowSidebarItem(
-    label: 'Support Tickets',
-    icon: Icons.support_agent_outlined,
-    navigationIndex: 4,
-    routeName: TourFlowRoutes.adminSupportTickets,
-  ),
-];
+const List<TourFlowSidebarItem> adminSidebarItems = [];
 
-const List<TourFlowSidebarItem> staffSidebarItems = [
-  TourFlowSidebarItem(
-    label: 'Scan QR',
-    icon: Icons.qr_code_scanner_rounded,
-    navigationIndex: 0,
-    routeName: TourFlowRoutes.staffScan,
-  ),
-  TourFlowSidebarItem(
-    label: 'Profile',
-    icon: Icons.person_outline_rounded,
-    navigationIndex: 1,
-    routeName: TourFlowRoutes.staffProfile,
-  ),
-];
+const List<TourFlowSidebarItem> staffSidebarItems = [];
 
 class OperatorSidebar extends StatelessWidget {
   const OperatorSidebar({

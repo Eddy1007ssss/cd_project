@@ -190,11 +190,24 @@ class AuthRepository implements ProfileSecurityGateway {
   }
 
   @override
-  Future<void> sendPasswordReset(String email) =>
-      _client.auth.resetPasswordForEmail(
-        email.trim(),
-        redirectTo: 'tourflow://auth/recovery',
+  Future<void> sendPasswordReset(String email) => _client.auth.signInWithOtp(
+        email: email.trim(),
+        shouldCreateUser: false,
       );
+
+  Future<void> verifyPasswordResetCode({
+    required String email,
+    required String code,
+  }) async {
+    final response = await _client.auth.verifyOTP(
+      type: OtpType.email,
+      email: email.trim(),
+      token: code.trim(),
+    );
+    if (response.session == null) {
+      throw const AuthException('That verification code is invalid or expired.');
+    }
+  }
 
   Future<void> resendEmailVerification(String email) => _client.auth.resend(
         type: OtpType.signup,

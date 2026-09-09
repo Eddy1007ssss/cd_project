@@ -133,7 +133,7 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
                         foregroundColor: selected
                             ? TourFlowColors.primaryText
                             : TourFlowColors.muted,
-                        child: TourFlowText(
+                        child: Text(
                           language.$4,
                           style: const TextStyle(
                             fontSize: 11,

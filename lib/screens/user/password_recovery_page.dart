@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../repositories/auth_repository.dart';
 import '../../widgets/navigation/navigation_routes.dart';
@@ -15,15 +16,29 @@ class PasswordRecoveryPage extends StatefulWidget {
 
 class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
   final _repository = AuthRepository();
+  final _email = TextEditingController();
+  final _code = TextEditingController();
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
   bool _saving = false;
   bool _obscure = true;
+  bool _loadedArguments = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_loadedArguments) return;
+    _loadedArguments = true;
+    final email = ModalRoute.of(context)?.settings.arguments;
+    if (email is String) _email.text = email;
+  }
 
   @override
   void dispose() {
     _password.dispose();
     _confirmation.dispose();
+    _email.dispose();
+    _code.dispose();
     super.dispose();
   }
 
@@ -35,6 +50,10 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
     }
     setState(() => _saving = true);
     try {
+      await _repository.verifyPasswordResetCode(
+        email: _email.text,
+        code: _code.text,
+      );
       await _repository.completePasswordRecovery(_password.text);
       await _repository.signOut();
       if (!mounted) return;
@@ -59,16 +78,36 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const TourFlowText('Create a new password')),
+    appBar: AppBar(title: const TourFlowText('Reset password')),
     body: SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           const SectionTitle(
-            'Secure your account',
-            subtitle: 'Use at least 8 characters for your new password.',
+            'Enter your email code',
+            subtitle: 'We sent a six-digit code to your email address. Then choose a new password.',
           ),
           const SizedBox(height: 18),
+          TextField(
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'Email address',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _code,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            maxLength: 6,
+            decoration: const InputDecoration(
+              labelText: 'Six-digit verification code',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 4),
           TextField(
             controller: _password,
             obscureText: _obscure,
@@ -104,7 +143,7 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
                     dimension: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const TourFlowText('Update password'),
+                : const TourFlowText('Verify code and update password'),
           ),
         ],
       ),

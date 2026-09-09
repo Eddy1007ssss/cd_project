@@ -6,7 +6,6 @@ import 'package:latlong2/latlong.dart';
 import '../../models/module3_models.dart';
 import '../../models/saved_itinerary.dart';
 import '../../repositories/module3_repository.dart';
-import '../../services/itinerary_routing_service.dart';
 import '../../widgets/navigation/navigation_logout.dart';
 import '../../widgets/navigation/user_sidebar.dart';
 import 'community_itineraries_page.dart';
@@ -21,19 +20,16 @@ class ItineraryPlannerPage extends StatefulWidget {
 
 class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
   final _repository = Module3Repository();
-  final _router = ItineraryRoutingService();
   final _title = TextEditingController(text: 'My Day Trip');
   final _selectedIds = <String>{};
   late Future<List<TourBooking>> _bookings;
   List<SavedItinerary>? _saved;
   bool _savedError = false;
   bool _busy = false;
-  bool _routing = false;
   bool _builderOpen = false;
   String? _editingId;
   ItineraryPlan? _roadPlan;
   DateTime? _day;
-  int _routeVersion = 0;
 
   DateTime _date(DateTime value) => DateTime(value.year, value.month, value.day);
 
@@ -84,7 +80,6 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
       _editingId = itinerary?.id;
       _title.text = itinerary?.title ?? 'My Day Trip';
       _day = itinerary == null ? null : _date(itinerary.date);
-      _routeVersion++;
       _selectedIds
         ..clear()
         ..addAll(ids.where(valid.contains));
@@ -103,7 +98,6 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
     setState(() {
       _bookings = _repository.fetchBookings();
       _roadPlan = null;
-      _routeVersion++;
     });
     try {
       final latest = await _bookings;
@@ -116,27 +110,6 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
       // The booking FutureBuilder displays the load failure and retry action.
     }
     await _loadSaved();
-  }
-
-  Future<void> _calculate(ItineraryPlan plan) async {
-    final version = ++_routeVersion;
-    setState(() => _routing = true);
-    try {
-      final routed = await _router.calculate(plan);
-      if (mounted && version == _routeVersion) {
-        setState(() => _roadPlan = routed);
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: TourFlowText(
-            'Driving route unavailable. Approximate times are still shown.',
-          ),
-        ));
-      }
-    } finally {
-      if (mounted) setState(() => _routing = false);
-    }
   }
 
   Future<void> _save(ItineraryPlan plan) async {
@@ -320,7 +293,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
       title: const TourFlowText('Itinerary Planner'),
       actions: [
         IconButton(
-          onPressed: _busy || _routing ? null : _refresh,
+          onPressed: _busy ? null : _refresh,
           icon: const Icon(Icons.refresh),
           tooltip: 'Refresh',
         ),
@@ -368,7 +341,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                 label: const TourFlowText('Discover'),
               ),
               TextButton.icon(
-                onPressed: _busy || _routing ? null : () => _edit(null, available),
+                onPressed: _busy ? null : () => _edit(null, available),
                 icon: const Icon(Icons.add),
                 label: const TourFlowText('New'),
               ),
@@ -391,9 +364,9 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                     '${saved.isPublished ? 'Shared' : 'Private'}',
                   ),
                   selected: saved.id == _editingId,
-                  onTap: _busy || _routing ? null : () => _edit(saved, available),
+                  onTap: _busy ? null : () => _edit(saved, available),
                   trailing: PopupMenuButton<String>(
-                    enabled: !_busy && !_routing,
+                    enabled: !_busy,
                     onSelected: (action) {
                       if (action == 'share') _publish(saved);
                       if (action == 'private') _unpublish(saved);
@@ -425,7 +398,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                 IconButton(
                   tooltip: 'Back to my itineraries',
                   icon: const Icon(Icons.arrow_back),
-                  onPressed: _busy || _routing ? null : () => setState(() {
+                  onPressed: _busy ? null : () => setState(() {
                     _builderOpen = false;
                     _editingId = null;
                     _selectedIds.clear();
@@ -443,7 +416,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
             const TourFlowText('Build a single-day or multi-day trip. Visits stay in booking-time order. Overnight transfers and accommodation are not included.'),
             const SizedBox(height: 12),
             TextField(
-              enabled: !_busy && !_routing,
+              enabled: !_busy,
               maxLength: 120,
               controller: _title,
               decoration: InputDecoration(
@@ -466,19 +439,19 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
               ),
             Wrap(spacing: 8, runSpacing: 4, children: [
               ChoiceChip(label: const TourFlowText('All days'), selected: _day == null,
-                onSelected: _busy || _routing ? null : (_) => setState(() => _day = null)),
+                onSelected: _busy ? null : (_) => setState(() => _day = null)),
               ...dates.map((date) => ChoiceChip(label: Text(shortDate(date)), selected: _day == date,
-                onSelected: _busy || _routing ? null : (_) => setState(() => _day = date))),
+                onSelected: _busy ? null : (_) => setState(() => _day = date))),
             ]),
             Wrap(spacing: 8, children: [
-              TextButton(onPressed: _busy || _routing ? null : () => setState(() {
+              TextButton(onPressed: _busy ? null : () => setState(() {
                 _selectedIds.addAll(visible.map((b) => b.id));
                 _roadPlan = null;
               }), child: const TourFlowText('Select visible visits')),
-              TextButton(onPressed: _busy || _routing ? null : () => setState(() {
+              TextButton(onPressed: _busy ? null : () => setState(() {
                 _selectedIds.clear(); _roadPlan = null;
               }), child: const TourFlowText('Clear selection')),
-              TextButton.icon(onPressed: _busy || _routing ? null : () async {
+              TextButton.icon(onPressed: _busy ? null : () async {
                 await Navigator.pushNamed(context, '/attraction-discovery');
                 if (mounted) await _refresh();
               }, icon: const Icon(Icons.add_location_alt_outlined), label: const TourFlowText('Find more attractions')),
@@ -487,7 +460,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
               color: Colors.white,
               child: CheckboxListTile(
                 value: _selectedIds.contains(booking.id),
-                onChanged: _busy || _routing
+                onChanged: _busy
                     ? null
                     : (checked) => setState(() {
                         _roadPlan = null;
@@ -518,19 +491,9 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                 Text('${plan.bookings.fold<int>(0, (sum, b) => sum + b.slot.endsAt.difference(b.slot.startsAt).inMinutes)} min at attractions'),
                 const TourFlowText('Removing a visit here does not cancel its booking.'),
               ]))),
-              if (plan.bookings.length > 1)
-                OutlinedButton.icon(
-                  onPressed: _busy || _routing
-                      ? null
-                      : () => _calculate(plan),
-                  icon: const Icon(Icons.directions_car),
-                  label: TourFlowText(
-                    _routing ? 'Calculating…' : 'Calculate driving route',
-                  ),
-                ),
-              TourFlowText(plan.usesRoadRoutes
-                  ? 'Road estimates include a 15-minute safety buffer.'
-                  : 'Travel times are approximate until a route is calculated.'),
+              const TourFlowText(
+                'Travel time and safety buffers update automatically when visits change.',
+              ),
               _PlanStatus(conflict: plan.hasConflict),
               ...selectedDates.map((date) => Column(children: [
                 ListTile(title: Text(shortDate(date), style: const TextStyle(fontWeight: FontWeight.bold))),
@@ -574,9 +537,9 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                       ),
                       title: TourFlowText(booking.slot.attractionName),
                       subtitle: TourFlowText(slotTime(booking.slot)),
-                      onTap: _busy || _routing ? null : () => _openBooking(booking),
+                      onTap: _busy ? null : () => _openBooking(booking),
                       trailing: PopupMenuButton<String>(
-                        enabled: !_busy && !_routing,
+                        enabled: !_busy,
                         onSelected: (action) {
                           if (action == 'view') _openBooking(booking);
                           if (action == 'reschedule') _openBooking(booking, reschedule: true);
@@ -596,7 +559,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
               }),
               const SizedBox(height: 12),
               FilledButton.icon(
-                onPressed: _busy || _routing || plan.hasConflict || plan.bookings.length > 20 ? null : () => _save(plan),
+                onPressed: _busy || plan.hasConflict || plan.bookings.length > 20 ? null : () => _save(plan),
                 icon: const Icon(Icons.save_outlined),
                 label: TourFlowText(
                   _busy
