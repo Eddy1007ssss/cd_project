@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/module3_models.dart';
+import '../models/saved_itinerary.dart';
 
 const _slotSelection =
     'id, attraction_id, starts_at, ends_at, maximum_capacity, '
@@ -139,46 +140,34 @@ class Module3Repository {
     return fetchBooking(bookingId);
   }
 
+  Future<List<SavedItinerary>> fetchItineraries() async {
+    final rows = await _client.from('itineraries')
+        .select('id, title, itinerary_date, itinerary_items(booking_id, position)')
+        .eq('tourist_id', _userId).order('updated_at', ascending: false);
+    return rows.map(SavedItinerary.fromMap).toList();
+  }
+
+  Future<void> deleteItinerary(String id) async {
+    await _client.from('itineraries').delete().eq('id', id).eq('tourist_id', _userId);
+  }
+
   Future<String> saveItinerary({
     required String title,
     required ItineraryPlan plan,
+    String? itineraryId,
   }) async {
     if (plan.bookings.isEmpty) {
       throw const FormatException('Select at least one booking.');
     }
-
-    final itinerary = await _client
-        .from('itineraries')
-        .insert({
-          'tourist_id': _userId,
-          'title': title.trim(),
-          'itinerary_date': plan.bookings.first.slot.startsAt
-              .toIso8601String()
-              .substring(0, 10),
-          'status': plan.hasConflict ? 'conflict_detected' : 'conflict_free',
-        })
-        .select('id')
-        .single();
-
-    final itineraryId = itinerary['id'] as String;
-    final items = <Map<String, dynamic>>[];
-
-    for (var index = 0; index < plan.bookings.length; index++) {
-      final leg = index == 0 ? null : plan.legs[index - 1];
-
-      items.add({
-        'itinerary_id': itineraryId,
-        'booking_id': plan.bookings[index].id,
-        'position': index,
-        'travel_minutes_from_previous': leg?.travelMinutes,
-        'distance_km_from_previous': leg?.distanceKm,
-        'safety_buffer_minutes': 15,
-      });
-    }
-
-    await _client.from('itinerary_items').insert(items);
-
-    return itineraryId;
+    final result = await _client.rpc('save_my_itinerary', params: {
+      'p_itinerary_id': itineraryId,
+      'p_title': title.trim(),
+      'p_booking_ids': plan.bookings.map((b) => b.id).toList(),
+      'p_travel_minutes': plan.legs.map((leg) => leg.travelMinutes).toList(),
+      'p_distances_km': plan.legs.map((leg) => leg.distanceKm).toList(),
+      'p_uses_road_routes': plan.usesRoadRoutes,
+    });
+    return result as String;
   }
 
   Map<String, dynamic> _singleMap(Object? result) {

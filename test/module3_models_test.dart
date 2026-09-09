@@ -20,6 +20,19 @@ void main() {
   });
 
   group('ItineraryPlan', () {
+    test('road durations replace estimates and recompute appointment conflicts', () {
+      final plan = ItineraryPlan.build([
+        _booking('first', _slot(id: 'a', startHour: 9, endHour: 10)),
+        _booking('second', _slot(id: 'b', startHour: 12, endHour: 13)),
+      ]);
+      final routed = plan.withRoadLegs([
+        const ItineraryLeg(distanceKm: 100, travelMinutes: 135),
+      ]);
+      expect(routed.usesRoadRoutes, isTrue);
+      expect(routed.hasConflict, isTrue);
+      expect(routed.bookings.map((b) => b.id), ['first', 'second']);
+      expect(() => plan.withRoadLegs([]), throwsFormatException);
+    });
     test('sorts visits and detects insufficient travel time', () {
       final later = _booking(
         'later',

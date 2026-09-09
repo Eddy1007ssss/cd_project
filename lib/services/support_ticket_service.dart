@@ -51,6 +51,10 @@ class SupportTicketService {
     String? sourceConversationId,
   }) async {
     _userId;
+    if (subject.trim().runes.length < 5 || subject.trim().runes.length > 160 ||
+        description.trim().runes.length < 10 || description.trim().runes.length > 4000) {
+      throw const FormatException('Use a subject of 5–160 characters and details of 10–4000 characters.');
+    }
     final result = await _client.rpc(
       'create_support_ticket',
       params: {

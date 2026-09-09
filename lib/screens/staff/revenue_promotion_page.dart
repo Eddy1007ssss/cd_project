@@ -151,9 +151,14 @@ class _RevenuePromotionPageState extends State<RevenuePromotionPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Padding(padding: EdgeInsets.only(bottom: 12), child: Text(
+            'Estimated booking value from completed visits, not payments received. '
+            'Older bookings without a saved price use the current entrance price.')),
           FutureBuilder<List<RevenueEntry>>(
             future: _revenue,
             builder: (context, revenueSnapshot) {
+              if (revenueSnapshot.hasError) return const Text('Could not load booking values. Please reopen this page to retry.');
+              if (!revenueSnapshot.hasData) return const LinearProgressIndicator();
               final revenueEntries =
                   revenueSnapshot.data ?? const <RevenueEntry>[];
 
@@ -179,7 +184,7 @@ class _RevenuePromotionPageState extends State<RevenuePromotionPage> {
                         Expanded(
                           child: _SummaryStat(
                             icon: Icons.payments_outlined,
-                            label: 'Revenue',
+                            label: 'Est. Value',
                             value: _formatRevenue(revenue),
                             note: 'This month',
                           ),
@@ -244,7 +249,7 @@ class _RevenuePromotionPageState extends State<RevenuePromotionPage> {
                                 CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Revenue & Visitors',
+                                    'Estimated Value & Visitors',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(

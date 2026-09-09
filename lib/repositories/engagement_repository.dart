@@ -258,7 +258,7 @@ class EngagementRepository implements StaffCheckInGateway {
     final rows = await _client
         .from('bookings')
         .select(
-          'id, visitor_count, completed_at, '
+          'id, visitor_count, completed_at, unit_price_myr, '
           'slot:attraction_slots('
           'attraction:attractions('
           'id, name, entrance_price_myr'

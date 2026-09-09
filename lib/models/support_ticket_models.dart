@@ -165,13 +165,16 @@ class SupportTicketDraft {
   bool get canGoBack => category != null;
   bool get needsBooking => category == 'booking' || category == 'qr_check_in';
   String get categoryLabel => supportTicketCategoryLabel(category);
-  String get generatedSubject => issueLabel?.trim().isNotEmpty == true
-      ? issueLabel!.trim()
-      : '$categoryLabel support request';
+  String get generatedSubject {
+    final label = issueLabel?.trim().isNotEmpty == true
+        ? issueLabel!.trim() : '$categoryLabel support request';
+    return label.runes.length < 5 ? 'TourFlow · $label' : label;
+  }
   String get generatedDescription {
     final details = additionalDetails?.trim();
-    if (details == null || details.isEmpty) return generatedSubject;
-    return '$generatedSubject\n\n$details';
+    final summary = '$categoryLabel — $generatedSubject';
+    if (details == null || details.isEmpty) return summary;
+    return '$summary\n\n$details';
   }
 
   factory SupportTicketDraft.fromMap(Map<String, dynamic> map) {

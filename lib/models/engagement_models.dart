@@ -255,6 +255,7 @@ class RevenueEntry {
     required this.visitorCount,
     required this.entrancePrice,
     required this.completedAt,
+    this.isEstimated = false,
   });
 
   final String bookingId;
@@ -263,6 +264,7 @@ class RevenueEntry {
   final int visitorCount;
   final double entrancePrice;
   final DateTime completedAt;
+  final bool isEstimated;
 
   double get revenue => visitorCount * entrancePrice;
 
@@ -278,7 +280,9 @@ class RevenueEntry {
           attraction?['name'] as String? ?? 'Attraction unavailable',
       visitorCount: (map['visitor_count'] as num?)?.toInt() ?? 0,
       entrancePrice:
+          (map['unit_price_myr'] as num?)?.toDouble() ??
           (attraction?['entrance_price_myr'] as num?)?.toDouble() ?? 0.0,
+      isEstimated: map['unit_price_myr'] == null,
       completedAt: DateTime.parse(map['completed_at'] as String).toLocal(),
     );
   }

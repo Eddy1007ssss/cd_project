@@ -501,58 +501,11 @@ class AttractionService {
   // ============================================================
 
   Future<Map<String, double>> _getAverageRatings() async {
-    try {
-      final rows = await _client
-          .from('feedback')
-          .select(
-        'attraction_id, overall_rating',
-      );
-
-      final totals =
-      <String, double>{};
-
-      final counts =
-      <String, int>{};
-
-      for (final row in rows) {
-        final attractionId =
-        row['attraction_id'] as String?;
-
-        final rating =
-        (row['overall_rating'] as num?)?.toDouble();
-
-        if (attractionId == null ||
-            rating == null) {
-          continue;
-        }
-
-        totals[attractionId] =
-            (totals[attractionId] ?? 0) +
-                rating;
-
-        counts[attractionId] =
-            (counts[attractionId] ?? 0) +
-                1;
-      }
-
-      final averages =
-      <String, double>{};
-
-      for (final entry in totals.entries) {
-        final count =
-        counts[entry.key];
-
-        if (count != null &&
-            count > 0) {
-          averages[entry.key] =
-              entry.value / count;
-        }
-      }
-
-      return averages;
-    } catch (_) {
-      return const {};
-    }
+    // Aggregate scores only; written reviews and reviewer identities stay private.
+    final result = await _client.rpc('get_attraction_rating_summary');
+    final rows = (result as List).cast<Map<String, dynamic>>();
+    return {for (final row in rows)
+      row['attraction_id'] as String: (row['average_rating'] as num).toDouble()};
   }
 
   // ============================================================

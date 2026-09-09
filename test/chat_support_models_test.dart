@@ -4,6 +4,15 @@ import 'package:cd_project/services/gemini_chat_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('short multilingual issue labels satisfy ticket text limits', () {
+    final draft = SupportTicketDraft.fromMap({
+      'category': 'technical', 'issueType': 'app_error', 'issueLabel': '错误',
+      'additionalDetailsComplete': true, 'missingFields': <String>[],
+    });
+    expect(draft.generatedSubject.runes.length, greaterThanOrEqualTo(5));
+    expect(draft.generatedDescription.runes.length, greaterThanOrEqualTo(10));
+    expect(draft.generatedDescription, contains('错误'));
+  });
   test('guided complaint draft exposes the next required field', () {
     final draft = ComplaintDraft.fromMap({
       'attractionId': 'attraction-1',

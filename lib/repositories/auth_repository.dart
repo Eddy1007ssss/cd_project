@@ -67,10 +67,11 @@ class AuthRepository implements ProfileSecurityGateway {
         .eq('id', userId)
         .single();
     final profile = UserProfile.fromMap(data);
-    _profileNotifier.value = profile;
-    TourFlowLocaleController.instance.useLanguageCode(
-      profile.preferredLanguage,
-    );
+    // A slow profile request may finish after logout or an account switch.
+    if (currentUser?.id == userId) {
+      _profileNotifier.value = profile;
+      TourFlowLocaleController.instance.useLanguageCode(profile.preferredLanguage);
+    }
     return profile;
   }
 

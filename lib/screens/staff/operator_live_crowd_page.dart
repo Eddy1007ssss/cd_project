@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../models/live_crowd_models.dart';
+import '../../services/crowd_updates.dart';
 import '../../repositories/live_crowd_repository.dart';
 import '../../widgets/navigation/navigation_logout.dart';
 import '../../widgets/navigation/navigation_scope.dart';
@@ -29,6 +30,7 @@ class _OperatorLiveCrowdPageState
   LiveCrowdRepository();
 
   Timer? _timer;
+  CrowdUpdates? _updates;
 
   List<OperatorLiveCrowdSummary> _attractions =
   const [];
@@ -47,6 +49,9 @@ class _OperatorLiveCrowdPageState
 
     _load();
     _startTimer();
+    _updates = CrowdUpdates(() {
+      if (mounted && _foreground) _load(silent: true);
+    })..start();
   }
 
   @override
@@ -69,6 +74,7 @@ class _OperatorLiveCrowdPageState
 
   @override
   void dispose() {
+    _updates?.dispose();
     _timer?.cancel();
 
     WidgetsBinding.instance.removeObserver(

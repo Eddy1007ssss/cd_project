@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import '../../models/booking_value.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -94,7 +95,7 @@ class _AdminPerformanceReportPageState
     var bookingQuery = _client
         .from('bookings')
         .select(
-          'visitor_count, completed_at, '
+          'visitor_count, completed_at, unit_price_myr, '
           'slot:attraction_slots('
           'attraction:attractions(entrance_price_myr)'
           ')',
@@ -139,12 +140,7 @@ class _AdminPerformanceReportPageState
     for (final row in bookingRows) {
       final visitors = (row['visitor_count'] as num?)?.toInt() ?? 0;
 
-      final slot = (row['slot'] as Map?)?.cast<String, dynamic>();
-
-      final attraction = (slot?['attraction'] as Map?)?.cast<String, dynamic>();
-
-      final entrancePrice =
-          (attraction?['entrance_price_myr'] as num?)?.toDouble() ?? 0.0;
+      final entrancePrice = BookingValue.fromMap(row).unitPrice;
 
       totalVisitors += visitors;
       totalRevenue += visitors * entrancePrice;
@@ -199,7 +195,7 @@ class _AdminPerformanceReportPageState
     final rows = await _client
         .from('bookings')
         .select(
-          'visitor_count, completed_at, '
+          'visitor_count, completed_at, unit_price_myr, '
           'slot:attraction_slots('
           'attraction:attractions(entrance_price_myr)'
           ')',
@@ -213,12 +209,7 @@ class _AdminPerformanceReportPageState
     for (final row in rows) {
       final visitors = (row['visitor_count'] as num?)?.toInt() ?? 0;
 
-      final slot = (row['slot'] as Map?)?.cast<String, dynamic>();
-
-      final attraction = (slot?['attraction'] as Map?)?.cast<String, dynamic>();
-
-      final entrancePrice =
-          (attraction?['entrance_price_myr'] as num?)?.toDouble() ?? 0.0;
+      final entrancePrice = BookingValue.fromMap(row).unitPrice;
 
       revenue += visitors * entrancePrice;
     }
@@ -385,7 +376,7 @@ class _AdminPerformanceReportPageState
                     : '${data.averageRating.toStringAsFixed(1)} / 5',
               ),
               _pdfTableRow(
-                'Revenue Per Visitor',
+                'Estimated Value Per Visitor',
                 'RM ${data.revenuePerVisitor.toStringAsFixed(2)}',
               ),
               _pdfTableRow('Revenue Growth', data.revenueGrowth),
@@ -412,7 +403,7 @@ class _AdminPerformanceReportPageState
               _pdfTableRow('Reporting Period', _reportPeriod(data)),
               _pdfTableRow('Total Visitors', _formatNumber(data.totalVisitors)),
               _pdfTableRow(
-                'Total Revenue',
+                'Estimated Booking Value',
                 'RM ${data.totalRevenue.toStringAsFixed(2)}',
               ),
               _pdfTableRow('Feedback Records', '${data.totalFeedback}'),
@@ -442,9 +433,11 @@ class _AdminPerformanceReportPageState
                 pw.SizedBox(height: 6),
 
                 pw.Text(
-                  'Revenue is derived from completed bookings '
+                  'Estimated booking value is derived from completed bookings '
                   'within the selected reporting period using '
-                  'visitor count multiplied by attraction entrance price.',
+                  'visitor count multiplied by recorded booking price. '
+                  'Older bookings use the current price. These are estimates, '
+                  'not payments received.',
                   style: const pw.TextStyle(
                     fontSize: 9,
                     color: PdfColors.grey700,
@@ -679,7 +672,7 @@ class _AdminPerformanceReportPageState
                         Expanded(
                           child: _MetricCard(
                             icon: Icons.payments_outlined,
-                            label: 'Revenue / Visitor',
+                            label: 'Value / Visitor',
                             value:
                                 'RM ${data.revenuePerVisitor.toStringAsFixed(2)}',
                           ),
@@ -770,7 +763,7 @@ class _AdminPerformanceReportPageState
 
                           _SummaryRow(
                             icon: Icons.account_balance_wallet_outlined,
-                            label: 'Total Revenue',
+                            label: 'Estimated Booking Value',
                             value: 'RM ${data.totalRevenue.toStringAsFixed(2)}',
                           ),
 
@@ -809,7 +802,7 @@ class _AdminPerformanceReportPageState
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Revenue is derived from completed bookings within the selected reporting period using visitor count × attraction entrance price. Revenue growth compares the selected period with the immediately preceding period of the same duration.',
+                              'Estimated booking value is derived from completed bookings within the selected reporting period using visitor count × recorded booking price (current price for older bookings). These are estimates, not payments received. Revenue growth compares the selected period with the immediately preceding period of the same duration.',
                               style: TextStyle(
                                 color: TourFlowColors.body,
                                 fontSize: 8.8,

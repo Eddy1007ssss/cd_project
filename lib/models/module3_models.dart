@@ -237,11 +237,26 @@ class ItineraryPlan {
     required this.bookings,
     required this.legs,
     required this.hasConflict,
+    this.usesRoadRoutes = false,
   });
 
   final List<TourBooking> bookings;
   final List<ItineraryLeg> legs;
   final bool hasConflict;
+  final bool usesRoadRoutes;
+
+  ItineraryPlan withRoadLegs(List<ItineraryLeg> roadLegs) {
+    if (roadLegs.length != bookings.length - 1) {
+      throw const FormatException('The route is missing a journey segment.');
+    }
+    var conflict = false;
+    for (var i = 1; i < bookings.length; i++) {
+      if (bookings[i].slot.startsAt.difference(bookings[i - 1].slot.endsAt).inMinutes <
+          roadLegs[i - 1].travelMinutes) conflict = true;
+    }
+    return ItineraryPlan(bookings: bookings, legs: roadLegs,
+      hasConflict: conflict, usesRoadRoutes: true);
+  }
 
   static ItineraryPlan build(Iterable<TourBooking> selectedBookings) {
     final bookings = selectedBookings.toList()

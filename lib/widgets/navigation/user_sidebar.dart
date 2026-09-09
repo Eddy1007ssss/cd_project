@@ -4,6 +4,7 @@ import 'package:cd_project/l10n/tourflow_localization.dart';
 import 'user_bottom_navigation_bar.dart';
 import 'navigation_scope.dart';
 import 'navigation_routes.dart';
+import 'signed_in_identity.dart';
 
 class TourFlowSidebarItem {
   const TourFlowSidebarItem({
@@ -101,14 +102,14 @@ class TourFlowSidebar extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            _SidebarHeader(
+            SignedInIdentity(builder: (identity) => _SidebarHeader(
               title: title,
               roleLabel: roleLabel,
-              displayName: displayName,
-              email: email,
-              avatarUrl: avatarUrl,
+              displayName: identity.name,
+              email: identity.email,
+              avatarUrl: identity.avatarUrl,
               translateLabels: translateLabels,
-            ),
+            )),
             const Divider(height: 1, color: TourFlowNavigationColors.border),
             Expanded(
               child: ListView.separated(

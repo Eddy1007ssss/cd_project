@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cd_project/l10n/tourflow_localization.dart';
 
 import '../../models/module3_models.dart';
+import '../../models/saved_itinerary.dart';
+import '../../services/itinerary_routing_service.dart';
 import '../../repositories/module3_repository.dart';
 import '../../widgets/navigation/navigation_logout.dart';
 import '../../widgets/navigation/user_sidebar.dart';
@@ -19,11 +21,77 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
   late Future<List<TourBooking>> _bookings;
   final _selectedIds = <String>{};
   bool _saving = false;
+  bool _routing = false;
+  String? _editingId;
+  ItineraryPlan? _roadPlan;
+  List<SavedItinerary>? _saved;
+  bool _savedError = false;
+
+  Future<void> _loadSaved() async {
+    if (mounted) setState(() { _saved = null; _savedError = false; });
+    try {
+      final rows = await _repository.fetchItineraries();
+      if (mounted) setState(() => _saved = rows);
+    } catch (_) {
+      if (mounted) setState(() => _savedError = true);
+    }
+  }
+  final _router = ItineraryRoutingService();
+
+  Future<void> _calculate(ItineraryPlan plan) async {
+    setState(() => _routing = true);
+    try {
+      final routed = await _router.calculate(plan);
+      if (mounted) setState(() => _roadPlan = routed);
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: TourFlowText('Driving route unavailable. Approximate travel times are still shown.')));
+    } finally { if (mounted) setState(() => _routing = false); }
+  }
+
+  void _edit(SavedItinerary? itinerary, List<TourBooking> available) {
+    final valid = available.map((b) => b.id).toSet();
+    final ids = itinerary?.bookingIds ?? <String>[];
+    setState(() {
+      _editingId = itinerary?.id;
+      _title.text = itinerary?.title ?? 'My Kuala Lumpur Day';
+      _selectedIds..clear()..addAll(ids.where(valid.contains));
+      _roadPlan = null;
+    });
+    if (ids.any((id) => !valid.contains(id))) ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: TourFlowText('Some visits are no longer upcoming. Review the remaining bookings before saving.')));
+  }
+
+  Future<void> _delete(SavedItinerary itinerary) async {
+    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
+      title: const TourFlowText('Delete itinerary?'),
+      content: const TourFlowText('Your bookings will remain available in Trips.'),
+      actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const TourFlowText('Keep')),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: const TourFlowText('Delete'))]));
+    if (confirmed != true || !mounted) return;
+    setState(() => _saving = true);
+    try {
+      await _repository.deleteItinerary(itinerary.id);
+      if (mounted) {
+        setState(() {
+          if (_editingId == itinerary.id) {
+            _editingId = null; _selectedIds.clear(); _roadPlan = null;
+          }
+        });
+        await _loadSaved();
+      }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: TourFlowText('Could not delete the itinerary. Please retry.')));
+    } finally { if (mounted) setState(() => _saving = false); }
+  }
+
 
   @override
   void initState() {
     super.initState();
     _bookings = _repository.fetchBookings();
+    _loadSaved();
   }
 
   @override
@@ -33,7 +101,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
   }
 
   Future<void> _save(ItineraryPlan plan) async {
-    if (_title.text.trim().length < 2) {
+    if (_title.text.trim().length < 2 || _title.text.trim().length > 120) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: TourFlowText('Enter an itinerary name.')),
       );
@@ -41,7 +109,11 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
     }
     setState(() => _saving = true);
     try {
-      await _repository.saveItinerary(title: _title.text, plan: plan);
+      final id = await _repository.saveItinerary(title: _title.text, plan: plan, itineraryId: _editingId);
+      if (mounted) {
+        setState(() => _editingId = id);
+        await _loadSaved();
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: TourFlowText('Itinerary saved.')),
@@ -50,7 +122,9 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: TourFlowText('Could not save itinerary: $error')),
+          SnackBar(content: TourFlowText(error.toString().contains('ITINERARY_BOOKING_UNAVAILABLE')
+            ? 'A visit changed or is closed. Refresh your bookings before saving.'
+            : 'Could not save itinerary. Check your connection and selected visits, then retry.')),
         );
       }
     } finally {
@@ -63,12 +137,16 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     drawer: UserSidebar(
-      displayName: 'Alex Tan',
-      email: 'alex@example.com',
+      displayName: '',
+      email: '',
       selectedIndex: 5,
       onLogout: () async => signOutAndReturnToSignIn(context),
     ),
-    appBar: AppBar(title: const TourFlowText('Itinerary Planner')),
+    appBar: AppBar(title: const TourFlowText('Itinerary Planner'), actions: [
+      IconButton(onPressed: _saving || _routing ? null : () {
+        setState(() { _bookings = _repository.fetchBookings(); _roadPlan = null; });
+        _loadSaved();
+      }, icon: const Icon(Icons.refresh), tooltip: 'Refresh')]),
     body: FutureBuilder<List<TourBooking>>(
       future: _bookings,
       builder: (context, snapshot) {
@@ -86,11 +164,27 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
         final selected = available.where(
           (booking) => _selectedIds.contains(booking.id),
         );
-        final plan = ItineraryPlan.build(selected);
+        final plan = _roadPlan ?? ItineraryPlan.build(selected);
+        final sameDay = plan.bookings.map((b) => shortDate(b.slot.startsAt)).toSet().length <= 1;
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            Row(children: [const Expanded(child: TourFlowText('Saved itineraries', style: TextStyle(fontWeight: FontWeight.bold))),
+              TextButton.icon(onPressed: _saving || _routing ? null : () => _edit(null, available),
+                icon: const Icon(Icons.add), label: const TourFlowText('New'))]),
+            if (_savedError) const TourFlowText('Could not load saved plans. Tap Refresh to retry.')
+            else if (_saved == null) const LinearProgressIndicator()
+            else if (_saved!.isEmpty) const TourFlowText('Your saved plans will appear here.')
+            else ..._saved!.map((saved) => Card(child: ListTile(
+              title: TourFlowText(saved.title),
+              subtitle: TourFlowText('${shortDate(saved.date)} · ${saved.bookingIds.length} visits'),
+              selected: saved.id == _editingId,
+              onTap: _saving || _routing ? null : () => _edit(saved, available),
+              trailing: IconButton(onPressed: _saving || _routing ? null : () => _delete(saved),
+                icon: const Icon(Icons.delete_outline), tooltip: 'Delete itinerary')))),
+            const SizedBox(height: 16),
             TextField(
+              enabled: !_saving && !_routing, maxLength: 120,
               controller: _title,
               decoration: InputDecoration(
                 labelText: context.tr('Itinerary name'),
@@ -116,7 +210,8 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                 color: Colors.white,
                 child: CheckboxListTile(
                   value: _selectedIds.contains(booking.id),
-                  onChanged: (checked) => setState(() {
+                  onChanged: _saving || _routing ? null : (checked) => setState(() {
+                    _roadPlan = null;
                     checked == true
                         ? _selectedIds.add(booking.id)
                         : _selectedIds.remove(booking.id);
@@ -133,6 +228,14 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
             ),
             if (plan.bookings.isNotEmpty) ...[
               const SizedBox(height: 14),
+              if (!sameDay) const TourFlowText('Choose visits on the same day, or create separate itineraries.'),
+              if (plan.bookings.length > 1) OutlinedButton.icon(
+                onPressed: _saving || _routing || !sameDay ? null : () => _calculate(plan),
+                icon: const Icon(Icons.directions_car),
+                label: TourFlowText(_routing ? 'Calculating…' : 'Calculate driving route')),
+              TourFlowText(plan.usesRoadRoutes
+                ? 'Driving routes include a 15-minute buffer. Live traffic may change travel time.'
+                : 'Travel times are approximate. Calculate a driving route for a better estimate.'),
               _PlanStatus(conflict: plan.hasConflict),
               const SizedBox(height: 8),
               ...List.generate(plan.bookings.length, (index) {
@@ -151,7 +254,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                                 'Distance unavailable; conservative travel estimate used',
                               )
                             : TourFlowText(
-                                '${leg.distanceKm.toStringAsFixed(1)} km estimated',
+                                '${leg.distanceKm.toStringAsFixed(1)} km ${plan.usesRoadRoutes ? 'by road' : 'approximate'}',
                               ),
                       ),
                     Card(
@@ -170,9 +273,9 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
               }),
               const SizedBox(height: 12),
               FilledButton.icon(
-                onPressed: _saving ? null : () => _save(plan),
+                onPressed: _saving || _routing || !sameDay ? null : () => _save(plan),
                 icon: const Icon(Icons.save_outlined),
-                label: TourFlowText(_saving ? 'Saving…' : 'Save Itinerary'),
+                label: TourFlowText(_saving ? 'Saving…' : _editingId == null ? 'Save Itinerary' : 'Update Itinerary'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.all(15),
                 ),
