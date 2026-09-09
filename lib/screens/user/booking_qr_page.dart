@@ -8,15 +8,12 @@ import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
 
 class BookingQrPage extends StatefulWidget {
-  const BookingQrPage({
-    super.key,
-  });
+  const BookingQrPage({super.key});
 
   static const routeName = '/booking-qr';
 
   @override
-  State<BookingQrPage> createState() =>
-      _BookingQrPageState();
+  State<BookingQrPage> createState() => _BookingQrPageState();
 }
 
 class _BookingQrPageState extends State<BookingQrPage>
@@ -45,9 +42,7 @@ class _BookingQrPageState extends State<BookingQrPage>
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addObserver(
-      this,
-    );
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -60,8 +55,7 @@ class _BookingQrPageState extends State<BookingQrPage>
 
     _initialized = true;
 
-    final arguments =
-        ModalRoute.of(context)?.settings.arguments;
+    final arguments = ModalRoute.of(context)?.settings.arguments;
 
     if (arguments is! TourBooking) {
       return;
@@ -69,37 +63,32 @@ class _BookingQrPageState extends State<BookingQrPage>
 
     _booking = arguments;
 
-    WidgetsBinding.instance.addPostFrameCallback(
-          (_) async {
-        if (!mounted) {
-          return;
-        }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
 
-        await _refresh();
+      await _refresh();
 
-        if (!mounted) {
-          return;
-        }
+      if (!mounted) {
+        return;
+      }
 
-        if (_booking?.slot.usesStaffScan == true) {
-          await _checkLocation();
-        }
+      if (_booking?.slot.usesStaffScan == true) {
+        await _checkLocation();
+      }
 
-        if (!mounted) {
-          return;
-        }
+      if (!mounted) {
+        return;
+      }
 
-        _startTimer();
-      },
-    );
+      _startTimer();
+    });
   }
 
   @override
-  void didChangeAppLifecycleState(
-      AppLifecycleState state,
-      ) {
-    _foreground =
-        state == AppLifecycleState.resumed;
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
 
     if (_foreground) {
       if (ModalRoute.of(context)?.isCurrent == true) {
@@ -120,9 +109,7 @@ class _BookingQrPageState extends State<BookingQrPage>
   void dispose() {
     _timer?.cancel();
 
-    WidgetsBinding.instance.removeObserver(
-      this,
-    );
+    WidgetsBinding.instance.removeObserver(this);
 
     super.dispose();
   }
@@ -130,40 +117,28 @@ class _BookingQrPageState extends State<BookingQrPage>
   void _startTimer() {
     _timer?.cancel();
 
-    if (!_foreground ||
-        _booking == null) {
+    if (!_foreground || _booking == null) {
       return;
     }
 
-    _timer = Timer.periodic(
-      const Duration(
-        seconds: 3,
-      ),
-          (_) {
-        if (!mounted ||
-            !_foreground) {
-          return;
-        }
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted || !_foreground) {
+        return;
+      }
 
-        if (ModalRoute.of(context)?.isCurrent != true) {
-          return;
-        }
+      if (ModalRoute.of(context)?.isCurrent != true) {
+        return;
+      }
 
-        _refresh();
-      },
-    );
+      _refresh();
+    });
   }
 
-  bool _finished(
-      TourBooking booking,
-      ) {
-    return booking.isCompleted ||
-        booking.isCheckedOut;
+  bool _finished(TourBooking booking) {
+    return booking.isCompleted || booking.isCheckedOut;
   }
 
-  String _status(
-      TourBooking booking,
-      ) {
+  String _status(TourBooking booking) {
     if (_finished(booking)) {
       return 'Completed';
     }
@@ -179,42 +154,29 @@ class _BookingQrPageState extends State<BookingQrPage>
     return 'Confirmed';
   }
 
-  Color _statusColor(
-      TourBooking booking,
-      ) {
+  Color _statusColor(TourBooking booking) {
     if (_finished(booking)) {
-      return const Color(
-        0xFF2563EB,
-      );
+      return const Color(0xFF2563EB);
     }
 
     if (booking.isCheckedIn) {
-      return const Color(
-        0xFF15803D,
-      );
+      return const Color(0xFF15803D);
     }
 
     if (booking.isCancelled) {
-      return const Color(
-        0xFFB91C1C,
-      );
+      return const Color(0xFFB91C1C);
     }
 
-    return const Color(
-      0xFF79571E,
-    );
+    return const Color(0xFF79571E);
   }
 
-  String _instructions(
-      TourBooking booking,
-      ) {
+  String _instructions(TourBooking booking) {
     if (_finished(booking)) {
       return 'This visit is completed. '
           'The QR code is retained as your booking reference.';
     }
 
-    if (booking.isCancelled &&
-        !booking.isCheckedIn) {
+    if (booking.isCancelled && !booking.isCheckedIn) {
       return 'This booking is cancelled. '
           'The QR code cannot be used for entry.';
     }
@@ -222,9 +184,9 @@ class _BookingQrPageState extends State<BookingQrPage>
     if (booking.slot.usesGeofence) {
       return booking.isCheckedIn
           ? 'You are currently checked in. '
-          'This ticket uses location-based check-out.'
+                'This ticket uses location-based check-out.'
           : 'This is a location-based ticket. '
-          'The QR code is retained as your booking reference.';
+                'The QR code is retained as your booking reference.';
     }
 
     if (booking.slot.usesStaffScan) {
@@ -237,52 +199,36 @@ class _BookingQrPageState extends State<BookingQrPage>
   }
 
   Future<void> _refresh() async {
-    final previous =
-        _booking;
+    final previous = _booking;
 
-    if (!mounted ||
-        !_foreground ||
-        previous == null ||
-        _refreshing) {
+    if (!mounted || !_foreground || previous == null || _refreshing) {
       return;
     }
 
     _refreshing = true;
 
     try {
-      final updated =
-      await _repository.fetchBooking(
-        previous.id,
-      );
+      final updated = await _repository.fetchBooking(previous.id);
 
       if (!mounted) {
         return;
       }
 
-      final justCompleted =
-          !_finished(previous) &&
-              _finished(updated);
+      final justCompleted = !_finished(previous) && _finished(updated);
 
       final justCheckedIn =
-          !previous.hasCheckedIn &&
-              updated.isCheckedIn &&
-              !_finished(updated);
+          !previous.hasCheckedIn && updated.isCheckedIn && !_finished(updated);
 
       setState(() {
         _booking = updated;
         _error = null;
       });
 
-      if (_foreground &&
-          ModalRoute.of(context)?.isCurrent == true) {
+      if (_foreground && ModalRoute.of(context)?.isCurrent == true) {
         if (justCompleted) {
-          _message(
-            'Check-Out Successful. Your booking is completed.',
-          );
+          _message('Check-Out Successful. Your booking is completed.');
         } else if (justCheckedIn) {
-          _message(
-            'Check-In Successful',
-          );
+          _message('Check-In Successful');
         }
       }
     } catch (_) {
@@ -291,8 +237,7 @@ class _BookingQrPageState extends State<BookingQrPage>
       }
 
       setState(() {
-        _error =
-        'Unable to refresh. The displayed status may be out of date.';
+        _error = 'Unable to refresh. The displayed status may be out of date.';
       });
     } finally {
       _refreshing = false;
@@ -300,23 +245,17 @@ class _BookingQrPageState extends State<BookingQrPage>
   }
 
   Future<void> _checkLocation() async {
-    final booking =
-        _booking;
+    final booking = _booking;
 
-    if (booking == null ||
-        !booking.slot.usesStaffScan ||
-        _checkingLocation) {
+    if (booking == null || !booking.slot.usesStaffScan || _checkingLocation) {
       return;
     }
 
-    final attractionLatitude =
-        booking.slot.latitude;
+    final attractionLatitude = booking.slot.latitude;
 
-    final attractionLongitude =
-        booking.slot.longitude;
+    final attractionLongitude = booking.slot.longitude;
 
-    if (attractionLatitude == null ||
-        attractionLongitude == null) {
+    if (attractionLatitude == null || attractionLongitude == null) {
       if (!mounted) {
         return;
       }
@@ -324,8 +263,7 @@ class _BookingQrPageState extends State<BookingQrPage>
       setState(() {
         _locationVerified = false;
         _distanceM = null;
-        _locationError =
-        'Attraction location is unavailable.';
+        _locationError = 'Attraction location is unavailable.';
       });
 
       return;
@@ -337,8 +275,7 @@ class _BookingQrPageState extends State<BookingQrPage>
     });
 
     try {
-      final serviceEnabled =
-      await Geolocator.isLocationServiceEnabled();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
       if (!serviceEnabled) {
         throw Exception(
@@ -346,41 +283,32 @@ class _BookingQrPageState extends State<BookingQrPage>
         );
       }
 
-      var permission =
-      await Geolocator.checkPermission();
+      var permission = await Geolocator.checkPermission();
 
-      if (permission ==
-          LocationPermission.denied) {
-        permission =
-        await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
       }
 
-      if (permission ==
-          LocationPermission.denied) {
+      if (permission == LocationPermission.denied) {
         throw Exception(
           'Location permission is required to access your QR code.',
         );
       }
 
-      if (permission ==
-          LocationPermission.deniedForever) {
+      if (permission == LocationPermission.deniedForever) {
         throw Exception(
           'Location permission is permanently denied. '
-              'Please enable it in your device settings.',
+          'Please enable it in your device settings.',
         );
       }
 
-      final position =
-      await Geolocator.getCurrentPosition(
-        locationSettings:
-        const LocationSettings(
-          accuracy:
-          LocationAccuracy.high,
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
         ),
       );
 
-      final distance =
-      Geolocator.distanceBetween(
+      final distance = Geolocator.distanceBetween(
         position.latitude,
         position.longitude,
         attractionLatitude,
@@ -394,8 +322,7 @@ class _BookingQrPageState extends State<BookingQrPage>
       setState(() {
         _distanceM = distance;
 
-        _locationVerified =
-            distance <= _qrAccessRadiusM;
+        _locationVerified = distance <= _qrAccessRadiusM;
 
         _locationError = null;
       });
@@ -408,12 +335,7 @@ class _BookingQrPageState extends State<BookingQrPage>
         _locationVerified = false;
         _distanceM = null;
 
-        _locationError = error
-            .toString()
-            .replaceFirst(
-          'Exception: ',
-          '',
-        );
+        _locationError = error.toString().replaceFirst('Exception: ', '');
       });
     } finally {
       if (mounted) {
@@ -436,27 +358,18 @@ class _BookingQrPageState extends State<BookingQrPage>
     }
   }
 
-  void _message(
-      String text,
-      ) {
+  void _message(String text) {
     if (!mounted) {
       return;
     }
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            text,
-          ),
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(text)));
   }
 
   String _distanceText() {
-    final distance =
-        _distanceM;
+    final distance = _distanceM;
 
     if (distance == null) {
       return '';
@@ -469,43 +382,25 @@ class _BookingQrPageState extends State<BookingQrPage>
     return '${(distance / 1000).toStringAsFixed(2)} km from attraction';
   }
 
-  Widget _locationCard(
-      TourBooking booking,
-      ) {
+  Widget _locationCard(TourBooking booking) {
     if (_checkingLocation) {
       return Container(
         width: double.infinity,
-        padding:
-        const EdgeInsets.all(
-          16,
-        ),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(
-            0xFFFFF7EA,
-          ),
-          borderRadius:
-          BorderRadius.circular(
-            14,
-          ),
+          color: const Color(0xFFFFF7EA),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: const Column(
           children: [
             SizedBox.square(
               dimension: 24,
-              child:
-              CircularProgressIndicator(
-                strokeWidth: 2.5,
-              ),
+              child: CircularProgressIndicator(strokeWidth: 2.5),
             ),
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox(height: 10),
             Text(
               'Checking your location...',
-              style: TextStyle(
-                fontWeight:
-                FontWeight.w700,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w700),
             ),
           ],
         ),
@@ -515,61 +410,33 @@ class _BookingQrPageState extends State<BookingQrPage>
     if (_locationVerified) {
       return Container(
         width: double.infinity,
-        padding:
-        const EdgeInsets.all(
-          16,
-        ),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(
-            0xFFEFF8F0,
-          ),
-          borderRadius:
-          BorderRadius.circular(
-            14,
-          ),
-          border: Border.all(
-            color: const Color(
-              0xFFB7D8BD,
-            ),
-          ),
+          color: const Color(0xFFEFF8F0),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFB7D8BD)),
         ),
         child: Column(
           children: [
             const Icon(
-              Icons
-                  .check_circle_rounded,
-              color: Color(
-                0xFF15803D,
-              ),
+              Icons.check_circle_rounded,
+              color: Color(0xFF15803D),
               size: 34,
             ),
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
             const Text(
               'Location Verified',
               style: TextStyle(
-                color: Color(
-                  0xFF15803D,
-                ),
+                color: Color(0xFF15803D),
                 fontSize: 16,
-                fontWeight:
-                FontWeight.w800,
+                fontWeight: FontWeight.w800,
               ),
             ),
             if (_distanceM != null) ...[
-              const SizedBox(
-                height: 5,
-              ),
+              const SizedBox(height: 5),
               Text(
                 _distanceText(),
-                style:
-                const TextStyle(
-                  color: Color(
-                    0xFF4B5563,
-                  ),
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Color(0xFF4B5563), fontSize: 12),
               ),
             ],
           ],
@@ -579,111 +446,61 @@ class _BookingQrPageState extends State<BookingQrPage>
 
     return Container(
       width: double.infinity,
-      padding:
-      const EdgeInsets.all(
-        16,
-      ),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(
-          0xFFFFF4E5,
-        ),
-        borderRadius:
-        BorderRadius.circular(
-          14,
-        ),
-        border: Border.all(
-          color: const Color(
-            0xFFF5C27A,
-          ),
-        ),
+        color: const Color(0xFFFFF4E5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF5C27A)),
       ),
       child: Column(
         children: [
           const Icon(
             Icons.location_off_outlined,
-            color: Color(
-              0xFFB45309,
-            ),
+            color: Color(0xFFB45309),
             size: 34,
           ),
-          const SizedBox(
-            height: 8,
-          ),
+          const SizedBox(height: 8),
           const Text(
             'Move Closer to the Attraction',
-            textAlign:
-            TextAlign.center,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: Color(
-                0xFFB45309,
-              ),
+              color: Color(0xFFB45309),
               fontSize: 16,
-              fontWeight:
-              FontWeight.w800,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(
-            height: 7,
-          ),
+          const SizedBox(height: 7),
           const Text(
             'You must be within 10 metres of the attraction '
-                'to access your QR code.',
-            textAlign:
-            TextAlign.center,
-            style: TextStyle(
-              height: 1.4,
-            ),
+            'to access your QR code.',
+            textAlign: TextAlign.center,
+            style: TextStyle(height: 1.4),
           ),
           if (_distanceM != null) ...[
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
             Text(
               _distanceText(),
-              style:
-              const TextStyle(
-                color: Color(
-                  0xFF6B7280,
-                ),
-                fontWeight:
-                FontWeight.w600,
+              style: const TextStyle(
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
           if (_locationError != null) ...[
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
             Text(
               _locationError!,
-              textAlign:
-              TextAlign.center,
-              style:
-              const TextStyle(
-                color: Color(
-                  0xFFB45309,
-                ),
-                fontSize: 12,
-              ),
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFFB45309), fontSize: 12),
             ),
           ],
-          const SizedBox(
-            height: 14,
-          ),
+          const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed:
-              _checkingLocation
-                  ? null
-                  : _checkLocation,
-              icon: const Icon(
-                Icons
-                    .my_location_rounded,
-              ),
-              label: const Text(
-                'Check Location Again',
-              ),
+              onPressed: _checkingLocation ? null : _checkLocation,
+              icon: const Icon(Icons.my_location_rounded),
+              label: const Text('Check Location Again'),
             ),
           ),
         ],
@@ -691,37 +508,20 @@ class _BookingQrPageState extends State<BookingQrPage>
     );
   }
 
-  Widget _timeRow(
-      String label,
-      DateTime value,
-      ) {
-    final local =
-    value.toLocal();
+  Widget _timeRow(String label, DateTime value) {
+    final local = value.toLocal();
 
     return Padding(
-      padding:
-      const EdgeInsets.only(
-        top: 10,
-      ),
+      padding: const EdgeInsets.only(top: 10),
       child: Row(
-        crossAxisAlignment:
-        CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              label,
-            ),
-          ),
+          SizedBox(width: 90, child: Text(label)),
           Expanded(
             child: Text(
               '${shortDate(local)} '
-                  '${clockTime(local)}',
-              style:
-              const TextStyle(
-                fontWeight:
-                FontWeight.w600,
-              ),
+              '${clockTime(local)}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -730,299 +530,164 @@ class _BookingQrPageState extends State<BookingQrPage>
   }
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
-    final booking =
-        _booking;
+  Widget build(BuildContext context) {
+    final booking = _booking;
 
     if (booking == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Booking Ticket',
-          ),
-        ),
-        body: const Center(
-          child: Text(
-            'Booking ticket is missing.',
-          ),
-        ),
+        appBar: AppBar(title: const Text('Booking Ticket')),
+        body: const Center(child: Text('Booking ticket is missing.')),
       );
     }
 
-    final color =
-    _statusColor(
-      booking,
-    );
+    final color = _statusColor(booking);
 
     // Indoor entry tickets are valid as soon as a booking is confirmed.
     // Geofence is never a condition for opening an indoor QR ticket.
     final requiresLocation = false;
-    final showQr = booking.slot.usesStaffScan &&
+    final showQr =
+        booking.slot.usesStaffScan &&
         booking.qrToken != null &&
         !booking.isCancelled &&
         !_finished(booking);
 
     return Scaffold(
-      backgroundColor:
-      const Color(
-        0xFFFAF8FF,
-      ),
-      appBar: AppBar(
-        title: const Text(
-          'Booking Ticket',
-        ),
-      ),
+      backgroundColor: const Color(0xFFFAF8FF),
+      appBar: AppBar(title: const Text('Booking Ticket')),
       body: RefreshIndicator(
-        onRefresh:
-        _pullRefresh,
+        onRefresh: _pullRefresh,
         child: ListView(
-          physics:
-          const AlwaysScrollableScrollPhysics(),
-          padding:
-          const EdgeInsets.all(
-            24,
-          ),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24),
           children: [
             Center(
               child: ConstrainedBox(
-                constraints:
-                const BoxConstraints(
-                  maxWidth: 480,
-                ),
+                constraints: const BoxConstraints(maxWidth: 480),
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Card(
-                      color:
-                      Colors.white,
+                      color: Colors.white,
                       child: Padding(
-                        padding:
-                        const EdgeInsets.all(
-                          24,
-                        ),
+                        padding: const EdgeInsets.all(24),
                         child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.stretch,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Icon(
                               booking.slot.usesGeofence
-                                  ? Icons
-                                  .location_on_outlined
-                                  : Icons
-                                  .qr_code_2_rounded,
-                              color:
-                              const Color(
-                                0xFF79571E,
-                              ),
+                                  ? Icons.location_on_outlined
+                                  : Icons.qr_code_2_rounded,
+                              color: const Color(0xFF79571E),
                               size: 34,
                             ),
-                            const SizedBox(
-                              height: 8,
-                            ),
+                            const SizedBox(height: 8),
                             Text(
-                              booking.slot
-                                  .ticketTypeLabel,
-                              textAlign:
-                              TextAlign.center,
-                              style:
-                              const TextStyle(
-                                color:
-                                Color(
-                                  0xFF79571E,
-                                ),
-                                fontWeight:
-                                FontWeight.w800,
+                              booking.slot.ticketTypeLabel,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Color(0xFF79571E),
+                                fontWeight: FontWeight.w800,
                                 fontSize: 16,
                               ),
                             ),
-                            const SizedBox(
-                              height: 16,
-                            ),
+                            const SizedBox(height: 16),
                             Text(
-                              booking.slot
-                                  .attractionName,
-                              textAlign:
-                              TextAlign.center,
-                              style:
-                              const TextStyle(
+                              booking.slot.attractionName,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
                                 fontSize: 20,
-                                fontWeight:
-                                FontWeight.w800,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const SizedBox(
-                              height: 8,
-                            ),
+                            const SizedBox(height: 8),
                             Text(
                               '${shortDate(booking.slot.startsAt)} '
-                                  '· ${slotTime(booking.slot)}',
-                              textAlign:
-                              TextAlign.center,
+                              '· ${slotTime(booking.slot)}',
+                              textAlign: TextAlign.center,
                             ),
-                            const SizedBox(
-                              height: 6,
-                            ),
+                            const SizedBox(height: 6),
                             Text(
                               '${booking.visitorCount} visitor(s)',
-                              textAlign:
-                              TextAlign.center,
-                              style:
-                              const TextStyle(
-                                color:
-                                Colors.black54,
-                              ),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.black54),
                             ),
-                            const SizedBox(
-                              height: 18,
-                            ),
+                            const SizedBox(height: 18),
                             Container(
-                              padding:
-                              const EdgeInsets.all(
-                                12,
-                              ),
-                              decoration:
-                              BoxDecoration(
-                                color:
-                                color.withAlpha(
-                                  20,
-                                ),
-                                borderRadius:
-                                BorderRadius.circular(
-                                  12,
-                                ),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: color.withAlpha(20),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                _status(
-                                  booking,
-                                ),
-                                key:
-                                const Key(
-                                  'tourist-booking-status',
-                                ),
-                                textAlign:
-                                TextAlign.center,
-                                style:
-                                TextStyle(
-                                  color:
-                                  color,
-                                  fontSize:
-                                  18,
-                                  fontWeight:
-                                  FontWeight.w800,
+                                _status(booking),
+                                key: const Key('tourist-booking-status'),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: color,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
                             ),
                             if (requiresLocation) ...[
-                              const SizedBox(
-                                height: 20,
-                              ),
-                              _locationCard(
-                                booking,
-                              ),
+                              const SizedBox(height: 20),
+                              _locationCard(booking),
                             ],
                             if (showQr) ...[
-                              const SizedBox(
-                                height: 20,
-                              ),
+                              const SizedBox(height: 20),
                               Center(
                                 child: SizedBox(
                                   width: 230,
-                                  child:
-                                  AspectRatio(
-                                    aspectRatio:
-                                    1,
-                                    child:
-                                    QrImageView(
-                                      data:
-                                      booking.qrToken!,
-                                      backgroundColor:
-                                      Colors.white,
-                                      padding:
-                                      const EdgeInsets.all(
-                                        16,
-                                      ),
+                                  child: AspectRatio(
+                                    aspectRatio: 1,
+                                    child: QrImageView(
+                                      data: booking.qrToken!,
+                                      backgroundColor: Colors.white,
+                                      padding: const EdgeInsets.all(16),
                                     ),
                                   ),
                                 ),
                               ),
                             ],
-                            const SizedBox(
-                              height: 12,
-                            ),
+                            const SizedBox(height: 12),
                             const Text(
                               'Booking Code',
-                              textAlign:
-                              TextAlign.center,
-                              style:
-                              TextStyle(
-                                color:
-                                Colors.black54,
-                                fontSize:
-                                12,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 12,
                               ),
                             ),
-                            const SizedBox(
-                              height: 6,
-                            ),
+                            const SizedBox(height: 6),
                             SelectableText(
                               booking.bookingCode,
-                              textAlign:
-                              TextAlign.center,
-                              style:
-                              const TextStyle(
-                                fontWeight:
-                                FontWeight.w800,
-                                letterSpacing:
-                                1,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1,
                               ),
                             ),
-                            const SizedBox(
-                              height: 16,
-                            ),
+                            const SizedBox(height: 16),
                             Text(
                               _instructions(booking),
-                              textAlign:
-                              TextAlign.center,
-                              style:
-                              const TextStyle(
-                                height: 1.5,
-                              ),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(height: 1.5),
                             ),
                             if (booking.checkedInAt != null ||
                                 booking.checkedOutAt != null) ...[
-                              const Divider(
-                                height: 28,
-                              ),
+                              const Divider(height: 28),
                               if (booking.checkedInAt != null)
-                                _timeRow(
-                                  'Check-in',
-                                  booking.checkedInAt!,
-                                ),
+                                _timeRow('Check-in', booking.checkedInAt!),
                               if (booking.checkedOutAt != null)
-                                _timeRow(
-                                  'Check-out',
-                                  booking.checkedOutAt!,
-                                ),
+                                _timeRow('Check-out', booking.checkedOutAt!),
                             ],
                             if (booking.canSubmitFeedback) ...[
-                              const SizedBox(
-                                height: 16,
-                              ),
+                              const SizedBox(height: 16),
                               const Text(
                                 'You can now submit feedback '
-                                    'from the Feedback page.',
-                                textAlign:
-                                TextAlign.center,
-                                style:
-                                TextStyle(
-                                  color:
-                                  Color(
-                                    0xFF2563EB,
-                                  ),
-                                ),
+                                'from the Feedback page.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Color(0xFF2563EB)),
                               ),
                             ],
                           ],
@@ -1030,20 +695,11 @@ class _BookingQrPageState extends State<BookingQrPage>
                       ),
                     ),
                     if (_error != null) ...[
-                      const SizedBox(
-                        height: 12,
-                      ),
+                      const SizedBox(height: 12),
                       Text(
                         _error!,
-                        textAlign:
-                        TextAlign.center,
-                        style:
-                        const TextStyle(
-                          color:
-                          Color(
-                            0xFFB45309,
-                          ),
-                        ),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Color(0xFFB45309)),
                       ),
                     ],
                   ],

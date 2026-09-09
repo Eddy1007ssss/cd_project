@@ -55,7 +55,9 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: TourFlowText(error.toString().replaceFirst('Exception: ', '')),
+          content: TourFlowText(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
         ),
       );
     }
@@ -71,16 +73,15 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
       );
       await AuthRepository().getCurrentProfile();
       if (!mounted) return;
-      Navigator.pop(
-        context,
-        TourFlowLocaleController.instance.languageName,
-      );
+      Navigator.pop(context, TourFlowLocaleController.instance.languageName);
     } catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: TourFlowText(error.toString().replaceFirst('Exception: ', '')),
+          content: TourFlowText(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
         ),
       );
     }
@@ -100,7 +101,7 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
           const SectionTitle(
             'Preferred app language',
             subtitle:
-            'Navigation, pages, system messages and the chatbot will use the same language.',
+                'Navigation, pages, system messages and the chatbot will use the same language.',
           ),
           const SizedBox(height: 16),
           if (_isLoading)
@@ -193,10 +194,10 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
               ),
               icon: _isSaving
                   ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.check_rounded),
               label: TourFlowText(
                 context.tr(_isSaving ? 'Saving...' : 'Save Language'),

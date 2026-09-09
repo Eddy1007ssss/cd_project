@@ -45,8 +45,8 @@ class AttractionSlot {
 
   bool get isBookable =>
       status == 'open' &&
-          remainingCapacity > 0 &&
-          startsAt.isAfter(DateTime.now());
+      remainingCapacity > 0 &&
+      startsAt.isAfter(DateTime.now());
 
   bool get usesStaffScan => checkInMethod == 'staff_scan';
 
@@ -61,28 +61,25 @@ class AttractionSlot {
   factory AttractionSlot.fromMap(Map<String, dynamic> map) {
     final attraction =
         (map['attraction'] as Map?)?.cast<String, dynamic>() ??
-            (map['attractions'] as Map?)?.cast<String, dynamic>() ??
-            const <String, dynamic>{};
+        (map['attractions'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
 
     return AttractionSlot(
       id: map['id'] as String,
-      attractionId:
-      (map['attraction_id'] ?? attraction['id'] ?? '') as String,
+      attractionId: (map['attraction_id'] ?? attraction['id'] ?? '') as String,
       attractionName: attraction['name'] as String? ?? 'Attraction',
       category: attraction['category'] as String? ?? 'Attraction',
       locationName: attraction['location_name'] as String? ?? 'Malaysia',
       startsAt: DateTime.parse(map['starts_at'] as String).toLocal(),
       endsAt: DateTime.parse(map['ends_at'] as String).toLocal(),
       maximumCapacity: (map['maximum_capacity'] as num).toInt(),
-      reservedCapacity:
-      (map['reserved_capacity'] as num?)?.toInt() ?? 0,
+      reservedCapacity: (map['reserved_capacity'] as num?)?.toInt() ?? 0,
       status: map['status'] as String,
       latitude: (attraction['latitude'] as num?)?.toDouble(),
       longitude: (attraction['longitude'] as num?)?.toDouble(),
       coverImageUrl: attraction['cover_image_url'] as String?,
       checkInMethod: attraction['check_in_method'] as String? ?? 'unknown',
-      geofenceRadiusM:
-      (attraction['geofence_radius_m'] as num?)?.toInt(),
+      geofenceRadiusM: (attraction['geofence_radius_m'] as num?)?.toInt(),
     );
   }
 }
@@ -116,8 +113,7 @@ class TourBooking {
 
   bool get isCheckedOut => checkedOutAt != null;
 
-  bool get isCheckedIn =>
-      checkedInAt != null && checkedOutAt == null;
+  bool get isCheckedIn => checkedInAt != null && checkedOutAt == null;
 
   bool get isCompleted => status == BookingStatus.completed;
 
@@ -125,9 +121,9 @@ class TourBooking {
 
   bool get isUpcoming =>
       status == BookingStatus.confirmed &&
-          !hasCheckedIn &&
-          !isCheckedOut &&
-          slot.startsAt.isAfter(DateTime.now());
+      !hasCheckedIn &&
+      !isCheckedOut &&
+      slot.startsAt.isAfter(DateTime.now());
 
   bool get canSubmitFeedback => isCompleted;
 
@@ -155,7 +151,7 @@ class TourBooking {
   static TourBooking? tryFromMap(Map<String, dynamic> map) {
     final rawSlot =
         (map['slot'] as Map?)?.cast<String, dynamic>() ??
-            (map['attraction_slots'] as Map?)?.cast<String, dynamic>();
+        (map['attraction_slots'] as Map?)?.cast<String, dynamic>();
 
     if (rawSlot == null) return null;
 
@@ -217,16 +213,11 @@ DateTime? _readOptionalDateTime(Object? value) {
     return DateTime.parse(value).toLocal();
   }
 
-  throw const FormatException(
-    'Booking response contains an invalid date.',
-  );
+  throw const FormatException('Booking response contains an invalid date.');
 }
 
 class ItineraryLeg {
-  const ItineraryLeg({
-    required this.distanceKm,
-    required this.travelMinutes,
-  });
+  const ItineraryLeg({required this.distanceKm, required this.travelMinutes});
 
   final double distanceKm;
   final int travelMinutes;
@@ -251,11 +242,18 @@ class ItineraryPlan {
     }
     var conflict = false;
     for (var i = 1; i < bookings.length; i++) {
-      if (bookings[i].slot.startsAt.difference(bookings[i - 1].slot.endsAt).inMinutes <
-          roadLegs[i - 1].travelMinutes) conflict = true;
+      if (bookings[i].slot.startsAt
+              .difference(bookings[i - 1].slot.endsAt)
+              .inMinutes <
+          roadLegs[i - 1].travelMinutes)
+        conflict = true;
     }
-    return ItineraryPlan(bookings: bookings, legs: roadLegs,
-        hasConflict: conflict, usesRoadRoutes: true);
+    return ItineraryPlan(
+      bookings: bookings,
+      legs: roadLegs,
+      hasConflict: conflict,
+      usesRoadRoutes: true,
+    );
   }
 
   static ItineraryPlan build(Iterable<TourBooking> selectedBookings) {
@@ -275,10 +273,7 @@ class ItineraryPlan {
           : (distance / 30 * 60).ceil() + 15;
 
       legs.add(
-        ItineraryLeg(
-          distanceKm: distance ?? 0,
-          travelMinutes: travelMinutes,
-        ),
+        ItineraryLeg(distanceKm: distance ?? 0, travelMinutes: travelMinutes),
       );
 
       final availableMinutes = current.startsAt
@@ -290,17 +285,10 @@ class ItineraryPlan {
       }
     }
 
-    return ItineraryPlan(
-      bookings: bookings,
-      legs: legs,
-      hasConflict: conflict,
-    );
+    return ItineraryPlan(bookings: bookings, legs: legs, hasConflict: conflict);
   }
 
-  static double? _distanceKm(
-      AttractionSlot first,
-      AttractionSlot second,
-      ) {
+  static double? _distanceKm(AttractionSlot first, AttractionSlot second) {
     if (first.latitude == null ||
         first.longitude == null ||
         second.latitude == null ||
@@ -315,9 +303,9 @@ class ItineraryPlan {
 
     final value =
         math.pow(math.sin(latitudeDelta / 2), 2) +
-            math.cos(radians(first.latitude!)) *
-                math.cos(radians(second.latitude!)) *
-                math.pow(math.sin(longitudeDelta / 2), 2);
+        math.cos(radians(first.latitude!)) *
+            math.cos(radians(second.latitude!)) *
+            math.pow(math.sin(longitudeDelta / 2), 2);
 
     return 6371 * 2 * math.asin(math.sqrt(value));
   }
@@ -344,7 +332,7 @@ String shortDate(DateTime date) {
 
 String clockTime(DateTime date) =>
     '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
+    '${date.minute.toString().padLeft(2, '0')}';
 
 String slotTime(AttractionSlot slot) =>
     '${clockTime(slot.startsAt)} – ${clockTime(slot.endsAt)}';

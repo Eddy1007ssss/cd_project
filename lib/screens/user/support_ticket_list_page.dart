@@ -85,7 +85,7 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
       final result = await _service.deletePendingTicket(ticket.id);
       if (!mounted) return;
       setState(
-            () => _tickets = _tickets
+        () => _tickets = _tickets
             .where((existing) => existing.id != ticket.id)
             .toList(),
       );
@@ -127,32 +127,32 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
           const SectionTitle(
             'Track your support requests',
             subtitle:
-            'View current status, staff responses, attachments, and the complete processing history.',
+                'View current status, staff responses, attachments, and the complete processing history.',
           ),
           const SizedBox(height: 16),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children:
-              const {
-                'all': 'All',
-                'pending': 'Pending',
-                'in_progress': 'In Progress',
-                'resolved': 'Resolved',
-                'closed': 'Closed',
-              }.entries.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: TourFlowText(entry.value),
-                    selected: _selectedStatus == entry.key,
-                    onSelected: (_) =>
-                        setState(() => _selectedStatus = entry.key),
-                    selectedColor: TourFlowColors.primary,
-                    side: const BorderSide(color: TourFlowColors.border),
-                  ),
-                );
-              }).toList(),
+                  const {
+                    'all': 'All',
+                    'pending': 'Pending',
+                    'in_progress': 'In Progress',
+                    'resolved': 'Resolved',
+                    'closed': 'Closed',
+                  }.entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: TourFlowText(entry.value),
+                        selected: _selectedStatus == entry.key,
+                        onSelected: (_) =>
+                            setState(() => _selectedStatus = entry.key),
+                        selectedColor: TourFlowColors.primary,
+                        side: const BorderSide(color: TourFlowColors.border),
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
           const SizedBox(height: 16),
@@ -166,126 +166,126 @@ class _SupportTicketListPageState extends State<SupportTicketListPage> {
           else if (_error != null)
             _ErrorCard(message: _error!, onRetry: _load)
           else if (visible.isEmpty)
-              ModuleCard(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.support_agent_rounded,
-                        size: 44,
-                        color: TourFlowColors.muted,
+            ModuleCard(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.support_agent_rounded,
+                      size: 44,
+                      color: TourFlowColors.muted,
+                    ),
+                    const SizedBox(height: 9),
+                    TourFlowText(
+                      _tickets.isEmpty
+                          ? 'You have not submitted any support tickets.'
+                          : 'No tickets match this status.',
+                    ),
+                    if (_tickets.isEmpty) ...[
+                      const SizedBox(height: 8),
+                      const TourFlowText(
+                        'Ask TourFlow Assistant to create a support ticket.',
                       ),
-                      const SizedBox(height: 9),
-                      TourFlowText(
-                        _tickets.isEmpty
-                            ? 'You have not submitted any support tickets.'
-                            : 'No tickets match this status.',
-                      ),
-                      if (_tickets.isEmpty) ...[
-                        const SizedBox(height: 8),
-                        const TourFlowText(
-                          'Ask TourFlow Assistant to create a support ticket.',
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
-              )
-            else
-              ...visible.map(
-                    (ticket) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: ModuleCard(
-                    padding: EdgeInsets.zero,
-                    child: InkWell(
-                      onTap: () => _openTicket(ticket),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(15),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Wrap(
-                              spacing: 4,
-                              runSpacing: 4,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                TourFlowText(
-                                  ticket.code,
+              ),
+            )
+          else
+            ...visible.map(
+              (ticket) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: ModuleCard(
+                  padding: EdgeInsets.zero,
+                  child: InkWell(
+                    onTap: () => _openTicket(ticket),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              TourFlowText(
+                                ticket.code,
+                                style: const TextStyle(
+                                  color: TourFlowColors.primaryText,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              _TicketStatusChip(status: ticket.status),
+                              if (ticket.status == 'pending') ...[
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  tooltip: context.tr('Delete ticket'),
+                                  onPressed: () => _deleteTicket(ticket),
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: TourFlowColors.danger,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 9),
+                          TourFlowText(
+                            ticket.subject,
+                            style: const TextStyle(
+                              color: TourFlowColors.heading,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TourFlowText(
+                            '${ticket.categoryLabel} · ${ticket.attractionName}',
+                            style: const TextStyle(
+                              color: TourFlowColors.body,
+                              fontSize: 11,
+                            ),
+                          ),
+                          const Divider(height: 24),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.schedule_rounded,
+                                size: 15,
+                                color: TourFlowColors.muted,
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: TourFlowText(
+                                  _dateTime(ticket.createdAt),
                                   style: const TextStyle(
-                                    color: TourFlowColors.primaryText,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                _TicketStatusChip(status: ticket.status),
-                                if (ticket.status == 'pending') ...[
-                                  const SizedBox(width: 4),
-                                  IconButton(
-                                    tooltip: context.tr('Delete ticket'),
-                                    onPressed: () => _deleteTicket(ticket),
-                                    icon: const Icon(
-                                      Icons.delete_outline_rounded,
-                                      color: TourFlowColors.danger,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 9),
-                            TourFlowText(
-                              ticket.subject,
-                              style: const TextStyle(
-                                color: TourFlowColors.heading,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            TourFlowText(
-                              '${ticket.categoryLabel} · ${ticket.attractionName}',
-                              style: const TextStyle(
-                                color: TourFlowColors.body,
-                                fontSize: 11,
-                              ),
-                            ),
-                            const Divider(height: 24),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.schedule_rounded,
-                                  size: 15,
-                                  color: TourFlowColors.muted,
-                                ),
-                                const SizedBox(width: 5),
-                                Expanded(
-                                  child: TourFlowText(
-                                    _dateTime(ticket.createdAt),
-                                    style: const TextStyle(
-                                      color: TourFlowColors.muted,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                                const TourFlowText(
-                                  'View details',
-                                  style: TextStyle(
-                                    color: TourFlowColors.primaryText,
+                                    color: TourFlowColors.muted,
                                     fontSize: 10,
-                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                const Icon(Icons.chevron_right_rounded),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                              const TourFlowText(
+                                'View details',
+                                style: TextStyle(
+                                  color: TourFlowColors.primaryText,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
+            ),
         ],
       ),
     );

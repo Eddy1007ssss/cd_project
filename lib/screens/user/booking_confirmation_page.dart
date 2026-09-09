@@ -73,7 +73,9 @@ class BookingConfirmationPage extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.group_outlined),
                     title: TourFlowText('${value.visitorCount} visitors'),
-                    subtitle: const TourFlowText('Please arrive 10 minutes early.'),
+                    subtitle: const TourFlowText(
+                      'Please arrive 10 minutes early.',
+                    ),
                   ),
                 ],
               ),

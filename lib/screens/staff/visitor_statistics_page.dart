@@ -61,8 +61,8 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
   }
 
   List<VisitorTrendEntry> _filterPreviousPeriod(
-      List<VisitorTrendEntry> entries,
-      ) {
+    List<VisitorTrendEntry> entries,
+  ) {
     final now = DateTime.now();
 
     if (_period == 'daily') {
@@ -243,16 +243,14 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
           }
 
           final attractionNames =
-          allEntries.map((entry) => entry.attractionName).toSet().toList()
-            ..sort();
+              allEntries.map((entry) => entry.attractionName).toSet().toList()
+                ..sort();
 
           final attractionFilteredEntries = _attractionFilter == null
               ? allEntries
               : allEntries
-              .where(
-                (entry) => entry.attractionName == _attractionFilter,
-          )
-              .toList();
+                    .where((entry) => entry.attractionName == _attractionFilter)
+                    .toList();
 
           final filteredEntries = _filterByPeriod(attractionFilteredEntries);
 
@@ -262,12 +260,12 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
 
           final totalVisitors = filteredEntries.fold<int>(
             0,
-                (sum, entry) => sum + entry.visitorCount,
+            (sum, entry) => sum + entry.visitorCount,
           );
 
           final previousTotalVisitors = previousEntries.fold<int>(
             0,
-                (sum, entry) => sum + entry.visitorCount,
+            (sum, entry) => sum + entry.visitorCount,
           );
 
           final visitorChange = totalVisitors - previousTotalVisitors;
@@ -282,7 +280,7 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
 
           if (trendData.isNotEmpty) {
             peakEntry = trendData.entries.reduce(
-                  (current, next) => next.value > current.value ? next : current,
+              (current, next) => next.value > current.value ? next : current,
             );
           }
 
@@ -346,10 +344,7 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
                     isExpanded: true,
                     hint: const Text(
                       'All Attractions',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF667085),
-                      ),
+                      style: TextStyle(fontSize: 11, color: Color(0xFF667085)),
                     ),
                     items: [
                       const DropdownMenuItem<String?>(
@@ -360,7 +355,7 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
                         ),
                       ),
                       ...attractionNames.map(
-                            (name) => DropdownMenuItem<String?>(
+                        (name) => DropdownMenuItem<String?>(
                           value: name,
                           child: Text(
                             name,
@@ -398,24 +393,15 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
                   segments: const [
                     ButtonSegment<String>(
                       value: 'daily',
-                      label: Text(
-                        'Daily',
-                        style: TextStyle(fontSize: 10),
-                      ),
+                      label: Text('Daily', style: TextStyle(fontSize: 10)),
                     ),
                     ButtonSegment<String>(
                       value: 'weekly',
-                      label: Text(
-                        'Weekly',
-                        style: TextStyle(fontSize: 10),
-                      ),
+                      label: Text('Weekly', style: TextStyle(fontSize: 10)),
                     ),
                     ButtonSegment<String>(
                       value: 'monthly',
-                      label: Text(
-                        'Monthly',
-                        style: TextStyle(fontSize: 10),
-                      ),
+                      label: Text('Monthly', style: TextStyle(fontSize: 10)),
                     ),
                   ],
                   selected: {_period},
@@ -603,10 +589,7 @@ class _VisitorStatisticsPageState extends State<VisitorStatisticsPage> {
                             Text(
                               peakEntry == null
                                   ? '-'
-                                  : _peakPeriodLabel(
-                                _period,
-                                peakEntry.key,
-                              ),
+                                  : _peakPeriodLabel(_period, peakEntry.key),
                               style: const TextStyle(
                                 color: TourFlowColors.heading,
                                 fontSize: 18,
@@ -688,10 +671,7 @@ class _VisitorChangeIndicator extends StatelessWidget {
     if (previousTotal == 0) {
       return Text(
         'No ${_comparisonLabel(period)} data',
-        style: const TextStyle(
-          color: TourFlowColors.muted,
-          fontSize: 8,
-        ),
+        style: const TextStyle(color: TourFlowColors.muted, fontSize: 8),
       );
     }
 
@@ -728,9 +708,7 @@ class _VisitorChangeIndicator extends StatelessWidget {
 }
 
 class _VisitorTrendChart extends StatelessWidget {
-  const _VisitorTrendChart({
-    required this.data,
-  });
+  const _VisitorTrendChart({required this.data});
 
   final Map<String, int> data;
 
@@ -757,10 +735,7 @@ class _VisitorTrendChart extends StatelessWidget {
 
           const Text(
             'Visitors recorded during the selected period.',
-            style: TextStyle(
-              color: TourFlowColors.muted,
-              fontSize: 9,
-            ),
+            style: TextStyle(color: TourFlowColors.muted, fontSize: 9),
           ),
 
           const SizedBox(height: 18),
@@ -769,9 +744,7 @@ class _VisitorTrendChart extends StatelessWidget {
             height: 190,
             width: double.infinity,
             child: CustomPaint(
-              painter: _VisitorLineChartPainter(
-                entries: entries,
-              ),
+              painter: _VisitorLineChartPainter(entries: entries),
             ),
           ),
         ],
@@ -781,9 +754,7 @@ class _VisitorTrendChart extends StatelessWidget {
 }
 
 class _VisitorLineChartPainter extends CustomPainter {
-  const _VisitorLineChartPainter({
-    required this.entries,
-  });
+  const _VisitorLineChartPainter({required this.entries});
 
   final List<MapEntry<String, int>> entries;
 
@@ -801,10 +772,7 @@ class _VisitorLineChartPainter extends CustomPainter {
 
     final maxValue = entries
         .map((entry) => entry.value)
-        .fold<int>(
-      0,
-          (max, value) => value > max ? value : max,
-    );
+        .fold<int>(0, (max, value) => value > max ? value : max);
 
     final safeMax = maxValue == 0 ? 1 : maxValue;
 
@@ -842,20 +810,14 @@ class _VisitorLineChartPainter extends CustomPainter {
       final painter = TextPainter(
         text: TextSpan(
           text: '$value',
-          style: const TextStyle(
-            color: Color(0xFF98A2B3),
-            fontSize: 7,
-          ),
+          style: const TextStyle(color: Color(0xFF98A2B3), fontSize: 7),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
 
       painter.paint(
         canvas,
-        Offset(
-          leftPadding - painter.width - 6,
-          y - painter.height / 2,
-        ),
+        Offset(leftPadding - painter.width - 6, y - painter.height / 2),
       );
     }
 
@@ -865,10 +827,7 @@ class _VisitorLineChartPainter extends CustomPainter {
     for (var i = 0; i < entries.length; i++) {
       final x = entries.length == 1
           ? leftPadding + chartWidth / 2
-          : leftPadding +
-          chartWidth *
-              i /
-              (isDaily ? 24 : entries.length - 1);
+          : leftPadding + chartWidth * i / (isDaily ? 24 : entries.length - 1);
 
       final ratio = entries[i].value / safeMax;
       final y = topPadding + chartHeight * (1 - ratio);
@@ -877,11 +836,7 @@ class _VisitorLineChartPainter extends CustomPainter {
     }
 
     if (points.length > 1) {
-      final path = Path()
-        ..moveTo(
-          points.first.dx,
-          points.first.dy,
-        );
+      final path = Path()..moveTo(points.first.dx, points.first.dy);
 
       for (var i = 1; i < points.length; i++) {
         final previous = points[i - 1];
@@ -937,13 +892,7 @@ class _VisitorLineChartPainter extends CustomPainter {
         x = size.width - rightPadding - painter.width;
       }
 
-      painter.paint(
-        canvas,
-        Offset(
-          x,
-          size.height - bottomPadding + 8,
-        ),
-      );
+      painter.paint(canvas, Offset(x, size.height - bottomPadding + 8));
     }
 
     if (isDaily) {
@@ -976,15 +925,11 @@ class _VisitorLineChartPainter extends CustomPainter {
       return index % 4 == 0;
     }
 
-    return index == 0 ||
-        index % 5 == 0 ||
-        index == total - 1;
+    return index == 0 || index % 5 == 0 || index == total - 1;
   }
 
   @override
-  bool shouldRepaint(
-      covariant _VisitorLineChartPainter oldDelegate,
-      ) {
+  bool shouldRepaint(covariant _VisitorLineChartPainter oldDelegate) {
     return oldDelegate.entries != entries;
   }
 }
@@ -1007,10 +952,7 @@ String _averageLabel(String period) {
   };
 }
 
-String _peakPeriodLabel(
-    String period,
-    String value,
-    ) {
+String _peakPeriodLabel(String period, String value) {
   if (period == 'daily') {
     return value;
   }
@@ -1076,12 +1018,8 @@ String _periodDateLabel(String period) {
 
   if (period == 'weekly') {
     final today = DateTime(now.year, now.month, now.day);
-    final start = today.subtract(
-      Duration(days: now.weekday - 1),
-    );
-    final end = start.add(
-      const Duration(days: 6),
-    );
+    final start = today.subtract(Duration(days: now.weekday - 1));
+    final end = start.add(const Duration(days: 6));
 
     if (start.month == end.month) {
       return '${start.day} - ${end.day} '

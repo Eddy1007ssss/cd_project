@@ -10,7 +10,8 @@ class PromotionSuggestionPage extends StatefulWidget {
   static const routeName = '/promotion-suggestion';
 
   @override
-  State<PromotionSuggestionPage> createState() => _PromotionSuggestionPageState();
+  State<PromotionSuggestionPage> createState() =>
+      _PromotionSuggestionPageState();
 }
 
 class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
@@ -38,25 +39,20 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
 
       attractions.putIfAbsent(
         key,
-            () => _AttractionOption(
-          key: key,
-          name: name,
-        ),
+        () => _AttractionOption(key: key, name: name),
       );
     }
 
     final result = attractions.values.toList();
-    result.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
+    result.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     return result;
   }
 
   _PromotionSuggestionData? _buildSuggestion(
-      List<VisitorTrendEntry> entries,
-      String attractionKey,
-      ) {
+    List<VisitorTrendEntry> entries,
+    String attractionKey,
+  ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final startDate = today.subtract(const Duration(days: 29));
@@ -121,7 +117,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
 
       final average =
           visitorTotals.fold<int>(0, (sum, value) => sum + value) /
-              visitorTotals.length;
+          visitorTotals.length;
 
       buckets.add(
         _PeriodBucket(
@@ -139,22 +135,18 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
         .where((bucket) => bucket.observations >= 2)
         .toList();
 
-    final candidates = repeatedBuckets.isNotEmpty
-        ? repeatedBuckets
-        : buckets;
+    final candidates = repeatedBuckets.isNotEmpty ? repeatedBuckets : buckets;
 
-    candidates.sort(
-          (a, b) => a.averageVisitors.compareTo(b.averageVisitors),
-    );
+    candidates.sort((a, b) => a.averageVisitors.compareTo(b.averageVisitors));
 
     final lowest = candidates.first;
 
     final overallAverage =
         dailyPeriodTotals.values.fold<int>(
           0,
-              (sum, item) => sum + item.visitors,
+          (sum, item) => sum + item.visitors,
         ) /
-            dailyPeriodTotals.length;
+        dailyPeriodTotals.length;
 
     var discount = 10;
 
@@ -256,8 +248,8 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                   OutlinedButton(
                     onPressed: () {
                       setState(() {
-                        _visitorTrends =
-                            _repository.fetchOperatorVisitorTrends();
+                        _visitorTrends = _repository
+                            .fetchOperatorVisitorTrends();
                       });
                     },
                     child: const Text('Try Again'),
@@ -267,8 +259,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
             );
           }
 
-          final entries =
-              snapshot.data ?? const <VisitorTrendEntry>[];
+          final entries = snapshot.data ?? const <VisitorTrendEntry>[];
 
           final attractions = _buildAttractions(entries);
 
@@ -313,10 +304,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
           final selectedAttractionKey =
               _selectedAttractionKey ?? attractions.first.key;
 
-          final suggestion = _buildSuggestion(
-            entries,
-            selectedAttractionKey,
-          );
+          final suggestion = _buildSuggestion(entries, selectedAttractionKey);
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,9 +315,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF5E6),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xFFFFE1B2),
-                  ),
+                  border: Border.all(color: const Color(0xFFFFE1B2)),
                 ),
                 child: const Row(
                   children: [
@@ -385,9 +371,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFE3E7EC),
-                  ),
+                  border: Border.all(color: const Color(0xFFE3E7EC)),
                 ),
                 child: Row(
                   children: [
@@ -486,8 +470,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                     Expanded(
                       child: _MetricCard(
                         icon: Icons.groups_outlined,
-                        value:
-                        suggestion.averageVisitors.toStringAsFixed(1),
+                        value: suggestion.averageVisitors.toStringAsFixed(1),
                         label: 'Avg. Visitors',
                       ),
                     ),
@@ -508,7 +491,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                   icon: Icons.analytics_outlined,
                   title: 'Why this period?',
                   text:
-                  'This was one of the lowest observed attendance periods for ${suggestion.attractionName} during the last 30 days, averaging ${suggestion.averageVisitors.toStringAsFixed(1)} visitors.',
+                      'This was one of the lowest observed attendance periods for ${suggestion.attractionName} during the last 30 days, averaging ${suggestion.averageVisitors.toStringAsFixed(1)} visitors.',
                 ),
 
                 const SizedBox(height: 10),
@@ -517,7 +500,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
                   icon: Icons.trending_up_rounded,
                   title: 'Expected Benefit',
                   text:
-                  'Encourage more bookings during lower-attendance periods and improve visitor distribution across different times of the week.',
+                      'Encourage more bookings during lower-attendance periods and improve visitor distribution across different times of the week.',
                 ),
               ],
             ],
@@ -529,10 +512,7 @@ class _PromotionSuggestionPageState extends State<PromotionSuggestionPage> {
 }
 
 class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({
-    required this.time,
-    required this.discount,
-  });
+  const _RecommendationCard({required this.time, required this.discount});
 
   final String time;
   final int discount;
@@ -601,10 +581,7 @@ class _RecommendationCard extends StatelessWidget {
 
           const SizedBox(height: 14),
 
-          Container(
-            height: 1,
-            color: const Color(0xFFEDF0F3),
-          ),
+          Container(height: 1, color: const Color(0xFFEDF0F3)),
 
           const SizedBox(height: 14),
 
@@ -691,16 +668,11 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 82,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 11,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE4E8ED),
-        ),
+        border: Border.all(color: const Color(0xFFE4E8ED)),
       ),
       child: Row(
         children: [
@@ -711,11 +683,7 @@ class _MetricCard extends StatelessWidget {
               color: const Color(0xFFFFF3E0),
               borderRadius: BorderRadius.circular(9),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF956000),
-              size: 17,
-            ),
+            child: Icon(icon, color: const Color(0xFF956000), size: 17),
           ),
 
           const SizedBox(width: 9),
@@ -776,11 +744,7 @@ class _InfoCard extends StatelessWidget {
               color: const Color(0xFFFFF3E0),
               borderRadius: BorderRadius.circular(9),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF956000),
-              size: 18,
-            ),
+            child: Icon(icon, color: const Color(0xFF956000), size: 18),
           ),
 
           const SizedBox(width: 11),
@@ -816,10 +780,7 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _AttractionOption {
-  const _AttractionOption({
-    required this.key,
-    required this.name,
-  });
+  const _AttractionOption({required this.key, required this.name});
 
   final String key;
   final String name;

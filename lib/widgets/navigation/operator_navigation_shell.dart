@@ -21,12 +21,12 @@ class OperatorNavigationShell extends StatelessWidget {
       items: operatorNavigationItems,
       initialIndex: initialIndex,
       tabBuilders: [
-            (_) => const OperatorDashboardPage(),
-            (_) => const AttractionDetailsPage(),
-            (_) => const SlotManagerPage(),
-            (_) => const OperatorReportQueuePage(),
-            (_) => const ChatSupportPage(),
-            (_) => const VisitorStatisticsPage(),
+        (_) => const OperatorDashboardPage(),
+        (_) => const AttractionDetailsPage(),
+        (_) => const SlotManagerPage(),
+        (_) => const OperatorReportQueuePage(),
+        (_) => const ChatSupportPage(),
+        (_) => const VisitorStatisticsPage(),
       ],
       bottomBarBuilder: (_, selectedIndex, onItemSelected) =>
           OperatorBottomNavigationBar(
