@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../l10n/tourflow_localization.dart';
 import '../../models/attraction.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
@@ -984,14 +985,14 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
       // APP BAR
       // ==========================================================
       appBar: AppBar(
-        title: const Text('Discover Attractions'),
+        title: const TourFlowText('Discover Attractions'),
 
         actions: [
           // ------------------------------------------------------
           // PREFERENCES
           // ------------------------------------------------------
           IconButton(
-            tooltip: 'Discovery Preferences',
+            tooltip: context.tr('Discovery Preferences'),
             onPressed: () async {
               await Navigator.pushNamed(
                 context,
@@ -1009,7 +1010,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
           // SMART RECOMMENDATIONS
           // ------------------------------------------------------
           IconButton(
-            tooltip: 'Smart Recommendations',
+            tooltip: context.tr('Smart Recommendations'),
             onPressed: () {
               Navigator.pushNamed(context, SmartRecommendationsPage.routeName);
             },
@@ -1020,7 +1021,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
           // NEARBY
           // ------------------------------------------------------
           IconButton(
-            tooltip: 'Nearby Attractions',
+            tooltip: context.tr('Nearby Attractions'),
             onPressed: () {
               Navigator.pushNamed(context, NearbyAttractionsPage.routeName);
             },
@@ -1064,12 +1065,12 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
               controller: _search,
               onChanged: _onSearch,
               decoration: InputDecoration(
-                hintText: 'Search name, category or location',
+                hintText: context.tr('Search name, category or location'),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _search.text.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Clear search',
+                        tooltip: context.tr('Clear search'),
                         onPressed: () {
                           _search.clear();
 
@@ -1110,7 +1111,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                   child: OutlinedButton.icon(
                     onPressed: _showSort,
                     icon: const Icon(Icons.sort),
-                    label: const Text('Sort'),
+                    label: const TourFlowText('Sort'),
                   ),
                 ),
               ],
@@ -1128,7 +1129,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                   Navigator.pushNamed(context, NearbyAttractionsPage.routeName);
                 },
                 icon: const Icon(Icons.location_on_outlined),
-                label: const Text('Nearby Attractions'),
+                label: const TourFlowText('Nearby Attractions'),
               ),
             ),
 
@@ -1248,13 +1249,13 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                           ButtonSegment<bool>(
                             value: false,
                             icon: Icon(Icons.view_list),
-                            label: Text('List View'),
+                            label: TourFlowText('List View'),
                           ),
 
                           ButtonSegment<bool>(
                             value: true,
                             icon: Icon(Icons.map_outlined),
-                            label: Text('Map View'),
+                            label: TourFlowText('Map View'),
                           ),
                         ],
                         selected: {_mapView},

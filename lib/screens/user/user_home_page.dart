@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/tourflow_localization.dart';
 import '../../models/attraction.dart';
 import '../../models/module3_models.dart';
 import '../../models/recommendation_result.dart';
@@ -122,12 +123,12 @@ class _UserHomePageState extends State<UserHomePage> {
       onLogout: () async => signOutAndReturnToSignIn(context),
     ),
     appBar: AppBar(
-      title: const Text('TourFlow'),
+      title: const TourFlowText('TourFlow'),
       actions: [
         IconButton(
           onPressed: () => _selectTab(1),
           icon: const Icon(Icons.search),
-          tooltip: 'Search attractions',
+          tooltip: context.tr('Search attractions'),
         ),
       ],
     ),
@@ -142,7 +143,7 @@ class _UserHomePageState extends State<UserHomePage> {
             child: FilledButton.icon(
               onPressed: _refresh,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry loading home'),
+              label: const TourFlowText('Retry loading home'),
             ),
           );
         }
@@ -164,7 +165,7 @@ class _UserHomePageState extends State<UserHomePage> {
                           : 'Near ${data.origin.label}',
                       style: const TextStyle(color: Color(0xFF79571E)),
                     ),
-                    const Text(
+                    const TourFlowText(
                       'Where will you go next?',
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                     ),
@@ -172,7 +173,7 @@ class _UserHomePageState extends State<UserHomePage> {
                     OutlinedButton.icon(
                       onPressed: () => _selectTab(1),
                       icon: const Icon(Icons.search),
-                      label: const Text('Search attractions and locations'),
+                      label: const TourFlowText('Search attractions and locations'),
                     ),
                   ],
                 ),
@@ -232,7 +233,7 @@ class _UserHomePageState extends State<UserHomePage> {
                     ItineraryPlannerPage.routeName,
                   ),
                   icon: const Icon(Icons.route_outlined),
-                  label: const Text('Plan or discover an itinerary'),
+                  label: const TourFlowText('Plan or discover an itinerary'),
                 ),
               ),
             ],
@@ -288,16 +289,16 @@ class _HomeSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(
+                    TourFlowText(title, style: const TextStyle(
                       fontSize: 19, fontWeight: FontWeight.w800,
                     )),
-                    Text(subtitle, style: const TextStyle(
+                    TourFlowText(subtitle, style: const TextStyle(
                       color: Color(0xFF64748B), fontSize: 12,
                     )),
                   ],
                 ),
               ),
-              TextButton(onPressed: onViewAll, child: const Text('View all')),
+              TextButton(onPressed: onViewAll, child: const TourFlowText('View all')),
             ],
           ),
         ),
@@ -305,7 +306,7 @@ class _HomeSection extends StatelessWidget {
         if (attractions.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Text('No matching attractions available yet.'),
+            child: TourFlowText('No matching attractions available yet.'),
           )
         else
           SizedBox(

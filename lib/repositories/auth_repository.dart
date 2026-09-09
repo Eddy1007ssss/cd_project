@@ -31,7 +31,10 @@ class AuthRepository implements ProfileSecurityGateway {
     final response = await _client.auth.signInWithPassword(
       email: email.trim(),
       password: password,
-    );
+      );
+    } on AuthException catch (error) {
+      throw AuthException(_friendlyEmailError(error.message));
+    }
     final user = response.user;
     if (user == null) {
       throw const AuthException('Sign in did not return a user.');
@@ -39,7 +42,7 @@ class AuthRepository implements ProfileSecurityGateway {
     if (user.emailConfirmedAt == null) {
       await _client.auth.signOut();
       throw const AuthException(
-        'Confirm your email address before signing in. You can resend the verification email below.',
+        'Confirm your email address before signing in. using the verification email sent after registration.',
       );
     }
     return getProfile(user.id);
@@ -52,7 +55,9 @@ class AuthRepository implements ProfileSecurityGateway {
     required String phone,
     required String preferredLanguage,
   }) async {
-    final response = await _client.auth.signUp(
+    late final AuthResponse response;
+    try {
+      response = await _client.auth.signUp(
       email: email.trim(),
       password: password,
       emailRedirectTo: 'tourflow://auth/confirm',
@@ -190,10 +195,15 @@ class AuthRepository implements ProfileSecurityGateway {
   }
 
   @override
-  Future<void> sendPasswordReset(String email) => _client.auth.signInWithOtp(
-        email: email.trim(),
-        shouldCreateUser: false,
-      );
+  Future<void> sendPasswordReset(String email) async {
+    try { await _client.auth.signInWithOtp(email: email.trim(), shouldCreateUser: false); } on AuthException catch (error) { throw AuthException(_friendlyEmailError(error.message)); }
+  }
+
+  String _friendlyEmailError(String message) {
+    final value = message.toLowerCase();
+    if (value.contains('error sending confirmation email') || value.contains('error sending email') || value.contains('unexpected_failure')) return 'TourFlow could not send the email. The Supabase SMTP sender needs to be configured before trying again.';
+    return message;
+  }
 
   Future<void> verifyPasswordResetCode({
     required String email,
