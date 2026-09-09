@@ -18,7 +18,7 @@ class ManagementAdminPage extends StatefulWidget {
 class _ManagementAdminPageState extends State<ManagementAdminPage> {
   late final _repository = widget.repository ?? ManagementRepository();
   late Future<List<ManagementRow>> _rows;
-  bool _accounts = false;
+  _AdminManagementSection _section = _AdminManagementSection.pendingOperators;
   bool _busy = false;
   @override
   void initState() {
@@ -29,7 +29,7 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
   void _load() {
     _rows = widget.attractionReview
         ? _repository.attractions(administrator: true)
-        : _accounts
+        : _section.isAccountSection
         ? _repository.users()
         : _repository.applications();
   }
@@ -38,7 +38,7 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
   Future<void> _act(ManagementRow row, String decision) async {
     if (_busy) return;
     // Keep the current list mode stable while the confirmation dialog is open.
-    final accountAction = _accounts;
+    final accountAction = _section.isAccountSection;
     final note = await managementDecision(
       context,
       'Confirm $decision?',
@@ -118,18 +118,31 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!widget.attractionReview)
-          SwitchListTile(
-            title: const Text('Show accounts'),
-            subtitle: const Text('Switch off to review operator applications'),
-            value: _accounts,
-            onChanged: _busy
-                ? null
-                : (value) => setState(() {
-                    _accounts = value;
-                    _load();
-                  }),
+        if (!widget.attractionReview) ...[
+          const Text(
+            'Choose a group to review. Accounts are separated by current access status.',
           ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _AdminManagementSection.values
+                .map(
+                  (section) => ChoiceChip(
+                    label: Text(section.label),
+                    selected: _section == section,
+                    onSelected: _busy
+                        ? null
+                        : (_) => setState(() {
+                            _section = section;
+                            _load();
+                          }),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 4),
+        ],
         TextButton(
           onPressed: _busy ? null : _refresh,
           child: const Text('Refresh'),
@@ -138,14 +151,18 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
         ManagementRows(
           future: _rows,
           retry: _refresh,
-          builder: (rows) => Column(
+          builder: (rows) {
+            final visibleRows = widget.attractionReview
+                ? rows
+                : rows.where(_matchesSelectedSection).toList();
+            return Column(
             children: [
-              if (rows.isEmpty) const Text('No records available.'),
-              for (final row in rows)
+              if (visibleRows.isEmpty) const Text('No records available.'),
+              for (final row in visibleRows)
                 Card(
                   child: ExpansionTile(
                     key: ValueKey(
-                      '${widget.attractionReview}-$_accounts-${row['id']}',
+                      '${widget.attractionReview}-${_section.name}-${row['id']}',
                     ),
                     title: Text(
                       '${row['name'] ?? row['full_name'] ?? row['business_name']}',
@@ -165,18 +182,21 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
                             )
                             .join('\n'),
                       ),
-                      if (!widget.attractionReview && !_accounts)
+                      if (!widget.attractionReview &&
+                          !_section.isAccountSection)
                         for (final field in const {
                           'registration_certificate_path':
                               'Registration certificate',
                           'identity_document_path': 'Identity document',
                           'operating_licence_path': 'Operating licence',
                         }.entries)
-                          TextButton(
-                            onPressed: () =>
-                                _openDocument(row[field.key] as String),
-                            child: Text('Open ${field.value}'),
-                          ),
+                          if (row[field.key] is String &&
+                              (row[field.key] as String).isNotEmpty)
+                            TextButton(
+                              onPressed: () =>
+                                  _openDocument(row[field.key] as String),
+                              child: Text('Open ${field.value}'),
+                            ),
                       if (widget.attractionReview)
                         _AttractionAssets(
                           id: row['id'] as String,
@@ -185,7 +205,7 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
                       Wrap(
                         spacing: 8,
                         children: [
-                          if (_accounts &&
+                          if (_section.isAccountSection &&
                               !widget.attractionReview &&
                               row['id'] != _repository.userId)
                             _action(
@@ -197,7 +217,7 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
                                   ? 'Deactivate'
                                   : 'Activate',
                             ),
-                          if ((!_accounts &&
+                          if ((!_section.isAccountSection &&
                                   !widget.attractionReview &&
                                   row['status'] == 'pending') ||
                               (widget.attractionReview &&
@@ -217,11 +237,30 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
                   ),
                 ),
             ],
-          ),
+          );
+          },
         ),
       ],
     ),
   );
+
+  bool _matchesSelectedSection(ManagementRow row) => switch (_section) {
+    _AdminManagementSection.pendingOperators => row['status'] == 'pending',
+    _AdminManagementSection.reviewedOperators => row['status'] != 'pending',
+    _AdminManagementSection.activeAccounts => row['status'] == 'active',
+    _AdminManagementSection.deactivatedAccounts => row['status'] == 'deactivated',
+  };
+}
+
+enum _AdminManagementSection {
+  pendingOperators('Pending operators', false),
+  activeAccounts('Active accounts', true),
+  deactivatedAccounts('Deactivated accounts', true),
+  reviewedOperators('Reviewed applications', false);
+
+  const _AdminManagementSection(this.label, this.isAccountSection);
+  final String label;
+  final bool isAccountSection;
 }
 
 class _AttractionAssets extends StatefulWidget {

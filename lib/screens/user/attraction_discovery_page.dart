@@ -1189,20 +1189,6 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
             const SizedBox(height: 14),
 
             // ====================================================
-            // CROWD INFO
-            // ====================================================
-            const Card(
-              color: Color(0xFFF2F3FF),
-              child: ListTile(
-                leading: Icon(Icons.info_outline, color: Color(0xFF79571E)),
-                title: Text('Crowd labels are slot occupancy estimates'),
-                subtitle: Text('Live visitor counts will come from Module 4.'),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // ====================================================
             // RESULTS
             // ====================================================
             FutureBuilder<List<Attraction>>(
@@ -1558,14 +1544,17 @@ class _AttractionCard extends StatelessWidget {
                 ),
               ),
 
-              // ==================================================
-              // COMPARE CHECKBOX
-              // ==================================================
-              Checkbox(
-                value: selected,
-                onChanged: (value) {
-                  onCompare(value ?? false);
-                },
+              IconButton(
+                tooltip: selected
+                    ? 'Remove from comparison'
+                    : 'Add to comparison',
+                onPressed: () => onCompare(!selected),
+                icon: Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.compare_arrows_rounded,
+                  color: selected ? const Color(0xFF79571E) : null,
+                ),
               ),
             ],
           ),

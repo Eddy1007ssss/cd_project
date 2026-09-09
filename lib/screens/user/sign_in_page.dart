@@ -99,22 +99,6 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  Future<void> _resendEmailVerification() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      _showMessage('Enter your email address first.');
-      return;
-    }
-    try {
-      await _authRepository.resendEmailVerification(email);
-      if (mounted) {
-        _showMessage('Verification email sent. Check your inbox and spam folder.');
-      }
-    } on AuthException catch (error) {
-      if (mounted) _showMessage(error.message);
-    }
-  }
-
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
@@ -305,14 +289,6 @@ class _SignInPageState extends State<SignInPage> {
                       child: TextButton(
                         onPressed: _sendPasswordReset,
                         child: const TourFlowText('Forgot Password?'),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: _isSubmitting ? null : _resendEmailVerification,
-                        icon: const Icon(Icons.mark_email_unread_outlined, size: 18),
-                        label: const TourFlowText('Resend verification email'),
                       ),
                     ),
                     PrimaryButton(
