@@ -63,6 +63,33 @@ void main() {
     },
   );
 
+  test('rating filter uses aggregate rating and hides unrated attractions', () {
+    final rated = Attraction.fromMap({
+      ..._map(),
+      'average_rating': 4.6,
+      'rating_count': 12,
+      'current_visitors': 20,
+      'live_crowd_level': 'Moderate',
+    });
+
+    expect(rated.ratingLabel, '4.6 (12)');
+    expect(rated.crowdLevel, 'Moderate');
+    expect(
+      attractionMatches(
+        attraction: rated,
+        filters: const AttractionFilters(minimumRating: 4.5),
+      ),
+      isTrue,
+    );
+    expect(
+      attractionMatches(
+        attraction: Attraction.fromMap(_map()),
+        filters: const AttractionFilters(minimumRating: 4),
+      ),
+      isFalse,
+    );
+  });
+
   test('Haversine distance and travel estimate are deterministic', () {
     final distance = LocationService.distanceKm(
       firstLatitude: 3.1478,

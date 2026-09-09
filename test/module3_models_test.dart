@@ -1,8 +1,55 @@
 import 'package:cd_project/models/module3_models.dart';
+import 'package:cd_project/models/published_itinerary.dart';
 import 'package:cd_project/repositories/module3_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('booking analysis blocks confirmation when a blocking issue exists', () {
+    const clear = BookingConflictAnalysis(
+      issues: [],
+      alternativeSlots: [],
+    );
+    const blocked = BookingConflictAnalysis(
+      issues: [
+        BookingConflictIssue(title: 'Overlap', detail: 'Conflicting visit'),
+      ],
+      alternativeSlots: [],
+    );
+
+    expect(clear.canConfirm, isTrue);
+    expect(blocked.canConfirm, isFalse);
+  });
+
+  test('published itinerary contains only sanitized public stop data', () {
+    final itinerary = PublishedItinerary.fromMap({
+      'id': 'public-1',
+      'title': 'Penang morning',
+      'description': 'Two heritage stops',
+      'author_name': null,
+      'itinerary_date': '2026-09-12',
+      'published_at': '2026-09-09T00:00:00Z',
+      'stops': [
+        {
+          'position': 0,
+          'starts_at': '09:00:00',
+          'ends_at': '10:00:00',
+          'attraction': {
+            'id': 'a1',
+            'name': 'Fort Cornwallis Heritage Trail',
+            'category': 'Heritage',
+            'location_name': 'George Town',
+            'cover_image_url': null,
+            'attraction_images': [],
+          },
+        },
+      ],
+    });
+
+    expect(itinerary.stops.single.attractionName,
+        'Fort Cornwallis Heritage Trail');
+    expect(itinerary.authorName, isNull);
+  });
+
   group('AttractionSlot', () {
     test('calculates remaining capacity and blocks a full slot', () {
       final slot = _slot(

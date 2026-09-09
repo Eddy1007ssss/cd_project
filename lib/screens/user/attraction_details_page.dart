@@ -224,6 +224,8 @@ class _AttractionDetailsPageState
             ),
           ];
 
+          final quietest = attraction.quietestAvailableSlot;
+
           final transportSuggestions =
           _transportService
               .suggestionsForDistance(
@@ -539,7 +541,7 @@ class _AttractionDetailsPageState
                     // AVAILABLE SLOTS
                     // =================================================
 
-                    if (attraction.quietestAvailableSlot case final quietest?)
+                    if (quietest != null)
                       Card(
                         color: const Color(0xFFFFF6E8),
                         child: ListTile(

@@ -348,3 +348,27 @@ String clockTime(DateTime date) =>
 
 String slotTime(AttractionSlot slot) =>
     '${clockTime(slot.startsAt)} – ${clockTime(slot.endsAt)}';
+
+class BookingConflictIssue {
+  const BookingConflictIssue({
+    required this.title,
+    required this.detail,
+    this.blocking = true,
+  });
+
+  final String title;
+  final String detail;
+  final bool blocking;
+}
+
+class BookingConflictAnalysis {
+  const BookingConflictAnalysis({
+    required this.issues,
+    required this.alternativeSlots,
+  });
+
+  final List<BookingConflictIssue> issues;
+  final List<AttractionSlot> alternativeSlots;
+
+  bool get canConfirm => !issues.any((issue) => issue.blocking);
+}

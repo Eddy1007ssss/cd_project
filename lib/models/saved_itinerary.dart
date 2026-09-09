@@ -1,10 +1,24 @@
 class SavedItinerary {
-  const SavedItinerary({required this.id, required this.title,
-    required this.date, required this.bookingIds});
+  const SavedItinerary({
+    required this.id,
+    required this.title,
+    required this.date,
+    required this.bookingIds,
+    this.isPublished = false,
+  });
   final String id;
   final String title;
   final DateTime date;
   final List<String> bookingIds;
+  final bool isPublished;
+
+  SavedItinerary copyWithPublished(bool value) => SavedItinerary(
+    id: id,
+    title: title,
+    date: date,
+    bookingIds: bookingIds,
+    isPublished: value,
+  );
 
   factory SavedItinerary.fromMap(Map<String, dynamic> row) {
     final items = List<Map<String, dynamic>>.from(

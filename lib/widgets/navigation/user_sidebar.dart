@@ -46,6 +46,12 @@ const List<TourFlowSidebarItem> userSidebarItems = [
     routeName: '/itinerary-planner',
   ),
   TourFlowSidebarItem(
+    label: 'Discover Itineraries',
+    icon: Icons.public_outlined,
+    navigationIndex: 7,
+    routeName: TourFlowRoutes.communityItineraries,
+  ),
+  TourFlowSidebarItem(
     label: 'Chatbot & Support',
     icon: Icons.chat_bubble_outline_rounded,
     navigationIndex: 3,
