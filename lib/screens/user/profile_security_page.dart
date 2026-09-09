@@ -3,11 +3,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/user_profile.dart';
-import '../staff/operator_registration_page.dart';
 import '../../repositories/auth_repository.dart';
 import '../../repositories/profile_security_gateway.dart';
 import '../../widgets/navigation/navigation_routes.dart';
 import '../../widgets/tourflow_widgets.dart';
+import '../staff/operator_registration_page.dart';
 import 'language_settings_page.dart';
 
 class ProfileSecurityPage extends StatefulWidget {
@@ -69,7 +69,9 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
     try {
       final profile = await _authRepository.getCurrentProfile();
       final email = _authRepository.currentUser?.email ?? '';
+
       if (!mounted) return;
+
       setState(() {
         _profile = profile;
         _email = email;
@@ -80,12 +82,14 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
       });
     } on AuthException catch (error) {
       if (!mounted) return;
+
       setState(() {
         _isLoading = false;
         _loadError = error.message;
       });
     } catch (_) {
       if (!mounted) return;
+
       setState(() {
         _isLoading = false;
         _loadError = 'Unable to load your profile. Please try again.';
@@ -97,12 +101,15 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
     if (_isSaving || !(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSaving = true);
+
     try {
       final profile = await _authRepository.updateMyProfile(
         fullName: _fullNameController.text,
         phone: _phoneController.text,
       );
+
       if (!mounted) return;
+
       setState(() => _profile = profile);
       _showMessage('Profile updated successfully.');
     } on AuthException catch (error) {
@@ -117,38 +124,6 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
-  Future<void> _pickAvatar() async {
-    if (_isUploadingAvatar) return;
-    final image = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 1024,
-      maxHeight: 1024,
-    );
-    if (image == null) return;
-
-    final extension =
-        image.name.contains('.') ? image.name.split('.').last : 'jpg';
-    setState(() => _isUploadingAvatar = true);
-    try {
-      final profile = await _authRepository.updateMyAvatar(
-        bytes: await image.readAsBytes(),
-        extension: extension,
-      );
-      if (!mounted) return;
-      setState(() => _profile = profile);
-      _showMessage('Profile photo updated.');
-    } on AuthException catch (error) {
-      if (mounted) _showMessage(error.message);
-    } on FormatException catch (error) {
-      if (mounted) _showMessage(error.message);
-    } catch (_) {
-      if (mounted) _showMessage('Unable to upload the profile photo.');
-    } finally {
-      if (mounted) setState(() => _isUploadingAvatar = false);
     }
   }
 
@@ -231,16 +206,20 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
       context,
       LanguageSettingsPage.routeName,
     );
+
     if (!mounted || result is! String) return;
+
     await _loadProfile(showLoader: false);
   }
 
   Future<void> _sendPasswordReset() async {
     if (_isSendingReset || _email.isEmpty) return;
+
     setState(() => _isSendingReset = true);
 
     try {
       await _authRepository.sendPasswordReset(_email);
+
       if (mounted) {
         _showMessage('Password reset link sent to $_email.');
       }
@@ -259,6 +238,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
+
     String? dialogError;
     bool isChanging = false;
 
@@ -273,16 +253,17 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
             final confirmation = confirmPasswordController.text;
 
             String? validationError;
+
             if (currentPassword.isEmpty) {
               validationError = 'Enter your current password.';
             } else if (newPassword.length < 8) {
               validationError =
-                  'The new password must contain at least 8 characters.';
+              'The new password must contain at least 8 characters.';
             } else if (newPassword != confirmation) {
               validationError = 'The new passwords do not match.';
             } else if (newPassword == currentPassword) {
               validationError =
-                  'The new password must be different from the current password.';
+              'The new password must be different from the current password.';
             }
 
             if (validationError != null) {
@@ -300,9 +281,14 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 currentPassword: currentPassword,
                 newPassword: newPassword,
               );
+
               if (!dialogContext.mounted) return;
+
               Navigator.pop(dialogContext);
-              if (mounted) _showMessage('Password updated successfully.');
+
+              if (mounted) {
+                _showMessage('Password updated successfully.');
+              }
             } on AuthException catch (error) {
               if (dialogContext.mounted) {
                 setDialogState(() {
@@ -315,7 +301,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 setDialogState(() {
                   isChanging = false;
                   dialogError =
-                      'Unable to change the password. Please try again.';
+                  'Unable to change the password. Please try again.';
                 });
               }
             }
@@ -387,10 +373,10 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 onPressed: isChanging ? null : submit,
                 child: isChanging
                     ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
                     : const TourFlowText('Update Password'),
               ),
             ],
@@ -429,10 +415,13 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
         .split(RegExp(r'\s+'))
         .where((part) => part.isNotEmpty)
         .toList();
+
     if (words.isEmpty) return '?';
+
     if (words.length == 1) {
       return words.first.characters.first.toUpperCase();
     }
+
     return '${words.first.characters.first}${words.last.characters.first}'
         .toUpperCase();
   }
@@ -452,14 +441,14 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
       email: _email,
       child: _isLoading
           ? const Padding(
-              padding: EdgeInsets.symmetric(vertical: 80),
-              child: Center(child: CircularProgressIndicator()),
-            )
+        padding: EdgeInsets.symmetric(vertical: 80),
+        child: Center(child: CircularProgressIndicator()),
+      )
           : _loadError != null
           ? _ProfileLoadError(
-              message: _loadError!,
-              onRetry: () => _loadProfile(),
-            )
+        message: _loadError!,
+        onRetry: () => _loadProfile(),
+      )
           : _buildProfile(profile!),
     );
   }
@@ -487,59 +476,22 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        CircleAvatar(
-                          radius: 34,
-                          backgroundColor: TourFlowColors.primary,
-                          backgroundImage: avatarUrl == null || avatarUrl.isEmpty
-                              ? null
-                              : NetworkImage(avatarUrl),
-                          child: avatarUrl == null || avatarUrl.isEmpty
-                              ? TourFlowText(
-                            _initials(profile.fullName),
-                            style: const TextStyle(
-                              color: TourFlowColors.primaryText,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                            ),
-                          )
-                              : null,
+                    CircleAvatar(
+                      radius: 34,
+                      backgroundColor: TourFlowColors.primary,
+                      backgroundImage: avatarUrl == null || avatarUrl.isEmpty
+                          ? null
+                          : NetworkImage(avatarUrl),
+                      child: avatarUrl == null || avatarUrl.isEmpty
+                          ? TourFlowText(
+                        _initials(profile.fullName),
+                        style: const TextStyle(
+                          color: TourFlowColors.primaryText,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
                         ),
-                        Positioned(
-                          right: -4,
-                          bottom: -4,
-                          child: Material(
-                            color: TourFlowColors.primaryText,
-                            shape: const CircleBorder(),
-                            child: InkWell(
-                              onTap: _isUploadingAvatar ? null : _chooseAvatarSource,
-                              customBorder: const CircleBorder(),
-                              child: SizedBox(
-                                width: 28,
-                                height: 28,
-                                child: Center(
-                                  child: _isUploadingAvatar
-                                      ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                      : const Icon(
-                                    Icons.camera_alt_outlined,
-                                    size: 15,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      )
+                          : null,
                     ),
                     Positioned(
                       right: -4,
@@ -548,7 +500,9 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                         color: TourFlowColors.primaryText,
                         shape: const CircleBorder(),
                         child: InkWell(
-                          onTap: _isUploadingAvatar ? null : _pickAvatar,
+                          onTap: _isUploadingAvatar
+                              ? null
+                              : _chooseAvatarSource,
                           customBorder: const CircleBorder(),
                           child: SizedBox(
                             width: 28,
@@ -556,18 +510,18 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                             child: Center(
                               child: _isUploadingAvatar
                                   ? const SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                                   : const Icon(
-                                      Icons.camera_alt_outlined,
-                                      size: 15,
-                                      color: Colors.white,
-                                    ),
+                                Icons.camera_alt_outlined,
+                                size: 15,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -616,7 +570,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 const SectionTitle(
                   'Personal Details',
                   subtitle:
-                      'Your information is loaded from your TourFlow account.',
+                  'Your information is loaded from your TourFlow account.',
                 ),
                 const SizedBox(height: 18),
                 TextFormField(
@@ -627,14 +581,16 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                   maxLength: 120,
                   decoration: InputDecoration(
                     labelText: context.tr('Full Name'),
-                    prefixIcon: Icon(Icons.person_outline_rounded),
-                    border: OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     final name = value?.trim() ?? '';
+
                     if (name.length < 2) {
                       return 'Enter at least 2 characters.';
                     }
+
                     return null;
                   },
                 ),
@@ -654,15 +610,17 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                   decoration: InputDecoration(
                     labelText: context.tr('Phone Number'),
                     hintText: context.tr('+60 12-345 6789'),
-                    prefixIcon: Icon(Icons.phone_outlined),
-                    border: OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     final phone = value?.trim() ?? '';
+
                     if (phone.isNotEmpty &&
                         !RegExp(r'^[0-9+()\-\s]{7,30}$').hasMatch(phone)) {
                       return 'Enter a valid phone number.';
                     }
+
                     return null;
                   },
                 ),
@@ -672,12 +630,12 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                   value: _languageLabel(profile.preferredLanguage),
                   icon: Icons.language_outlined,
                   trailing:
-                      widget.navigationRole == TourFlowNavigationRole.tourist
+                  widget.navigationRole == TourFlowNavigationRole.tourist
                       ? IconButton(
-                          tooltip: context.tr('Change language'),
-                          onPressed: _openLanguageSettings,
-                          icon: const Icon(Icons.chevron_right_rounded),
-                        )
+                    tooltip: context.tr('Change language'),
+                    onPressed: _openLanguageSettings,
+                    icon: const Icon(Icons.chevron_right_rounded),
+                  )
                       : null,
                 ),
                 const SizedBox(height: 14),
@@ -701,10 +659,10 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
               ),
               icon: _isSaving
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
                   : const Icon(Icons.save_outlined),
               label: TourFlowText(
                 _isSaving ? 'Saving...' : 'Save Profile Changes',
@@ -754,10 +712,10 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                   ),
                   trailing: _isSendingReset
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                       : const Icon(Icons.chevron_right_rounded),
                   onTap: _isSendingReset ? null : _sendPasswordReset,
                 ),
@@ -771,7 +729,10 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
 }
 
 class _ProfileLoadError extends StatelessWidget {
-  const _ProfileLoadError({required this.message, required this.onRetry});
+  const _ProfileLoadError({
+    required this.message,
+    required this.onRetry,
+  });
 
   final String message;
   final VoidCallback onRetry;
