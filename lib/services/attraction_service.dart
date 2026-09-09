@@ -69,8 +69,11 @@ class AttractionService {
         .eq('listing_status', 'approved')
         .order('name');
 
+    final insights = await _getAttractionInsights();
+
     return rows
         .map(Attraction.fromMap)
+        .map((attraction) => _withInsights(attraction, insights))
         .map(
           (attraction) => _withDistance(
         attraction,
@@ -113,8 +116,9 @@ class AttractionService {
       return null;
     }
 
+    final insights = await _getAttractionInsights();
     return _withDistance(
-      Attraction.fromMap(row),
+      _withInsights(Attraction.fromMap(row), insights),
       origin,
     );
   }
@@ -227,9 +231,10 @@ class AttractionService {
     final previousCategories =
     await _getCompletedVisitCategories();
 
-    final averageRatings = isDemoMode
-        ? <String, double>{}
-        : await _getAverageRatings();
+    final averageRatings = <String, double>{
+      for (final attraction in attractions)
+        if (attraction.hasRatings) attraction.id: attraction.averageRating,
+    };
 
     // ----------------------------------------------------------
     // Environment preference
@@ -438,6 +443,14 @@ class AttractionService {
         .getPublicUrl(path);
   }
 
+  String? primaryImageUrl(Attraction attraction) {
+    final cover = attraction.coverImageUrl?.trim();
+    if (cover != null && cover.isNotEmpty) return cover;
+    return attraction.images.isEmpty
+        ? null
+        : publicImageUrl(attraction.images.first.path);
+  }
+
   // ============================================================
   // ADD DISTANCE TO ATTRACTION
   // ============================================================
@@ -506,6 +519,40 @@ class AttractionService {
     final rows = (result as List).cast<Map<String, dynamic>>();
     return {for (final row in rows)
       row['attraction_id'] as String: (row['average_rating'] as num).toDouble()};
+  }
+
+  Future<Map<String, _AttractionInsight>> _getAttractionInsights() async {
+    try {
+      final result = await _client.rpc('get_public_attraction_insights');
+      final rows = (result as List).cast<Map<String, dynamic>>();
+      return {
+        for (final row in rows)
+          row['attraction_id'] as String: _AttractionInsight(
+            averageRating: (row['average_rating'] as num?)?.toDouble() ?? 0,
+            ratingCount: (row['rating_count'] as num?)?.toInt() ?? 0,
+            currentVisitors: (row['current_visitors'] as num?)?.toInt() ?? 0,
+            crowdLevel: row['crowd_level']?.toString() ?? 'Low',
+          ),
+      };
+    } catch (_) {
+      // Keep discovery usable while a development database is being migrated.
+      return const {};
+    }
+  }
+
+  Attraction _withInsights(
+    Attraction attraction,
+    Map<String, _AttractionInsight> insights,
+  ) {
+    final insight = insights[attraction.id];
+    return insight == null
+        ? attraction
+        : attraction.copyWithInsights(
+            averageRating: insight.averageRating,
+            ratingCount: insight.ratingCount,
+            currentVisitors: insight.currentVisitors,
+            liveCrowdLevel: insight.crowdLevel,
+          );
   }
 
   // ============================================================
@@ -795,7 +842,7 @@ class AttractionService {
 
     final actualCrowd =
     _alternativeCrowdRank(
-      attraction.estimatedCrowdLevel,
+      attraction.crowdLevel,
     );
 
     final preferredCrowd =
@@ -809,7 +856,7 @@ class AttractionService {
         actualCrowd >
             preferredCrowd) {
       issues.add(
-        '${attraction.estimatedCrowdLevel} crowd level '
+        '${attraction.crowdLevel} crowd level '
             'is higher than your preferred '
             '${preferences.preferredCrowdLevel} crowd level.',
       );
@@ -897,12 +944,12 @@ class AttractionService {
 
     final selectedCrowd =
     _alternativeCrowdRank(
-      selectedAttraction.estimatedCrowdLevel,
+      selectedAttraction.crowdLevel,
     );
 
     final alternativeCrowd =
     _alternativeCrowdRank(
-      alternative.estimatedCrowdLevel,
+      alternative.crowdLevel,
     );
 
     final preferredCrowd =
@@ -917,7 +964,7 @@ class AttractionService {
         alternativeCrowd <=
             preferredCrowd) {
       reasons.add(
-        '${alternative.estimatedCrowdLevel} crowd matches '
+        '${alternative.crowdLevel} crowd matches '
             'your preferred crowd level',
       );
     }
@@ -997,7 +1044,7 @@ class AttractionService {
               'distance_km':
               result.attraction.distanceKm,
               'crowd_source':
-              'slot_occupancy_estimate',
+              'live_check_in_count',
             },
           },
         )
@@ -1008,4 +1055,18 @@ class AttractionService {
       // if logging temporarily fails.
     }
   }
+}
+
+class _AttractionInsight {
+  const _AttractionInsight({
+    required this.averageRating,
+    required this.ratingCount,
+    required this.currentVisitors,
+    required this.crowdLevel,
+  });
+
+  final double averageRating;
+  final int ratingCount;
+  final int currentVisitors;
+  final String crowdLevel;
 }

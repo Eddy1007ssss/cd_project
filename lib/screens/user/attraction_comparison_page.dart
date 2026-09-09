@@ -257,9 +257,20 @@ class AttractionComparisonPage extends StatelessWidget {
                     label: 'Crowd',
                     values: attractions.map(
                           (item) {
-                        return '${item.estimatedCrowdLevel}\nestimate';
+                        return '${item.crowdLevel}\n'
+                            '${item.currentVisitors}/${item.maximumCapacity} inside';
                       },
                     ).toList(),
+                  ),
+
+                  _buildRow(
+                    label: 'Visitor rating',
+                    values: attractions
+                        .map((item) => item.hasRatings
+                            ? '${item.averageRating.toStringAsFixed(1)}/5\n'
+                                '${item.ratingCount} rating${item.ratingCount == 1 ? '' : 's'}'
+                            : 'New\nNo ratings yet')
+                        .toList(),
                   ),
 
                   // ==================================================

@@ -154,7 +154,7 @@ class RecommendationEngine {
     // 5. LOW-CROWD SCORE - 15%
     //
     final actualCrowdRank = _crowdRank(
-      attraction.estimatedCrowdLevel,
+      attraction.crowdLevel,
     );
 
     final preferredCrowdRank = _crowdRank(
@@ -178,7 +178,7 @@ class RecommendationEngine {
             _crowdWeight * crowdFactor;
 
         reasons.add(
-          '${attraction.estimatedCrowdLevel} estimated crowd level',
+          '${attraction.crowdLevel} live crowd level',
         );
       }
     }
