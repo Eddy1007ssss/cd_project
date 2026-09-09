@@ -81,7 +81,8 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
     setState(() {
       _performanceStartDate = date;
 
-      if (_performanceEndDate != null && _performanceEndDate!.isBefore(date)) {
+      if (_performanceEndDate != null &&
+          _performanceEndDate!.isBefore(date)) {
         _performanceEndDate = null;
       }
     });
@@ -102,7 +103,8 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
   }
 
   void _generateSustainabilityReport() {
-    if (_sustainabilityStartDate == null || _sustainabilityEndDate == null) {
+    if (_sustainabilityStartDate == null ||
+        _sustainabilityEndDate == null) {
       _showDateMessage();
       return;
     }
@@ -118,7 +120,8 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
   }
 
   void _generatePerformanceReport() {
-    if (_performanceStartDate == null || _performanceEndDate == null) {
+    if (_performanceStartDate == null ||
+        _performanceEndDate == null) {
       _showDateMessage();
       return;
     }
@@ -138,7 +141,9 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         const SnackBar(
-          content: Text('Please select a start date and end date.'),
+          content: Text(
+            'Please select a start date and end date.',
+          ),
         ),
       );
   }
@@ -161,10 +166,15 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
               fontWeight: FontWeight.w800,
             ),
           ),
+
           const SizedBox(height: 4),
+
           const Text(
             'Choose a report and reporting period',
-            style: TextStyle(color: TourFlowColors.muted, fontSize: 9.5),
+            style: TextStyle(
+              color: TourFlowColors.muted,
+              fontSize: 9.5,
+            ),
           ),
 
           const SizedBox(height: 17),
@@ -174,17 +184,24 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
             accentBackground: const Color(0xFFEAF7F0),
             icon: Icons.eco_rounded,
             title: 'Sustainability Report',
-            subtitle: 'Environmental performance and resource savings',
+            subtitle:
+            'Visitor distribution and attraction usage for better crowd management',
             metrics: const [
-              _MetricItem(icon: Icons.cloud_outlined, label: 'Carbon Offset'),
               _MetricItem(
-                icon: Icons.water_drop_outlined,
-                label: 'Water Saved',
+                icon: Icons.groups_outlined,
+                label: 'Total Visitors',
               ),
-              _MetricItem(icon: Icons.bolt_outlined, label: 'Energy Saved'),
               _MetricItem(
-                icon: Icons.recycling_rounded,
-                label: 'Recycling Rate',
+                icon: Icons.location_on_outlined,
+                label: 'Attractions Visited',
+              ),
+              _MetricItem(
+                icon: Icons.emoji_events_outlined,
+                label: 'Most Visited Attraction',
+              ),
+              _MetricItem(
+                icon: Icons.balance_outlined,
+                label: 'Average Visitors / Attraction',
               ),
             ],
             startDate: _sustainabilityStartDate,
@@ -201,7 +218,8 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
             accentBackground: const Color(0xFFF1EDFA),
             icon: Icons.analytics_outlined,
             title: 'Performance Report',
-            subtitle: 'Visitor satisfaction, rating and revenue analytics',
+            subtitle:
+            'Visitor satisfaction, rating and booking value analytics',
             metrics: const [
               _MetricItem(
                 icon: Icons.sentiment_satisfied_alt_outlined,
@@ -209,15 +227,15 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
               ),
               _MetricItem(
                 icon: Icons.star_outline_rounded,
-                label: 'Attraction Rating',
+                label: 'Average Rating',
               ),
               _MetricItem(
                 icon: Icons.payments_outlined,
-                label: 'Revenue / Visitor',
+                label: 'Estimated Value / Visitor',
               ),
               _MetricItem(
                 icon: Icons.trending_up_rounded,
-                label: 'Revenue Growth',
+                label: 'Booking Value Growth',
               ),
             ],
             startDate: _performanceStartDate,
@@ -231,11 +249,16 @@ class _AdminGenerateReportPageState extends State<AdminGenerateReportPage> {
 
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 11,
+            ),
             decoration: BoxDecoration(
               color: const Color(0xFFF8F9FA),
               borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: const Color(0xFFE4E7EB)),
+              border: Border.all(
+                color: const Color(0xFFE4E7EB),
+              ),
             ),
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +327,9 @@ class _ReportCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: const Color(0xFFE1E5EA)),
+        border: Border.all(
+          color: const Color(0xFFE1E5EA),
+        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A000000),
@@ -319,11 +344,19 @@ class _ReportCard extends StatelessWidget {
             left: 0,
             top: 0,
             bottom: 0,
-            child: Container(width: 5, color: accentColor),
+            child: Container(
+              width: 5,
+              color: accentColor,
+            ),
           ),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 15, 15, 15),
+            padding: const EdgeInsets.fromLTRB(
+              18,
+              15,
+              15,
+              15,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -334,30 +367,39 @@ class _ReportCard extends StatelessWidget {
                       height: 42,
                       decoration: BoxDecoration(
                         color: accentBackground,
-                        borderRadius: BorderRadius.circular(11),
+                        borderRadius:
+                        BorderRadius.circular(11),
                       ),
-                      child: Icon(icon, color: accentColor, size: 21),
+                      child: Icon(
+                        icon,
+                        color: accentColor,
+                        size: 21,
+                      ),
                     ),
 
                     const SizedBox(width: 11),
 
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                        CrossAxisAlignment.start,
                         children: [
                           Text(
                             title,
                             style: const TextStyle(
-                              color: TourFlowColors.heading,
+                              color:
+                              TourFlowColors.heading,
                               fontSize: 14,
-                              fontWeight: FontWeight.w800,
+                              fontWeight:
+                              FontWeight.w800,
                             ),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             subtitle,
                             style: const TextStyle(
-                              color: TourFlowColors.muted,
+                              color:
+                              TourFlowColors.muted,
                               fontSize: 8.7,
                               height: 1.3,
                             ),
@@ -376,7 +418,8 @@ class _ReportCard extends StatelessWidget {
                       child: _MetricTile(
                         item: metrics[0],
                         accentColor: accentColor,
-                        accentBackground: accentBackground,
+                        accentBackground:
+                        accentBackground,
                       ),
                     ),
                     const SizedBox(width: 9),
@@ -384,7 +427,8 @@ class _ReportCard extends StatelessWidget {
                       child: _MetricTile(
                         item: metrics[1],
                         accentColor: accentColor,
-                        accentBackground: accentBackground,
+                        accentBackground:
+                        accentBackground,
                       ),
                     ),
                   ],
@@ -398,7 +442,8 @@ class _ReportCard extends StatelessWidget {
                       child: _MetricTile(
                         item: metrics[2],
                         accentColor: accentColor,
-                        accentBackground: accentBackground,
+                        accentBackground:
+                        accentBackground,
                       ),
                     ),
                     const SizedBox(width: 9),
@@ -406,7 +451,8 @@ class _ReportCard extends StatelessWidget {
                       child: _MetricTile(
                         item: metrics[3],
                         accentColor: accentColor,
-                        accentBackground: accentBackground,
+                        accentBackground:
+                        accentBackground,
                       ),
                     ),
                   ],
@@ -437,10 +483,15 @@ class _ReportCard extends StatelessWidget {
                     ),
 
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 7),
+                      padding:
+                      EdgeInsets.symmetric(
+                        horizontal: 7,
+                      ),
                       child: Text(
                         '—',
-                        style: TextStyle(color: TourFlowColors.muted),
+                        style: TextStyle(
+                          color: TourFlowColors.muted,
+                        ),
                       ),
                     ),
 
@@ -463,26 +514,35 @@ class _ReportCard extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onGenerate,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: accentBackground,
+                      backgroundColor:
+                      accentBackground,
                       foregroundColor: accentColor,
                       elevation: 0,
                       side: BorderSide(
-                        color: accentColor.withValues(alpha: 0.25),
+                        color: accentColor.withValues(
+                          alpha: 0.25,
+                        ),
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius:
+                        BorderRadius.circular(10),
                       ),
                     ),
                     child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment:
+                      MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.description_outlined, size: 17),
+                        Icon(
+                          Icons.description_outlined,
+                          size: 17,
+                        ),
                         SizedBox(width: 7),
                         Text(
                           'Generate Report',
                           style: TextStyle(
                             fontSize: 10.8,
-                            fontWeight: FontWeight.w800,
+                            fontWeight:
+                            FontWeight.w800,
                           ),
                         ),
                       ],
@@ -525,24 +585,32 @@ class _DateField extends StatelessWidget {
         borderRadius: BorderRadius.circular(9),
         child: Container(
           height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 9),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 9,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(9),
-            border: Border.all(color: const Color(0xFFE1E5EA)),
+            border: Border.all(
+              color: const Color(0xFFE1E5EA),
+            ),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.calendar_month_outlined,
                 size: 15,
-                color: date == null ? const Color(0xFF98A2B3) : accentColor,
+                color: date == null
+                    ? const Color(0xFF98A2B3)
+                    : accentColor,
               ),
 
               const SizedBox(width: 6),
 
               Expanded(
                 child: Text(
-                  date == null ? label : _formatDate(date!),
+                  date == null
+                      ? label
+                      : _formatDate(date!),
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: date == null
@@ -578,11 +646,15 @@ class _MetricTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFBFC),
         borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: const Color(0xFFE6E9ED)),
+        border: Border.all(
+          color: const Color(0xFFE6E9ED),
+        ),
       ),
       child: Row(
         children: [
@@ -593,7 +665,11 @@ class _MetricTile extends StatelessWidget {
               color: accentBackground,
               borderRadius: BorderRadius.circular(7),
             ),
-            child: Icon(item.icon, color: accentColor, size: 14),
+            child: Icon(
+              item.icon,
+              color: accentColor,
+              size: 14,
+            ),
           ),
 
           const SizedBox(width: 7),
@@ -618,7 +694,10 @@ class _MetricTile extends StatelessWidget {
 }
 
 class _MetricItem {
-  const _MetricItem({required this.icon, required this.label});
+  const _MetricItem({
+    required this.icon,
+    required this.label,
+  });
 
   final IconData icon;
   final String label;
