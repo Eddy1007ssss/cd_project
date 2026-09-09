@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/tourflow_localization.dart';
+export '../l10n/tourflow_localization.dart'
+    show TourFlowText, TourFlowTranslationContext;
 
 import 'navigation/navigation_logout.dart';
 import 'navigation/navigation_routes.dart';
