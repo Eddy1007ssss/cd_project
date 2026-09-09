@@ -65,12 +65,13 @@ class _ChatSupportPageState extends State<ChatSupportPage> {
   String? _loadError;
   String? _complaintOptionsError;
 
-  static const _quickQuestions = [
-    'Available attractions',
-    'Live crowd status',
-    'Opening hours',
-    'Transportation help',
-  ];
+  List<String> get _quickQuestions => switch (_language) {
+    'Mandarin' => const ['有哪些景点？', '实时人流情况', '开放时间', '交通帮助'],
+    'Bahasa Malaysia' => const ['Tarikan yang tersedia', 'Status orang ramai', 'Waktu operasi', 'Bantuan pengangkutan'],
+    'Japanese' => const ['利用可能な観光地', '現在の混雑状況', '営業時間', '交通案内'],
+    'Korean' => const ['이용 가능한 관광지', '실시간 혼잡도', '운영 시간', '교통 안내'],
+    _ => const ['Available attractions', 'Live crowd status', 'Opening hours', 'Transportation help'],
+  };
 
   @override
   void initState() {

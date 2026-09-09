@@ -240,12 +240,11 @@ class SupportTicketConfirmationCard extends StatelessWidget {
       _row(copy.routedTo, _operatorIssue(draft.issueType) && draft.attractionId != null
         ? copy.operator : copy.admin),
       const Divider(height: 26),
-      Row(children: [
+      Wrap(alignment: WrapAlignment.end, spacing: 6, runSpacing: 6, children: [
         TextButton.icon(onPressed: isSubmitting ? null : onBack,
           icon: const Icon(Icons.arrow_back_rounded), label: TourFlowText(copy.back)),
         TextButton.icon(onPressed: isSubmitting ? null : onCancel,
           icon: const Icon(Icons.close_rounded), label: TourFlowText(copy.cancel)),
-        const Spacer(),
         FilledButton.icon(onPressed: isSubmitting ? null : onSubmit,
           icon: isSubmitting
             ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))

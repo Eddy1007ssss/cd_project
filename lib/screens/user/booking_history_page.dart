@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/tourflow_localization.dart';
 import '../../models/module3_models.dart';
 import '../../repositories/module3_repository.dart';
 import '../../widgets/navigation/navigation_logout.dart';
@@ -405,7 +406,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
         // MY TRIPS TITLE
         // ======================================================
 
-        title: const Text(
+        title: const TourFlowText(
           'My Trips',
           style: TextStyle(
             color: Color(
@@ -448,15 +449,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
           ),
 
           tabs: const [
-            Tab(
-              text: 'Active',
-            ),
-            Tab(
-              text: 'Past',
-            ),
-            Tab(
-              text: 'Cancelled',
-            ),
+            Tab(child: TourFlowText('Active')),
+            Tab(child: TourFlowText('Past')),
+            Tab(child: TourFlowText('Cancelled')),
           ],
         ),
       ),
@@ -497,9 +492,8 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                 0xFFFFF3CD,
               ),
               child:
-              const Text(
-                'Unable to refresh bookings. '
-                    'The displayed status may be out of date.',
+              const TourFlowText(
+                'Unable to refresh bookings. The displayed status may be out of date.',
                 textAlign:
                 TextAlign.center,
                 style:
@@ -527,7 +521,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
 
                 _buildBookingList(
                   active,
-                  'No active bookings.',
+                  context.tr('No active bookings.'),
                   'active-bookings',
                 ),
 
@@ -535,7 +529,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
 
                 _buildBookingList(
                   past,
-                  'No past bookings.',
+                  context.tr('No past bookings.'),
                   'past-bookings',
                 ),
 
@@ -543,7 +537,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
 
                 _buildBookingList(
                   cancelled,
-                  'No cancelled bookings.',
+                  context.tr('No cancelled bookings.'),
                   'cancelled-bookings',
                 ),
               ],
@@ -565,7 +559,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
           Icons.route_outlined,
         ),
         label:
-        const Text(
+        const TourFlowText(
           'Plan itinerary',
         ),
       ),

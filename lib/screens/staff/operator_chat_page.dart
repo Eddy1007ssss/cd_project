@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/gemini_chat_service.dart';
+import '../../services/support_ticket_service.dart';
 import '../../widgets/tourflow_widgets.dart';
 
 /// A separate operator-only assistant. It deliberately does not expose the
@@ -15,6 +16,7 @@ class OperatorChatPage extends StatefulWidget {
 class _OperatorChatPageState extends State<OperatorChatPage> {
   final _chatService = GeminiChatService();
   final _messageController = TextEditingController();
+  final _ticketService = SupportTicketService();
   final List<_OperatorChatMessage> _messages = [];
 
   String _language = 'English';
@@ -98,6 +100,41 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
     }
   }
 
+  List<String> get _quickQuestions => switch (_language) {
+    'Mandarin' => const ['今天需要处理什么？', '如何管理已批准的时段？', '如何监控实时人流？'],
+    'Bahasa Malaysia' => const ['Apa yang perlu diberi perhatian hari ini?', 'Bagaimana mengurus slot yang diluluskan?', 'Bagaimana memantau kapasiti orang ramai?'],
+    'Japanese' => const ['今日の対応事項は？', '承認済み時間枠の管理方法は？', '混雑状況の監視方法は？'],
+    'Korean' => const ['오늘 무엇을 확인해야 하나요?', '승인된 시간대를 어떻게 관리하나요?', '실시간 혼잡도를 어떻게 모니터링하나요?'],
+    _ => const ['What needs attention today?', 'How do I manage approved slots?', 'How do I monitor live crowd capacity?'],
+  };
+
+  Future<void> _reportTechnicalProblem() async {
+    final subject = TextEditingController();
+    final details = TextEditingController();
+    final submit = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Report technical problem'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: subject, decoration: const InputDecoration(labelText: 'Subject')),
+          const SizedBox(height: 12),
+          TextField(controller: details, minLines: 3, maxLines: 5, decoration: const InputDecoration(labelText: 'Describe the app problem')),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Submit')),
+        ],
+      ),
+    );
+    if (submit != true || !mounted) return;
+    try {
+      await _ticketService.createTicket(category: 'technical', issueType: 'app_error', subject: subject.text.trim(), description: details.text.trim());
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Technical support ticket submitted to the administrator.')));
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))));
+    }
+  }
+
   @override
   Widget build(BuildContext context) => TourFlowPage(
     title: 'Operator Assistant',
@@ -117,11 +154,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: [
-            'What needs attention today?',
-            'How do I manage approved slots?',
-            'How do I monitor live crowd capacity?',
-          ]
+          children: _quickQuestions
               .map(
                 (message) => ActionChip(
                   label: Text(message),
@@ -129,6 +162,15 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
                 ),
               )
               .toList(),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: _isSending ? null : _reportTechnicalProblem,
+            icon: const Icon(Icons.bug_report_outlined),
+            label: const Text('Report technical problem'),
+          ),
         ),
         const SizedBox(height: 16),
         if (!_loaded)

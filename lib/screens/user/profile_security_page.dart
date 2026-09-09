@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../l10n/tourflow_localization.dart';
 import '../../models/user_profile.dart';
 import '../../repositories/auth_repository.dart';
 import '../../repositories/profile_security_gateway.dart';
@@ -48,11 +49,17 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
   void initState() {
     super.initState();
     _authRepository = widget.gateway ?? AuthRepository();
+    TourFlowLocaleController.instance.addListener(_onLanguageChanged);
     _loadProfile();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) _loadProfile(showLoader: false);
   }
 
   @override
   void dispose() {
+    TourFlowLocaleController.instance.removeListener(_onLanguageChanged);
     _fullNameController.dispose();
     _phoneController.dispose();
     super.dispose();

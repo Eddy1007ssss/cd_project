@@ -2483,8 +2483,8 @@ Deno.serve(async (request: Request) => {
   }
 
   let inScope: boolean;
-  if (isOperator && (complaintAction || bookingAction || supportAction)) {
-    return jsonResponse({ error: "Operator Assistant cannot create tourist booking, complaint, or support-ticket actions." }, 403);
+  if (isOperator && (complaintAction || bookingAction)) {
+    return jsonResponse({ error: "Operator Assistant cannot create tourist booking or complaint actions." }, 403);
   }
   if (isOperator) {
     // Operator prompts are in scope by definition; do not ask the generic tourist classifier to interpret them.
@@ -2637,7 +2637,9 @@ Deno.serve(async (request: Request) => {
         ...(isOperator
           ? [
             "Operator scope: help with attraction listings, approval status, approved slots, capacity and crowd monitoring, visitor operations, and reports.",
-            "Never offer tourist booking, cancellation, rescheduling, itinerary creation, complaints, or tourist support-ticket actions.",
+            "The supplied database context contains public attraction data, not verified operator ownership. Do not claim that all listed attractions belong to this operator or give an operator-specific count. Direct the operator to Dashboard or Attractions for their own listing status.",
+            "Never offer tourist booking, cancellation, rescheduling, itinerary creation, or tourist complaints.",
+            "For a TourFlow app technical problem, tell the operator to use the Report technical problem button. Technical tickets are handled by administrators.",
           ]
           : [
             "Tourist scope: help with approved attractions, slots, bookings, itineraries, check-in, crowd information, and tourist support.",

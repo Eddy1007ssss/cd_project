@@ -242,6 +242,11 @@ class _Translation {
 }
 
 const _translations = <String, _Translation>{
+  'Active': _Translation('Aktif', '进行中', '進行中', '진행 중'),
+  'No active bookings.': _Translation('Tiada tempahan aktif.', '没有进行中的预订。', '進行中の予約はありません。', '진행 중인 예약이 없습니다.'),
+  'No past bookings.': _Translation('Tiada tempahan lepas.', '没有过往预订。', '過去の予約はありません。', '지난 예약이 없습니다.'),
+  'No cancelled bookings.': _Translation('Tiada tempahan dibatalkan.', '没有已取消的预订。', 'キャンセルされた予約はありません。', '취소된 예약이 없습니다.'),
+  'Unable to refresh bookings. The displayed status may be out of date.': _Translation('Tidak dapat memuat semula tempahan. Status mungkin tidak terkini.', '无法刷新预订，显示的状态可能不是最新。', '予約を更新できません。表示される状態は最新でない場合があります。', '예약을 새로고침할 수 없습니다. 표시된 상태가 최신이 아닐 수 있습니다.'),
   'Home': _Translation('Utama', '首页', 'ホーム', '홈'),
   'Discover': _Translation('Teroka', '发现', '見つける', '둘러보기'),
   'Trips': _Translation('Perjalanan', '行程', '旅行', '여행'),
