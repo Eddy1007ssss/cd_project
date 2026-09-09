@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/module3_models.dart';
+import '../models/published_itinerary.dart';
 import '../models/saved_itinerary.dart';
+import '../services/location_service.dart';
 
 const _slotSelection =
     'id, attraction_id, starts_at, ends_at, maximum_capacity, '
@@ -93,6 +95,141 @@ class Module3Repository {
     return fetchBooking(map['id'] as String);
   }
 
+  Future<BookingConflictAnalysis> previewBooking({
+    required AttractionSlot slot,
+    required int visitors,
+  }) async {
+    final issues = <BookingConflictIssue>[];
+    if (slot.status != 'open' || slot.startsAt.isBefore(DateTime.now())) {
+      issues.add(const BookingConflictIssue(
+        title: 'Slot unavailable',
+        detail: 'This slot is no longer open for registration.',
+      ));
+    } else if (slot.remainingCapacity < visitors) {
+      issues.add(BookingConflictIssue(
+        title: 'Insufficient capacity',
+        detail: 'Only ${slot.remainingCapacity} spaces remain for $visitors visitors.',
+      ));
+    }
+
+    final closures = await _client
+        .from('closure_periods')
+        .select('closure_type, reason, starts_at, ends_at')
+        .eq('attraction_id', slot.attractionId)
+        .lt('starts_at', slot.endsAt.toUtc().toIso8601String())
+        .gt('ends_at', slot.startsAt.toUtc().toIso8601String());
+    if (closures.isNotEmpty) {
+      final reason = closures.first['reason']?.toString().trim();
+      issues.add(BookingConflictIssue(
+        title: 'Attraction closed',
+        detail: reason?.isNotEmpty == true
+            ? reason!
+            : 'A closure or maintenance period overlaps this visit.',
+      ));
+    }
+
+    final bookings = (await fetchBookings())
+        .where((booking) => booking.status == BookingStatus.confirmed)
+        .toList()
+      ..sort((a, b) => a.slot.startsAt.compareTo(b.slot.startsAt));
+    for (final booking in bookings) {
+      final overlaps = booking.slot.startsAt.isBefore(slot.endsAt) &&
+          booking.slot.endsAt.isAfter(slot.startsAt);
+      if (overlaps) {
+        issues.add(BookingConflictIssue(
+          title: 'Booking overlap',
+          detail: '${booking.slot.attractionName} is already booked from '
+              '${clockTime(booking.slot.startsAt)} to ${clockTime(booking.slot.endsAt)}.',
+        ));
+      }
+    }
+
+    final previous = bookings
+        .where((booking) => !booking.slot.endsAt.isAfter(slot.startsAt))
+        .fold<TourBooking?>(null, (latest, booking) => latest == null ||
+                booking.slot.endsAt.isAfter(latest.slot.endsAt)
+            ? booking
+            : latest);
+    final next = bookings
+        .where((booking) => !booking.slot.startsAt.isBefore(slot.endsAt))
+        .fold<TourBooking?>(null, (earliest, booking) => earliest == null ||
+                booking.slot.startsAt.isBefore(earliest.slot.startsAt)
+            ? booking
+            : earliest);
+    if (previous != null) {
+      _addTravelIssue(
+        issues,
+        from: previous.slot,
+        to: slot,
+        availableMinutes: slot.startsAt.difference(previous.slot.endsAt).inMinutes,
+      );
+    }
+    if (next != null) {
+      _addTravelIssue(
+        issues,
+        from: slot,
+        to: next.slot,
+        availableMinutes: next.slot.startsAt.difference(slot.endsAt).inMinutes,
+      );
+    }
+
+    final alternatives = issues.any((issue) => issue.blocking)
+        ? await _fetchAlternativeSlots(slot, visitors)
+        : const <AttractionSlot>[];
+    return BookingConflictAnalysis(
+      issues: issues,
+      alternativeSlots: alternatives,
+    );
+  }
+
+  void _addTravelIssue(
+    List<BookingConflictIssue> issues, {
+    required AttractionSlot from,
+    required AttractionSlot to,
+    required int availableMinutes,
+  }) {
+    final requiredMinutes = _travelMinutes(from, to);
+    if (availableMinutes >= requiredMinutes) return;
+    issues.add(BookingConflictIssue(
+      title: 'Insufficient travel time',
+      detail: '${from.attractionName} to ${to.attractionName} needs about '
+          '$requiredMinutes minutes including a safety buffer, but only '
+          '$availableMinutes minutes are available.',
+    ));
+  }
+
+  int _travelMinutes(AttractionSlot from, AttractionSlot to) {
+    if (from.latitude == null || from.longitude == null ||
+        to.latitude == null || to.longitude == null) return 45;
+    final distance = LocationService.distanceKm(
+      firstLatitude: from.latitude!,
+      firstLongitude: from.longitude!,
+      secondLatitude: to.latitude!,
+      secondLongitude: to.longitude!,
+    );
+    return LocationService.estimatedTravelMinutes(distance);
+  }
+
+  Future<List<AttractionSlot>> _fetchAlternativeSlots(
+    AttractionSlot selected,
+    int visitors,
+  ) async {
+    final rows = await _client
+        .from('attraction_slots')
+        .select(_slotSelection)
+        .eq('attraction_id', selected.attractionId)
+        .eq('status', 'open')
+        .neq('id', selected.id)
+        .gt('starts_at', DateTime.now().toUtc().toIso8601String())
+        .order('starts_at')
+        .limit(50);
+    return rows
+        .map(AttractionSlot.fromMap)
+        .where((item) => item.remainingCapacity >= visitors)
+        .take(3)
+        .toList();
+  }
+
   Future<List<TourBooking>> fetchBookings() async {
     final rows = await _client
         .from('bookings')
@@ -144,7 +281,49 @@ class Module3Repository {
     final rows = await _client.from('itineraries')
         .select('id, title, itinerary_date, itinerary_items(booking_id, position)')
         .eq('tourist_id', _userId).order('updated_at', ascending: false);
-    return rows.map(SavedItinerary.fromMap).toList();
+    final publishedRows = await _client
+        .from('published_itineraries')
+        .select('source_itinerary_id')
+        .eq('owner_id', _userId);
+    final publishedIds = publishedRows
+        .map((row) => row['source_itinerary_id'] as String)
+        .toSet();
+    return rows
+        .map(SavedItinerary.fromMap)
+        .map((item) => item.copyWithPublished(publishedIds.contains(item.id)))
+        .toList();
+  }
+
+  Future<List<PublishedItinerary>> fetchPublishedItineraries() async {
+    final rows = await _client
+        .from('published_itineraries')
+        .select('id, title, description, author_name, itinerary_date, '
+            'published_at, stops:published_itinerary_stops('
+            'position, starts_at, ends_at, travel_minutes_from_previous, '
+            'distance_km_from_previous, attraction:attractions!inner('
+            'id, name, category, location_name, cover_image_url, '
+            'attraction_images(storage_path, display_order)))')
+        .order('published_at', ascending: false);
+    return rows.map(PublishedItinerary.fromMap).toList();
+  }
+
+  Future<void> publishItinerary({
+    required String itineraryId,
+    required String description,
+    required bool showAuthor,
+  }) async {
+    await _client.rpc('publish_my_itinerary', params: {
+      'p_itinerary_id': itineraryId,
+      'p_description': description.trim(),
+      'p_show_author': showAuthor,
+    });
+  }
+
+  Future<void> unpublishItinerary(String itineraryId) async {
+    await _client.rpc(
+      'unpublish_my_itinerary',
+      params: {'p_itinerary_id': itineraryId},
+    );
   }
 
   Future<void> deleteItinerary(String id) async {

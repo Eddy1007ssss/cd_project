@@ -32,9 +32,9 @@ class BookingLocationAnchor {
 
 class LocationService {
   static const fallback = LocationPoint(
-    latitude: 3.1478,
-    longitude: 101.6937,
-    label: 'Dataran Merdeka demo origin',
+    latitude: 5.4141,
+    longitude: 100.3288,
+    label: 'George Town, Penang fallback',
     isFallback: true,
   );
 

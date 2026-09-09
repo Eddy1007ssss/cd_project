@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import '../../models/attraction.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
+import '../../widgets/attraction_image.dart';
 import '../../widgets/navigation/navigation_routes.dart';
 import '../../widgets/navigation/navigation_logout.dart';
 import '../../widgets/navigation/user_sidebar.dart';
@@ -26,6 +27,7 @@ enum _AttractionSort {
   priceHighToLow,
   nearestFirst,
   crowdLowToHigh,
+  highestRated,
   mostAvailableSlots,
 }
 
@@ -173,9 +175,16 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
       case _AttractionSort.crowdLowToHigh:
         sorted.sort(
           (a, b) => _crowdRank(
-            a.estimatedCrowdLevel,
-          ).compareTo(_crowdRank(b.estimatedCrowdLevel)),
+            a.crowdLevel,
+          ).compareTo(_crowdRank(b.crowdLevel)),
         );
+        break;
+
+      case _AttractionSort.highestRated:
+        sorted.sort((a, b) {
+          final rating = b.averageRating.compareTo(a.averageRating);
+          return rating != 0 ? rating : b.ratingCount.compareTo(a.ratingCount);
+        });
         break;
 
       // ----------------------------------------------------------
@@ -228,6 +237,9 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
       case _AttractionSort.crowdLowToHigh:
         return 'Low Crowd';
 
+      case _AttractionSort.highestRated:
+        return 'Highest Rated';
+
       case _AttractionSort.mostAvailableSlots:
         return 'Most Slots';
     }
@@ -273,6 +285,8 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
     var distance = _filters.maximumDistanceKm;
 
     var crowd = _filters.crowdLevel;
+
+    var minimumRating = _filters.minimumRating;
 
     var openNow = _filters.openNow;
 
@@ -381,7 +395,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                           DropdownButtonFormField<String?>(
                             initialValue: crowd,
                             decoration: const InputDecoration(
-                              labelText: 'Estimated crowd',
+                              labelText: 'Live crowd',
                               border: OutlineInputBorder(),
                             ),
                             items: const [
@@ -406,6 +420,37 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                               setSheetState(() {
                                 crowd = value;
                               });
+                            },
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          DropdownButtonFormField<double?>(
+                            initialValue: minimumRating,
+                            decoration: const InputDecoration(
+                              labelText: 'Minimum visitor rating',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: const [
+                              DropdownMenuItem<double?>(
+                                value: null,
+                                child: Text('Any rating'),
+                              ),
+                              DropdownMenuItem<double?>(
+                                value: 3,
+                                child: Text('3.0 and above'),
+                              ),
+                              DropdownMenuItem<double?>(
+                                value: 4,
+                                child: Text('4.0 and above'),
+                              ),
+                              DropdownMenuItem<double?>(
+                                value: 4.5,
+                                child: Text('4.5 and above'),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setSheetState(() => minimumRating = value);
                             },
                           ),
 
@@ -443,6 +488,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                                     maximumPrice: price,
                                     maximumDistanceKm: distance,
                                     crowdLevel: crowd,
+                                    minimumRating: minimumRating,
                                     openNow: openNow,
                                   ),
                                 );
@@ -594,6 +640,16 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                       ),
 
                       _SortTile(
+                        title: 'Highest Rated',
+                        subtitle: 'Use aggregate ratings from completed visits',
+                        icon: Icons.star_outline,
+                        selected: _sort == _AttractionSort.highestRated,
+                        onTap: () {
+                          Navigator.pop(context, _AttractionSort.highestRated);
+                        },
+                      ),
+
+                      _SortTile(
                         title: 'Most Available Slots',
                         subtitle:
                             'Show attractions with more available slots first',
@@ -705,7 +761,7 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
 
                     _MapInfoChip(
                       icon: Icons.groups_outlined,
-                      label: '${attraction.estimatedCrowdLevel} crowd',
+                      label: '${attraction.crowdLevel} live crowd',
                     ),
 
                     _MapInfoChip(
@@ -1267,7 +1323,6 @@ class _AttractionDiscoveryPageState extends State<AttractionDiscoveryPage> {
                             selected: _selectedForComparison.contains(
                               attraction.id,
                             ),
-                            imageUrl: attraction.coverImageUrl,
                             onCompare: (selected) {
                               _changeComparison(attraction, selected);
                             },
@@ -1379,19 +1434,17 @@ class _AttractionCard extends StatelessWidget {
   const _AttractionCard({
     required this.attraction,
     required this.selected,
-    required this.imageUrl,
     required this.onCompare,
     required this.onTap,
   });
 
   final Attraction attraction;
   final bool selected;
-  final String? imageUrl;
   final ValueChanged<bool> onCompare;
   final VoidCallback onTap;
 
   Color get crowdColor {
-    switch (attraction.estimatedCrowdLevel) {
+    switch (attraction.crowdLevel) {
       case 'Low':
         return Colors.green;
 
@@ -1425,29 +1478,11 @@ class _AttractionCard extends StatelessWidget {
               // ==================================================
               // IMAGE
               // ==================================================
-              ClipRRect(
+              AttractionImageView(
+                attraction: attraction,
+                width: 82,
+                height: 100,
                 borderRadius: BorderRadius.circular(12),
-                child: imageUrl == null
-                    ? Container(
-                        width: 82,
-                        height: 100,
-                        color: const Color(0xFFFFE2B5),
-                        child: const Icon(Icons.place_outlined),
-                      )
-                    : Image.network(
-                        imageUrl!,
-                        width: 82,
-                        height: 100,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) {
-                          return Container(
-                            width: 82,
-                            height: 100,
-                            color: const Color(0xFFFFE2B5),
-                            child: const Icon(Icons.place_outlined),
-                          );
-                        },
-                      ),
               ),
 
               const SizedBox(width: 12),
@@ -1493,11 +1528,21 @@ class _AttractionCard extends StatelessWidget {
                       children: [
                         Chip(
                           label: Text(
-                            '${attraction.estimatedCrowdLevel} estimate',
+                            '${attraction.crowdLevel} · '
+                            '${attraction.currentVisitors}/${attraction.maximumCapacity}',
                             style: TextStyle(color: crowdColor, fontSize: 10),
                           ),
                           side: BorderSide.none,
                           backgroundColor: crowdColor.withValues(alpha: .1),
+                        ),
+
+                        Chip(
+                          avatar: const Icon(Icons.star, size: 14),
+                          label: Text(
+                            attraction.ratingLabel,
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                          side: BorderSide.none,
                         ),
 
                         Chip(

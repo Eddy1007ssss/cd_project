@@ -550,7 +550,7 @@ class _RecommendationCard extends StatelessWidget {
                 _InfoChip(
                   icon: Icons.groups_outlined,
                   label:
-                  '${attraction.estimatedCrowdLevel} crowd',
+                  '${attraction.crowdLevel} live crowd',
                 ),
 
                 _InfoChip(

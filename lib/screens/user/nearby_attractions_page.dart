@@ -274,7 +274,7 @@ class _NearbyAttractionsPageState
                       icon: Icons
                           .groups_outlined,
                       label:
-                      '${attraction.estimatedCrowdLevel} crowd',
+                      '${attraction.crowdLevel} live crowd',
                     ),
 
                     _MapInfoChip(
@@ -1885,7 +1885,7 @@ class _NearbyAttractionsPageState
                         Text(
                           '${distance.toStringAsFixed(1)} km away\n'
                               '${transport == null ? 'Transport suggestion unavailable' : 'Suggested: ${transport.title} · ${transport.timeLabel}'}\n'
-                              '${attraction.estimatedCrowdLevel} crowd · '
+                              '${attraction.crowdLevel} live crowd · '
                               '${attraction.availableSlots.length} future slots',
                         ),
 

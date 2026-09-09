@@ -95,6 +95,10 @@ class Attraction {
     this.attractionRules,
     this.coverImageUrl,
     this.distanceKm,
+    this.averageRating = 0,
+    this.ratingCount = 0,
+    this.currentVisitors = 0,
+    this.liveCrowdLevel,
   });
 
   final String id;
@@ -117,6 +121,10 @@ class Attraction {
   final List<AttractionOperatingHours> operatingHours;
   final List<AttractionSlotPreview> slots;
   final double? distanceKm;
+  final double averageRating;
+  final int ratingCount;
+  final int currentVisitors;
+  final String? liveCrowdLevel;
 
   List<AttractionSlotPreview> get availableSlots =>
       slots.where((slot) => slot.isBookable).toList()
@@ -124,6 +132,16 @@ class Attraction {
 
   AttractionSlotPreview? get nextAvailableSlot =>
       availableSlots.isEmpty ? null : availableSlots.first;
+
+  AttractionSlotPreview? get quietestAvailableSlot {
+    final available = availableSlots;
+    if (available.isEmpty) return null;
+    available.sort((a, b) {
+      final occupancy = a.occupancyRatio.compareTo(b.occupancyRatio);
+      return occupancy != 0 ? occupancy : a.startsAt.compareTo(b.startsAt);
+    });
+    return available.first;
+  }
 
   String get estimatedCrowdLevel {
     final ratio = nextAvailableSlot?.occupancyRatio;
@@ -133,6 +151,13 @@ class Attraction {
     if (ratio < .9) return 'High';
     return 'Critical';
   }
+
+  String get crowdLevel => liveCrowdLevel ?? estimatedCrowdLevel;
+  bool get hasRatings => ratingCount > 0;
+  String get ratingLabel => hasRatings
+      ? '${averageRating.toStringAsFixed(1)} ($ratingCount)'
+      : 'New';
+  String? get fallbackAssetPath => attractionFallbackAsset(name);
 
   bool get isAccessible => facilities.any((facility) {
     final value = facility.toLowerCase();
@@ -170,6 +195,42 @@ class Attraction {
     operatingHours: operatingHours,
     slots: slots,
     distanceKm: value,
+    averageRating: averageRating,
+    ratingCount: ratingCount,
+    currentVisitors: currentVisitors,
+    liveCrowdLevel: liveCrowdLevel,
+  );
+
+  Attraction copyWithInsights({
+    required double averageRating,
+    required int ratingCount,
+    required int currentVisitors,
+    required String liveCrowdLevel,
+  }) => Attraction(
+    id: id,
+    name: name,
+    description: description,
+    category: category,
+    locationName: locationName,
+    address: address,
+    latitude: latitude,
+    longitude: longitude,
+    entrancePriceMyr: entrancePriceMyr,
+    facilities: facilities,
+    visitorGuidelines: visitorGuidelines,
+    attractionRules: attractionRules,
+    attractionType: attractionType,
+    maximumCapacity: maximumCapacity,
+    listingStatus: listingStatus,
+    coverImageUrl: coverImageUrl,
+    images: images,
+    operatingHours: operatingHours,
+    slots: slots,
+    distanceKm: distanceKm,
+    averageRating: averageRating,
+    ratingCount: ratingCount,
+    currentVisitors: currentVisitors,
+    liveCrowdLevel: liveCrowdLevel,
   );
 
   factory Attraction.fromMap(Map<String, dynamic> map) {
@@ -208,6 +269,10 @@ class Attraction {
       images: images,
       operatingHours: hours,
       slots: slots,
+      averageRating: (map['average_rating'] as num?)?.toDouble() ?? 0,
+      ratingCount: (map['rating_count'] as num?)?.toInt() ?? 0,
+      currentVisitors: (map['current_visitors'] as num?)?.toInt() ?? 0,
+      liveCrowdLevel: map['live_crowd_level'] as String?,
     );
   }
 
@@ -221,6 +286,19 @@ class Attraction {
   }
 }
 
+String? attractionFallbackAsset(String name) => switch (name.toLowerCase()) {
+  'batik painting museum penang' =>
+    'assets/attractions/batik_painting_museum.jpg',
+  'clan jetties cultural walk' => 'assets/attractions/clan_jetties.jpg',
+  'entopia' => 'assets/attractions/entopia.jpg',
+  'fort cornwallis heritage trail' =>
+    'assets/attractions/fort_cornwallis.jpg',
+  'hin bus depot' => 'assets/attractions/hin_bus_depot.jpg',
+  'penang hill' => 'assets/attractions/penang_hill.jpg',
+  'tech dome penang' => 'assets/attractions/tech_dome.jpg',
+  _ => null,
+};
+
 class AttractionFilters {
   const AttractionFilters({
     this.category,
@@ -229,6 +307,7 @@ class AttractionFilters {
     this.maximumDistanceKm,
     this.crowdLevel,
     this.requiredFacility,
+    this.minimumRating,
     this.openNow = false,
   });
 
@@ -238,6 +317,7 @@ class AttractionFilters {
   final double? maximumDistanceKm;
   final String? crowdLevel;
   final String? requiredFacility;
+  final double? minimumRating;
   final bool openNow;
 
   bool get isActive =>
@@ -247,6 +327,7 @@ class AttractionFilters {
       maximumDistanceKm != null ||
       crowdLevel != null ||
       requiredFacility != null ||
+      minimumRating != null ||
       openNow;
 }
 
@@ -281,8 +362,13 @@ bool attractionMatches({
     return false;
   }
   if (filters.crowdLevel != null &&
-      attraction.estimatedCrowdLevel.toLowerCase() !=
+      attraction.crowdLevel.toLowerCase() !=
           filters.crowdLevel!.toLowerCase()) {
+    return false;
+  }
+  if (filters.minimumRating != null &&
+      (!attraction.hasRatings ||
+          attraction.averageRating < filters.minimumRating!)) {
     return false;
   }
   if (filters.requiredFacility != null &&

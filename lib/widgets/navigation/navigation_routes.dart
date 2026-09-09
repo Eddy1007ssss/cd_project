@@ -4,6 +4,7 @@ abstract final class TourFlowRoutes {
   static const userHome = '/user/home';
   static const attractionDiscovery = '/attraction-discovery';
   static const userTrips = '/user/trips';
+  static const communityItineraries = '/user/community-itineraries';
   static const userChat = '/user/chat';
   static const profileSecurity = '/profile-security';
   static const passwordRecovery = '/auth/recovery';

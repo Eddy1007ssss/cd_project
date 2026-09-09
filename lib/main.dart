@@ -25,6 +25,7 @@ import 'screens/user/booking_history_page.dart';
 import 'screens/user/booking_review_page.dart';
 import 'screens/user/chat_history_page.dart';
 import 'screens/user/chat_support_page.dart';
+import 'screens/user/community_itineraries_page.dart';
 import 'screens/user/itinerary_planner_page.dart';
 import 'screens/user/language_settings_page.dart';
 import 'screens/user/my_feedback_page.dart';
@@ -166,6 +167,8 @@ class _TourFlowMaterialAppState extends State<_TourFlowMaterialApp> {
         CapacityAlertPage.routeName: (_) => const CapacityAlertPage(),
         RescheduleBookingPage.routeName: (_) => const RescheduleBookingPage(),
         ItineraryPlannerPage.routeName: (_) => const ItineraryPlannerPage(),
+        CommunityItinerariesPage.routeName: (_) =>
+        const CommunityItinerariesPage(),
         ProfileSecurityPage.routeName: (_) =>
         const UserNavigationShell(initialIndex: 4),
         TourFlowRoutes.staffProfile: (_) => const ProfileSecurityPage(

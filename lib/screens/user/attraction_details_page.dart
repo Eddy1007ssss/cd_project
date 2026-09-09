@@ -4,6 +4,7 @@ import '../../models/attraction.dart';
 import '../../models/recommendation_result.dart';
 import '../../services/attraction_service.dart';
 import '../../services/location_service.dart';
+import '../../widgets/attraction_image.dart';
 import 'smart_recommendations_page.dart';
 import 'time_slot_selection_page.dart';
 
@@ -223,6 +224,8 @@ class _AttractionDetailsPageState
             ),
           ];
 
+          final quietest = attraction.quietestAvailableSlot;
+
           final transportSuggestions =
           _transportService
               .suggestionsForDistance(
@@ -240,15 +243,10 @@ class _AttractionDetailsPageState
               // ====================================================
 
               if (images.isEmpty)
-                Container(
+                AttractionImageView(
+                  attraction: attraction,
+                  width: double.infinity,
                   height: 220,
-                  color: const Color(
-                    0xFFFFE2B5,
-                  ),
-                  child: const Icon(
-                    Icons.place_outlined,
-                    size: 70,
-                  ),
                 )
               else
                 SizedBox(
@@ -262,14 +260,10 @@ class _AttractionDetailsPageState
                         fit: BoxFit.cover,
                         errorBuilder:
                             (_, _, _) {
-                          return const ColoredBox(
-                            color: Color(
-                              0xFFFFE2B5,
-                            ),
-                            child: Icon(
-                              Icons
-                                  .broken_image_outlined,
-                            ),
+                          return AttractionImageView(
+                            attraction: attraction,
+                            width: double.infinity,
+                            height: 230,
                           );
                         },
                       );
@@ -350,9 +344,17 @@ class _AttractionDetailsPageState
                             size: 17,
                           ),
                           label: Text(
-                            '${attraction.estimatedCrowdLevel} '
-                                'crowd estimate',
+                            '${attraction.crowdLevel} live crowd · '
+                                '${attraction.currentVisitors}/${attraction.maximumCapacity}',
                           ),
+                        ),
+
+                        Chip(
+                          avatar: const Icon(Icons.star, size: 17),
+                          label: Text(attraction.hasRatings
+                              ? '${attraction.averageRating.toStringAsFixed(1)}/5 '
+                                  '(${attraction.ratingCount})'
+                              : 'No ratings yet'),
                         ),
 
                         Chip(
@@ -538,6 +540,27 @@ class _AttractionDetailsPageState
                     // =================================================
                     // AVAILABLE SLOTS
                     // =================================================
+
+                    if (quietest != null)
+                      Card(
+                        color: const Color(0xFFFFF6E8),
+                        child: ListTile(
+                          leading: const Icon(Icons.nights_stay_outlined),
+                          title: const Text(
+                            'Quieter available time',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          subtitle: Text(
+                            '${_date(quietest.startsAt)} · '
+                            '${_time(quietest.startsAt)} – ${_time(quietest.endsAt)} · '
+                            '${quietest.remainingCapacity} spaces remaining',
+                          ),
+                          trailing: TextButton(
+                            onPressed: () => _book(attraction, slot: quietest),
+                            child: const Text('Choose'),
+                          ),
+                        ),
+                      ),
 
                     Row(
                       mainAxisAlignment:
@@ -1089,7 +1112,7 @@ class _AlternativeCard
                     icon: Icons
                         .groups_outlined,
                     label:
-                    '${attraction.estimatedCrowdLevel} crowd',
+                    '${attraction.crowdLevel} live crowd',
                   ),
                 ],
               ),
