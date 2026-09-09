@@ -932,7 +932,11 @@ class _LiveCrowdAttractionCard
                 14,
               ),
 
-              Row(
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
                 children: [
                   Container(
                     padding:
@@ -975,8 +979,6 @@ class _LiveCrowdAttractionCard
                       ),
                     ),
                   ),
-
-                  const Spacer(),
 
                   Text(
                     '${item.occupancyPercent}% occupancy',

@@ -162,10 +162,11 @@ class _PeriodEditor extends StatefulWidget {
 
 class _PeriodEditorState extends State<_PeriodEditor> {
   final _form = GlobalKey<FormState>();
-  final _start = TextEditingController();
-  final _end = TextEditingController();
   final _capacity = TextEditingController(text: '20');
   final _reason = TextEditingController();
+  DateTime? _startAt;
+  DateTime? _endAt;
+  String? _scheduleError;
   String _status = 'open';
   bool _busy = false;
   @override
@@ -173,12 +174,8 @@ class _PeriodEditorState extends State<_PeriodEditor> {
     super.initState();
     final slot = widget.slot;
     if (slot != null) {
-      _start.text = DateTime.parse(
-        slot['starts_at'] as String,
-      ).toLocal().toIso8601String().substring(0, 16);
-      _end.text = DateTime.parse(
-        slot['ends_at'] as String,
-      ).toLocal().toIso8601String().substring(0, 16);
+      _startAt = DateTime.parse(slot['starts_at'] as String).toLocal();
+      _endAt = DateTime.parse(slot['ends_at'] as String).toLocal();
       _capacity.text = '${slot['maximum_capacity']}';
       _status = slot['status'] == 'closed' ? 'closed' : 'open';
     }
@@ -186,32 +183,76 @@ class _PeriodEditorState extends State<_PeriodEditor> {
 
   @override
   void dispose() {
-    for (final c in [_start, _end, _capacity, _reason]) {
+    for (final c in [_capacity, _reason]) {
       c.dispose();
     }
     super.dispose();
   }
 
-  DateTime? _parse(String? value) {
-    if (!RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$').hasMatch(value ?? '')) {
-      return null;
-    }
-    final result = DateTime.tryParse(value!);
-    // DateTime.parse normalizes invalid calendar dates; reject those round trips.
-    return result != null && result.toIso8601String().substring(0, 16) == value
-        ? result
-        : null;
+  Future<DateTime?> _pickDateTime(DateTime? initial) async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial ?? now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (date == null || !mounted) return null;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial ?? now),
+    );
+    if (time == null) return null;
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  String _formatDateTime(DateTime? value) {
+    if (value == null) return 'Choose date and time';
+    final localizations = MaterialLocalizations.of(context);
+    return '${localizations.formatMediumDate(value)} · '
+        '${TimeOfDay.fromDateTime(value).format(context)}';
+  }
+
+  Future<void> _selectStart() async {
+    final picked = await _pickDateTime(_startAt);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _startAt = picked;
+      if (_endAt == null || !_endAt!.isAfter(picked)) {
+        _endAt = picked.add(const Duration(hours: 1));
+      }
+      _scheduleError = null;
+    });
+  }
+
+  Future<void> _selectEnd() async {
+    final picked = await _pickDateTime(_endAt ?? _startAt);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _endAt = picked;
+      _scheduleError = null;
+    });
   }
 
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
+    final start = _startAt;
+    final end = _endAt;
+    if (start == null || end == null || !end.isAfter(start)) {
+      setState(() {
+        _scheduleError = start == null || end == null
+            ? 'Choose both a start and end date/time.'
+            : 'End must be after start.';
+      });
+      return;
+    }
     setState(() => _busy = true);
     try {
       final values = <String, dynamic>{
         'id': widget.slot?['id'],
         'attraction_id': widget.attractionId,
-        'starts_at': _parse(_start.text)!.toUtc().toIso8601String(),
-        'ends_at': _parse(_end.text)!.toUtc().toIso8601String(),
+        'starts_at': start.toUtc().toIso8601String(),
+        'ends_at': end.toUtc().toIso8601String(),
         'maximum_capacity': int.tryParse(_capacity.text),
         'status': _status,
         'reason': _reason.text.trim(),
@@ -242,26 +283,38 @@ class _PeriodEditorState extends State<_PeriodEditor> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Enter local time as YYYY-MM-DDTHH:mm (for example, 2026-10-01T09:00).',
+          const Text('Choose local start and end times for this period.'),
+          const SizedBox(height: 12),
+          ListTile(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: const Color(0xFFF8FAFC),
+            leading: const Icon(Icons.calendar_month_outlined),
+            title: const Text('Start'),
+            subtitle: Text(_formatDateTime(_startAt)),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: _busy ? null : _selectStart,
           ),
-          managementField(
-            'Start',
-            _start,
-            validator: (value) =>
-                _parse(value) == null ? 'Enter a valid date and time' : null,
+          const SizedBox(height: 10),
+          ListTile(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: const Color(0xFFF8FAFC),
+            leading: const Icon(Icons.schedule_outlined),
+            title: const Text('End'),
+            subtitle: Text(_formatDateTime(_endAt)),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: _busy ? null : _selectEnd,
           ),
-          managementField(
-            'End',
-            _end,
-            validator: (value) {
-              final start = _parse(_start.text);
-              final end = _parse(value);
-              return start == null || end == null || !end.isAfter(start)
-                  ? 'End must be after start'
-                  : null;
-            },
-          ),
+          if (_scheduleError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _scheduleError!,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ],
           if (widget.maintenance) ...[
             managementField('Reason', _reason),
             const Text(
