@@ -324,6 +324,12 @@ const _translations = <String, _Translation>{
     '観光地を探す',
     '관광지 둘러보기',
   ),
+  'Discover Itineraries': _Translation(
+    'Teroka itinerari',
+    '探索行程',
+    '旅程を探す',
+    '일정 둘러보기',
+  ),
   'My Trips & Bookings': _Translation(
     'Perjalanan & Tempahan Saya',
     '我的行程与预订',
