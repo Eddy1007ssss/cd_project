@@ -58,25 +58,48 @@ class _SlotManagerPageState extends State<SlotManagerPage> {
         ManagementRows(
           future: _attractions,
           retry: () => setState(() => _attractions = _repository.attractions()),
-          builder: (rows) => rows.isEmpty
+          builder: (rows) {
+            final approvedRows = rows
+                .where((row) => row['listing_status'] == 'approved')
+                .toList();
+            final selectedIsStillApproved = approvedRows.any(
+              (row) => row['id'] == _selected,
+            );
+
+            return rows.isEmpty
               ? const Text('Create an attraction first.')
-              : DropdownButtonFormField<String>(
-                  initialValue: _selected,
-                  decoration: const InputDecoration(
-                    labelText: 'Select attraction',
-                  ),
-                  items: rows
-                      .map(
-                        (r) => DropdownMenuItem(
-                          value: r['id'] as String,
-                          child: Text(r['name'] as String),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (id) {
-                    if (id != null) _select(id);
-                  },
-                ),
+              : approvedRows.isEmpty
+              ? const Text(
+                  'Your attraction is awaiting administrator approval. Slots and maintenance are available after approval.',
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Only administrator-approved attractions can have slots or maintenance periods managed.',
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue:
+                          selectedIsStillApproved ? _selected : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Select approved attraction',
+                      ),
+                      items: approvedRows
+                          .map(
+                            (r) => DropdownMenuItem(
+                              value: r['id'] as String,
+                              child: Text(r['name'] as String),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (id) {
+                        if (id != null) _select(id);
+                      },
+                    ),
+                  ],
+                );
+          },
         ),
         if (_selected != null) ...[
           Wrap(
