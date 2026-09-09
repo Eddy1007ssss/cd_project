@@ -134,6 +134,47 @@ class ManagementRepository {
     await client.rpc('add_managed_closure', params: {'details': values});
   }
 
+  Future<int> bulkCreateSlots({
+    required String attractionId,
+    required DateTime firstDay,
+    required DateTime lastDay,
+    required String openingTime,
+    required String closingTime,
+    required int durationMinutes,
+    required int capacity,
+  }) async {
+    final result = await client.rpc('bulk_create_managed_slots', params: {
+      'target_attraction_id': attractionId,
+      'first_day': firstDay.toIso8601String().substring(0, 10),
+      'last_day': lastDay.toIso8601String().substring(0, 10),
+      'opening_time': openingTime,
+      'closing_time': closingTime,
+      'duration_minutes': durationMinutes,
+      'capacity': capacity,
+    });
+    return (result as num).toInt();
+  }
+
+  Future<void> assignStaff({
+    required String organizationId,
+    required String staffUserId,
+    required bool active,
+  }) => client.rpc('set_organization_staff', params: {
+        'target_organization_id': organizationId,
+        'target_user_id': staffUserId,
+        'active': active,
+      });
+
+  Future<String> submitAppeal({
+    String? applicationId,
+    String? attractionId,
+    required String explanation,
+  }) async => await client.rpc('create_operator_appeal', params: {
+        'target_application_id': applicationId,
+        'target_attraction_id': attractionId,
+        'explanation_value': explanation,
+      }) as String;
+
   Future<String> uploadImage({
     required String bucket,
     required String folder,

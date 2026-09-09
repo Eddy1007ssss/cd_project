@@ -382,8 +382,8 @@ class _TimeSlotSelectionPageState
     var maximumVisitors =
         slot.remainingCapacity;
 
-    if (maximumVisitors > 6) {
-      maximumVisitors = 6;
+    if (maximumVisitors > 10) {
+      maximumVisitors = 10;
     }
 
     if (maximumVisitors < 1) {
@@ -406,14 +406,14 @@ class _TimeSlotSelectionPageState
         _selectedSlot;
 
     if (slot == null) {
-      return 6;
+      return 10;
     }
 
     var maximum =
         slot.remainingCapacity;
 
-    if (maximum > 6) {
-      maximum = 6;
+    if (maximum > 10) {
+      maximum = 10;
     }
 
     if (maximum < 1) {
@@ -957,7 +957,7 @@ class _TimeSlotSelectionPageState
                           Text(
                             _selectedSlot ==
                                 null
-                                ? 'Maximum 6 visitors'
+                                ? 'Maximum 10 visitors'
                                 : 'Maximum $_maximumVisitors for this slot',
                             style:
                             const TextStyle(
