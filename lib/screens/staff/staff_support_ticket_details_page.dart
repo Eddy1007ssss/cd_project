@@ -129,20 +129,6 @@ class _StaffSupportTicketDetailsPageState
     }
   }
 
-  Future<void> _transfer(String handlerType) async {
-    if (_saving || _details?.ticket.handlerType == handlerType) return;
-    setState(() => _saving = true);
-    try {
-      await _service.transferTicket(_arguments!.ticketId, handlerType);
-      await _load(showLoader: false);
-      if (mounted) _snack('Ticket routed to $handlerType.');
-    } catch (error) {
-      if (mounted) _snack(_message(error));
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final navigationRole =
@@ -303,39 +289,6 @@ class _StaffSupportTicketDetailsPageState
             ],
           ),
         ),
-        if (_arguments?.navigationRole ==
-            TourFlowNavigationRole.administrator) ...[
-          const SizedBox(height: 16),
-          const SectionTitle('Routing'),
-          const SizedBox(height: 10),
-          ModuleCard(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    ticket.handlerType == 'operator'
-                        ? 'Attraction Operator'
-                        : 'TourFlow Admin',
-                  ),
-                ),
-                OutlinedButton(
-                  onPressed: _saving
-                      ? null
-                      : () => _transfer(
-                          ticket.handlerType == 'operator'
-                              ? 'admin'
-                              : 'operator',
-                        ),
-                  child: Text(
-                    ticket.handlerType == 'operator'
-                        ? 'Move to Admin'
-                        : 'Move to Operator',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
         if (data.attachments.isNotEmpty) ...[
           const SizedBox(height: 16),
           const SectionTitle('Attachments'),

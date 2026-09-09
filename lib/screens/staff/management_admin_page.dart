@@ -19,6 +19,7 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
   late final _repository = widget.repository ?? ManagementRepository();
   late Future<List<ManagementRow>> _rows;
   _AdminManagementSection _section = _AdminManagementSection.pendingOperators;
+  String _accountRole = 'all';
   bool _busy = false;
   @override
   void initState() {
@@ -142,6 +143,15 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
                 .toList(),
           ),
           const SizedBox(height: 4),
+          if (_section.isAccountSection) ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: const {'all': 'All roles', 'tourist': 'Tourists', 'operator': 'Operators', 'staff': 'Staff', 'administrator': 'Administrators'}.entries.map((entry) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(entry.value), selected: _accountRole == entry.key, onSelected: _busy ? null : (_) => setState(() => _accountRole = entry.key)))).toList(),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
         ],
         TextButton(
           onPressed: _busy ? null : _refresh,
@@ -152,9 +162,12 @@ class _ManagementAdminPageState extends State<ManagementAdminPage> {
           future: _rows,
           retry: _refresh,
           builder: (rows) {
-            final visibleRows = widget.attractionReview
+            var visibleRows = widget.attractionReview
                 ? rows
                 : rows.where(_matchesSelectedSection).toList();
+            if (!widget.attractionReview && _section.isAccountSection && _accountRole != 'all') {
+              visibleRows = visibleRows.where((row) => row['role'] == _accountRole).toList();
+            }
             return Column(
             children: [
               if (visibleRows.isEmpty) const Text('No records available.'),

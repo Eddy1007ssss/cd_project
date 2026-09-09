@@ -293,6 +293,7 @@ class SupportTicket {
     this.resolvedAt,
     this.issueType,
     this.handlerType = 'admin',
+    this.userRole = 'tourist',
   });
 
   final String id;
@@ -309,6 +310,7 @@ class SupportTicket {
   final String? assignedTo;
   final String? issueType;
   final String handlerType;
+  final String userRole;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? resolvedAt;
@@ -334,6 +336,7 @@ class SupportTicket {
     assignedTo: _nullableString(map['assigned_to']),
     issueType: _nullableString(map['issue_type']),
     handlerType: map['handler_type'] as String? ?? 'admin',
+    userRole: map['user_role'] as String? ?? 'tourist',
     createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
     updatedAt: DateTime.parse(map['updated_at'] as String).toLocal(),
     resolvedAt: _optionalDateTime(map['resolved_at']),

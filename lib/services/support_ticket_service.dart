@@ -10,7 +10,7 @@ class SupportTicketService {
   static const _ticketColumns =
       'id, ticket_code, requester_name, attraction_name, booking_code, '
       'category, subject, description, priority, status, submission_language, '
-      'assigned_to, issue_type, handler_type, created_at, updated_at, resolved_at';
+      'user_id, assigned_to, issue_type, handler_type, created_at, updated_at, resolved_at';
 
   final SupabaseClient _client;
 
@@ -132,7 +132,14 @@ class SupportTicketService {
         .eq('case_type', 'support');
     if (!isAdmin) query = query.eq('handler_type', 'operator');
     final rows = await query.order('created_at', ascending: false);
-    return _ticketList(rows);
+    if (!isAdmin) return _ticketList(rows);
+    final ticketRows = rows.map((row) => Map<String, dynamic>.from(row)).toList();
+    final userIds = ticketRows.map((row) => row['user_id']?.toString()).whereType<String>().toSet().toList();
+    if (userIds.isEmpty) return _ticketList(ticketRows);
+    final profiles = await _client.from('profiles').select('id, role').inFilter('id', userIds);
+    final roles = <String, String>{for (final profile in profiles) profile['id'].toString(): profile['role']?.toString() ?? 'tourist'};
+    for (final row in ticketRows) { row['user_role'] = roles[row['user_id']?.toString()] ?? 'tourist'; }
+    return _ticketList(ticketRows);
   }
 
   Future<SupportTicketDetailsData> fetchTicketDetails(String ticketId) async {
@@ -220,13 +227,6 @@ class SupportTicketService {
     await _client.rpc(
       'reopen_my_support_ticket',
       params: {'p_ticket_id': ticketId},
-    );
-  }
-
-  Future<void> transferTicket(String ticketId, String handlerType) async {
-    await _client.rpc(
-      'transfer_support_ticket',
-      params: {'p_ticket_id': ticketId, 'p_handler_type': handlerType},
     );
   }
 

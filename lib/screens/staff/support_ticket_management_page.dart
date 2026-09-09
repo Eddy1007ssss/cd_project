@@ -26,6 +26,7 @@ class _SupportTicketManagementPageState
 
   List<SupportTicket> _tickets = const [];
   String _selectedStatus = 'all';
+  String _selectedRequesterType = 'all';
   String _query = '';
   bool _loading = true;
   String? _error;
@@ -78,6 +79,10 @@ class _SupportTicketManagementPageState
     final visible = _tickets.where((ticket) {
       final statusMatches =
           _selectedStatus == 'all' || ticket.status == _selectedStatus;
+      final requesterMatches = _selectedRequesterType == 'all' ||
+          (_selectedRequesterType == 'operator'
+              ? ticket.userRole == 'operator'
+              : ticket.userRole != 'operator');
       final queryMatches =
           query.isEmpty ||
           ticket.code.toLowerCase().contains(query) ||
@@ -85,7 +90,7 @@ class _SupportTicketManagementPageState
           ticket.requesterName.toLowerCase().contains(query) ||
           ticket.attractionName.toLowerCase().contains(query) ||
           ticket.submissionLanguageLabel.toLowerCase().contains(query);
-      return statusMatches && queryMatches;
+      return statusMatches && requesterMatches && queryMatches;
     }).toList();
 
     final pending = _tickets.where((item) => item.status == 'pending').length;
@@ -165,6 +170,15 @@ class _SupportTicketManagementPageState
             ),
           ),
           const SizedBox(height: 12),
+          if (widget.navigationRole == TourFlowNavigationRole.administrator)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: const {'all': 'All reports', 'tourist': 'Tourist support', 'operator': 'Operator technical reports'}.entries.map((entry) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(entry.value), selected: _selectedRequesterType == entry.key, onSelected: (_) => setState(() => _selectedRequesterType = entry.key), selectedColor: TourFlowColors.primary))).toList(),
+              ),
+            ),
+          if (widget.navigationRole == TourFlowNavigationRole.administrator)
+            const SizedBox(height: 12),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
