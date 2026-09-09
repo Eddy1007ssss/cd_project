@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-export '../l10n/tourflow_localization.dart'
-    show TourFlowText, TourFlowTranslationContext;
+import '../l10n/tourflow_localization.dart';
 
 import 'navigation/navigation_logout.dart';
 import 'navigation/navigation_routes.dart';
@@ -162,7 +161,7 @@ class TourFlowPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  TourFlowText(
                     title,
                     style: const TextStyle(
                       color: TourFlowColors.heading,
@@ -170,7 +169,7 @@ class TourFlowPage extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Text(
+                  TourFlowText(
                     role,
                     style: const TextStyle(
                       color: TourFlowColors.primaryText,
@@ -180,7 +179,7 @@ class TourFlowPage extends StatelessWidget {
                   ),
                 ],
               )
-            : Text(
+            : TourFlowText(
                 title,
                 style: const TextStyle(
                   color: TourFlowColors.heading,
@@ -268,7 +267,7 @@ class SectionTitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        TourFlowText(
           title,
           style: const TextStyle(
             color: TourFlowColors.heading,
@@ -278,7 +277,7 @@ class SectionTitle extends StatelessWidget {
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 4),
-          Text(
+          TourFlowText(
             subtitle!,
             style: const TextStyle(
               color: TourFlowColors.muted,
@@ -313,7 +312,7 @@ class StaticField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        TourFlowText(
           label,
           style: const TextStyle(
             color: TourFlowColors.body,
@@ -380,7 +379,7 @@ class PrimaryButton extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: onPressed,
         icon: icon == null ? const SizedBox.shrink() : Icon(icon, size: 19),
-        label: Text(label),
+        label: TourFlowText(label),
         style: FilledButton.styleFrom(
           backgroundColor: TourFlowColors.primary,
           foregroundColor: TourFlowColors.primaryText,
@@ -414,7 +413,7 @@ class OutlineActionButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: icon == null ? const SizedBox.shrink() : Icon(icon, size: 18),
-      label: Text(label),
+      label: TourFlowText(label),
       style: OutlinedButton.styleFrom(
         foregroundColor: color,
         side: BorderSide(color: color.withValues(alpha: 0.55)),

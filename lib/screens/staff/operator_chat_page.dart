@@ -74,7 +74,7 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
 
     try {
       final response = await _chatService.sendMessage(
-        message: 'Operator context: do not offer tourist booking, cancellation, itinerary, complaint, or tourist support-ticket actions. $message',
+        message: message,
         language: _language,
         conversationId: _conversationId,
       );
@@ -83,12 +83,12 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
         _conversationId = response.conversationId;
         _messages.add(_OperatorChatMessage(response.reply, isUser: false));
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() {
         _messages.add(
-          const _OperatorChatMessage(
-            'The operator assistant is unavailable right now. Please try again.',
+          _OperatorChatMessage(
+            'The operator assistant could not reply: ${error.toString().replaceFirst('Exception: ', '')}',
             isUser: false,
           ),
         );
@@ -134,7 +134,10 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
         if (!_loaded)
           const Center(child: CircularProgressIndicator())
         else
-          ..._messages.map(
+          SizedBox(
+            height: 330,
+            child: ListView(
+              children: _messages.map(
             (message) => Align(
               alignment: message.isUser
                   ? Alignment.centerRight
@@ -151,6 +154,8 @@ class _OperatorChatPageState extends State<OperatorChatPage> {
                 ),
                 child: Text(message.text),
               ),
+            ),
+          ).toList(),
             ),
           ),
         const SizedBox(height: 8),
