@@ -28,9 +28,11 @@ class AuthRepository implements ProfileSecurityGateway {
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email.trim(),
-      password: password,
+    late final AuthResponse response;
+    try {
+      response = await _client.auth.signInWithPassword(
+        email: email.trim(),
+        password: password,
       );
     } on AuthException catch (error) {
       throw AuthException(_friendlyEmailError(error.message));
@@ -58,15 +60,18 @@ class AuthRepository implements ProfileSecurityGateway {
     late final AuthResponse response;
     try {
       response = await _client.auth.signUp(
-      email: email.trim(),
-      password: password,
-      emailRedirectTo: 'tourflow://auth/confirm',
-      data: {
-        'full_name': fullName.trim(),
-        'phone': phone.trim(),
-        'preferred_language': preferredLanguage,
-      },
-    );
+        email: email.trim(),
+        password: password,
+        emailRedirectTo: 'tourflow://auth/confirm',
+        data: {
+          'full_name': fullName.trim(),
+          'phone': phone.trim(),
+          'preferred_language': preferredLanguage,
+        },
+      );
+    } on AuthException catch (error) {
+      throw AuthException(_friendlyEmailError(error.message));
+    }
     final user = response.user;
     if (user == null) {
       throw const AuthException('Sign up did not return a user.');
@@ -83,7 +88,9 @@ class AuthRepository implements ProfileSecurityGateway {
     // A slow profile request may finish after logout or an account switch.
     if (currentUser?.id == userId) {
       _profileNotifier.value = profile;
-      TourFlowLocaleController.instance.useLanguageCode(profile.preferredLanguage);
+      TourFlowLocaleController.instance.useLanguageCode(
+        profile.preferredLanguage,
+      );
     }
     return profile;
   }
@@ -196,12 +203,22 @@ class AuthRepository implements ProfileSecurityGateway {
 
   @override
   Future<void> sendPasswordReset(String email) async {
-    try { await _client.auth.signInWithOtp(email: email.trim(), shouldCreateUser: false); } on AuthException catch (error) { throw AuthException(_friendlyEmailError(error.message)); }
+    try {
+      await _client.auth.signInWithOtp(
+        email: email.trim(),
+        shouldCreateUser: false,
+      );
+    } on AuthException catch (error) {
+      throw AuthException(_friendlyEmailError(error.message));
+    }
   }
 
   String _friendlyEmailError(String message) {
     final value = message.toLowerCase();
-    if (value.contains('error sending confirmation email') || value.contains('error sending email') || value.contains('unexpected_failure')) return 'TourFlow could not send the email. The Supabase SMTP sender needs to be configured before trying again.';
+    if (value.contains('error sending confirmation email') ||
+        value.contains('error sending email') ||
+        value.contains('unexpected_failure'))
+      return 'TourFlow could not send the email. The Supabase SMTP sender needs to be configured before trying again.';
     return message;
   }
 
@@ -215,15 +232,17 @@ class AuthRepository implements ProfileSecurityGateway {
       token: code.trim(),
     );
     if (response.session == null) {
-      throw const AuthException('That verification code is invalid or expired.');
+      throw const AuthException(
+        'That verification code is invalid or expired.',
+      );
     }
   }
 
   Future<void> resendEmailVerification(String email) => _client.auth.resend(
-        type: OtpType.signup,
-        email: email.trim(),
-        emailRedirectTo: 'tourflow://auth/confirm',
-      );
+    type: OtpType.signup,
+    email: email.trim(),
+    emailRedirectTo: 'tourflow://auth/confirm',
+  );
 
   Future<void> completePasswordRecovery(String newPassword) async {
     if (newPassword.length < 8) {
