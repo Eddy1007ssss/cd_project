@@ -296,7 +296,7 @@ class Module3Repository {
     final rows = await _client
         .from('itineraries')
         .select(
-          'id, title, itinerary_date, itinerary_items(booking_id, position)',
+          'id, title, itinerary_date, end_date, itinerary_items(booking_id, position)',
         )
         .eq('tourist_id', _userId)
         .order('updated_at', ascending: false);
@@ -319,7 +319,7 @@ class Module3Repository {
         .select(
           'id, title, description, author_name, itinerary_date, '
           'published_at, stops:published_itinerary_stops('
-          'position, starts_at, ends_at, travel_minutes_from_previous, '
+          'position, visit_date, starts_at, ends_at, travel_minutes_from_previous, '
           'distance_km_from_previous, attraction:attractions!inner('
           'id, name, category, location_name, cover_image_url, '
           'attraction_images(storage_path, display_order)))',

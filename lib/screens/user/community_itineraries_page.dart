@@ -131,7 +131,7 @@ class _ItineraryCard extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w800),
       ),
       subtitle: Text(
-        '${_date(itinerary.date)} · ${itinerary.stops.length} stops'
+        '${_date(itinerary.date)}–${_date(itinerary.endDate)} · ${itinerary.stops.length} stops'
         '${itinerary.authorName == null ? '' : ' · by ${itinerary.authorName}'}',
       ),
       children: [
@@ -147,14 +147,19 @@ class _ItineraryCard extends StatelessWidget {
           final stop = itinerary.stops[index];
           return Column(
             children: [
-              if (index > 0)
+              if (index == 0 || stop.visitDate != itinerary.stops[index - 1].visitDate)
+                ListTile(
+                  leading: const Icon(Icons.calendar_today_outlined),
+                  title: Text(_date(stop.visitDate ?? itinerary.date)),
+                ),
+              if (index > 0 && stop.visitDate == itinerary.stops[index - 1].visitDate)
                 ListTile(
                   dense: true,
                   leading: const Icon(Icons.directions_car_outlined),
                   title: Text(
                     stop.travelMinutesFromPrevious == null
                         ? 'Travel time unavailable'
-                        : '${stop.travelMinutesFromPrevious} min travel',
+                        : '${stop.travelMinutesFromPrevious} min travel including buffer',
                   ),
                   subtitle: stop.distanceKmFromPrevious == null
                       ? null

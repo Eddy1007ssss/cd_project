@@ -224,6 +224,8 @@ class ItineraryLeg {
 }
 
 class ItineraryPlan {
+  static bool sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
   const ItineraryPlan({
     required this.bookings,
     required this.legs,
@@ -268,12 +270,13 @@ class ItineraryPlan {
       final current = bookings[index].slot;
       final distance = _distanceKm(previous, current);
 
-      final travelMinutes = distance == null
+      final newDay = !sameDay(previous.startsAt, current.startsAt);
+      final travelMinutes = newDay ? 0 : distance == null
           ? 45
           : (distance / 30 * 60).ceil() + 15;
 
       legs.add(
-        ItineraryLeg(distanceKm: distance ?? 0, travelMinutes: travelMinutes),
+        ItineraryLeg(distanceKm: newDay ? 0 : distance ?? 0, travelMinutes: travelMinutes),
       );
 
       final availableMinutes = current.startsAt

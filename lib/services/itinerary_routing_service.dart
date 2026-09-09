@@ -7,6 +7,25 @@ import '../models/module3_models.dart';
 class ItineraryRoutingService {
   Future<ItineraryPlan> calculate(ItineraryPlan plan) async {
     if (plan.bookings.length < 2) return plan;
+    final days = <List<TourBooking>>[];
+    for (final booking in plan.bookings) {
+      if (days.isEmpty || !ItineraryPlan.sameDay(
+          days.last.first.slot.startsAt, booking.slot.startsAt)) {
+        days.add(<TourBooking>[]);
+      }
+      days.last.add(booking);
+    }
+    if (days.length > 1) {
+      final legs = <ItineraryLeg>[];
+      for (final day in days) {
+        if (legs.isNotEmpty || day != days.first) {
+          legs.add(const ItineraryLeg(distanceKm: 0, travelMinutes: 0));
+        }
+        final routed = await calculate(ItineraryPlan.build(day));
+        legs.addAll(routed.legs);
+      }
+      return plan.withRoadLegs(legs);
+    }
     final coordinates = plan.bookings.map((booking) {
       final slot = booking.slot;
       if (slot.latitude == null || slot.longitude == null) {

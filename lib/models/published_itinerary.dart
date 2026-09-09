@@ -11,6 +11,7 @@ class PublishedItineraryStop {
     this.storageImagePath,
     this.travelMinutesFromPrevious,
     this.distanceKmFromPrevious,
+    this.visitDate,
   });
 
   final String attractionId;
@@ -24,6 +25,7 @@ class PublishedItineraryStop {
   final String? storageImagePath;
   final int? travelMinutesFromPrevious;
   final double? distanceKmFromPrevious;
+  final DateTime? visitDate;
 
   factory PublishedItineraryStop.fromMap(Map<String, dynamic> row) {
     final attraction =
@@ -40,6 +42,7 @@ class PublishedItineraryStop {
       category: attraction['category']?.toString() ?? 'Attraction',
       locationName: attraction['location_name']?.toString() ?? 'Malaysia',
       position: (row['position'] as num?)?.toInt() ?? 0,
+      visitDate: DateTime.tryParse(row['visit_date']?.toString() ?? ''),
       startsAt: row['starts_at']?.toString() ?? '',
       endsAt: row['ends_at']?.toString() ?? '',
       coverImageUrl: attraction['cover_image_url'] as String?,
@@ -71,6 +74,9 @@ class PublishedItinerary {
   final DateTime date;
   final DateTime publishedAt;
   final List<PublishedItineraryStop> stops;
+
+  DateTime get endDate => stops.fold<DateTime>(date, (last, stop) =>
+      stop.visitDate != null && stop.visitDate!.isAfter(last) ? stop.visitDate! : last);
 
   factory PublishedItinerary.fromMap(Map<String, dynamic> row) {
     final stops = ((row['stops'] as List?) ?? const [])
