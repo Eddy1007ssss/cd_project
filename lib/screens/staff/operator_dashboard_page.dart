@@ -869,19 +869,19 @@ class _AttractionSummaryCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            name,
-                            style: const TextStyle(
-                              color: TourFlowColors.heading,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        StatusChip(label: status, color: statusColor),
-                      ],
+                    Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: TourFlowColors.heading,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: StatusChip(label: status, color: statusColor),
                     ),
 
                     const SizedBox(height: 4),

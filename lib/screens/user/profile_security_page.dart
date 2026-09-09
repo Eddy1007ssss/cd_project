@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/user_profile.dart';
@@ -40,6 +41,7 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
   String? _loadError;
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isUploadingAvatar = false;
   bool _isSendingReset = false;
 
   @override
@@ -115,6 +117,38 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _pickAvatar() async {
+    if (_isUploadingAvatar) return;
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
+    if (image == null) return;
+
+    final extension =
+        image.name.contains('.') ? image.name.split('.').last : 'jpg';
+    setState(() => _isUploadingAvatar = true);
+    try {
+      final profile = await _authRepository.updateMyAvatar(
+        bytes: await image.readAsBytes(),
+        extension: extension,
+      );
+      if (!mounted) return;
+      setState(() => _profile = profile);
+      _showMessage('Profile photo updated.');
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } on FormatException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } catch (_) {
+      if (mounted) _showMessage('Unable to upload the profile photo.');
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
     }
   }
 
@@ -376,22 +410,59 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
             color: TourFlowColors.lavender,
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 34,
-                  backgroundColor: TourFlowColors.primary,
-                  backgroundImage: avatarUrl == null || avatarUrl.isEmpty
-                      ? null
-                      : NetworkImage(avatarUrl),
-                  child: avatarUrl == null || avatarUrl.isEmpty
-                      ? TourFlowText(
-                          _initials(profile.fullName),
-                          style: const TextStyle(
-                            color: TourFlowColors.primaryText,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    CircleAvatar(
+                      radius: 34,
+                      backgroundColor: TourFlowColors.primary,
+                      backgroundImage: avatarUrl == null || avatarUrl.isEmpty
+                          ? null
+                          : NetworkImage(avatarUrl),
+                      child: avatarUrl == null || avatarUrl.isEmpty
+                          ? TourFlowText(
+                              _initials(profile.fullName),
+                              style: const TextStyle(
+                                color: TourFlowColors.primaryText,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
+                              ),
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      right: -4,
+                      bottom: -4,
+                      child: Material(
+                        color: TourFlowColors.primaryText,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          onTap: _isUploadingAvatar ? null : _pickAvatar,
+                          customBorder: const CircleBorder(),
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Center(
+                              child: _isUploadingAvatar
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.camera_alt_outlined,
+                                      size: 15,
+                                      color: Colors.white,
+                                    ),
+                            ),
                           ),
-                        )
-                      : null,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 14),
                 Expanded(
