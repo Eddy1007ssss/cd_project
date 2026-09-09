@@ -152,6 +152,80 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
     }
   }
 
+  Future<void> _chooseAvatarSource() async {
+    if (_isUploadingAvatar) return;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(
+              title: Text(
+                'Change Profile Photo',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from Gallery'),
+              onTap: () =>
+                  Navigator.pop(sheetContext, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Take Photo'),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      await _uploadAvatar(source);
+    }
+  }
+
+  Future<void> _uploadAvatar(ImageSource source) async {
+    final image = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 85,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
+
+    if (image == null) return;
+
+    final extension =
+    image.name.contains('.') ? image.name.split('.').last : 'jpg';
+
+    setState(() => _isUploadingAvatar = true);
+
+    try {
+      final profile = await _authRepository.updateMyAvatar(
+        bytes: await image.readAsBytes(),
+        extension: extension,
+      );
+
+      if (!mounted) return;
+
+      setState(() => _profile = profile);
+      _showMessage('Profile photo updated.');
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } on FormatException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Unable to upload the profile photo.');
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
+    }
+  }
+
   Future<void> _openLanguageSettings() async {
     final result = await Navigator.pushNamed(
       context,
@@ -413,22 +487,59 @@ class _ProfileSecurityPageState extends State<ProfileSecurityPage> {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    CircleAvatar(
-                      radius: 34,
-                      backgroundColor: TourFlowColors.primary,
-                      backgroundImage: avatarUrl == null || avatarUrl.isEmpty
-                          ? null
-                          : NetworkImage(avatarUrl),
-                      child: avatarUrl == null || avatarUrl.isEmpty
-                          ? TourFlowText(
-                              _initials(profile.fullName),
-                              style: const TextStyle(
-                                color: TourFlowColors.primaryText,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 18,
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CircleAvatar(
+                          radius: 34,
+                          backgroundColor: TourFlowColors.primary,
+                          backgroundImage: avatarUrl == null || avatarUrl.isEmpty
+                              ? null
+                              : NetworkImage(avatarUrl),
+                          child: avatarUrl == null || avatarUrl.isEmpty
+                              ? TourFlowText(
+                            _initials(profile.fullName),
+                            style: const TextStyle(
+                              color: TourFlowColors.primaryText,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          )
+                              : null,
+                        ),
+                        Positioned(
+                          right: -4,
+                          bottom: -4,
+                          child: Material(
+                            color: TourFlowColors.primaryText,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              onTap: _isUploadingAvatar ? null : _chooseAvatarSource,
+                              customBorder: const CircleBorder(),
+                              child: SizedBox(
+                                width: 28,
+                                height: 28,
+                                child: Center(
+                                  child: _isUploadingAvatar
+                                      ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                      : const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 15,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
-                            )
-                          : null,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     Positioned(
                       right: -4,

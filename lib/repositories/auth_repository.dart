@@ -124,12 +124,14 @@ class AuthRepository implements ProfileSecurityGateway {
     if (user == null) {
       throw const AuthException('Please sign in to change your profile photo.');
     }
+
     if (bytes.isEmpty || bytes.length > 5 * 1024 * 1024) {
       throw const FormatException('Choose an image smaller than 5 MB.');
     }
 
     final normalizedExtension = extension.toLowerCase().replaceFirst('.', '');
     const allowedExtensions = {'jpg', 'jpeg', 'png', 'webp'};
+
     if (!allowedExtensions.contains(normalizedExtension)) {
       throw const FormatException('Choose a JPG, PNG or WEBP image.');
     }
@@ -139,15 +141,20 @@ class AuthRepository implements ProfileSecurityGateway {
       'png' => 'image/png',
       _ => 'image/webp',
     };
-    final path = '${user.id}/avatar_${DateTime.now().millisecondsSinceEpoch}.'
-        '$normalizedExtension';
+
+    final path =
+        '${user.id}/avatar_${DateTime.now().millisecondsSinceEpoch}.$normalizedExtension';
+
     final storage = _client.storage.from('profile-avatars');
+
     await storage.uploadBinary(
       path,
       bytes,
       fileOptions: FileOptions(contentType: contentType),
     );
+
     final avatarUrl = storage.getPublicUrl(path);
+
     await _client
         .from('profiles')
         .update({'avatar_url': avatarUrl})
