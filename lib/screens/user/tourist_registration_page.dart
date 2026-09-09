@@ -65,9 +65,9 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
             Icons.check_circle_outline_rounded,
             color: TourFlowColors.success,
           ),
-          title: const TourFlowText('Account Created'),
+          title: const TourFlowText('Verify your email'),
           content: const TourFlowText(
-            'Your tourist account is ready. Sign in to start planning visits.',
+            'We sent a verification link to your email address. Open it before signing in. Check your spam folder if it does not arrive.',
           ),
           actions: [
             FilledButton(
@@ -79,7 +79,7 @@ class _TouristRegistrationPageState extends State<TouristRegistrationPage> {
                   (route) => false,
                 );
               },
-              child: const TourFlowText('Continue to Sign In'),
+              child: const TourFlowText('Back to Sign In'),
             ),
           ],
         ),

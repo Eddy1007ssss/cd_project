@@ -36,10 +36,16 @@ class AuthRepository implements ProfileSecurityGateway {
     if (user == null) {
       throw const AuthException('Sign in did not return a user.');
     }
+    if (user.emailConfirmedAt == null) {
+      await _client.auth.signOut();
+      throw const AuthException(
+        'Confirm your email address before signing in. You can resend the verification email below.',
+      );
+    }
     return getProfile(user.id);
   }
 
-  Future<UserProfile> signUpTourist({
+  Future<void> signUpTourist({
     required String email,
     required String password,
     required String fullName,
@@ -49,6 +55,7 @@ class AuthRepository implements ProfileSecurityGateway {
     final response = await _client.auth.signUp(
       email: email.trim(),
       password: password,
+      emailRedirectTo: 'tourflow://auth/confirm',
       data: {
         'full_name': fullName.trim(),
         'phone': phone.trim(),
@@ -59,7 +66,6 @@ class AuthRepository implements ProfileSecurityGateway {
     if (user == null) {
       throw const AuthException('Sign up did not return a user.');
     }
-    return getProfile(user.id);
   }
 
   Future<UserProfile> getProfile(String userId) async {
@@ -188,6 +194,12 @@ class AuthRepository implements ProfileSecurityGateway {
       _client.auth.resetPasswordForEmail(
         email.trim(),
         redirectTo: 'tourflow://auth/recovery',
+      );
+
+  Future<void> resendEmailVerification(String email) => _client.auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+        emailRedirectTo: 'tourflow://auth/confirm',
       );
 
   Future<void> completePasswordRecovery(String newPassword) async {
