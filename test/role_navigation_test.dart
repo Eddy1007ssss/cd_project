@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cd_project/models/engagement_models.dart';
 import 'package:cd_project/models/user_profile.dart';
 import 'package:cd_project/repositories/engagement_repository.dart';
@@ -177,6 +179,12 @@ class _FakeProfileSecurityGateway implements ProfileSecurityGateway {
   Future<UserProfile> updateMyProfile({
     required String fullName,
     required String phone,
+  }) => getCurrentProfile();
+
+  @override
+  Future<UserProfile> updateMyAvatar({
+    required Uint8List bytes,
+    required String extension,
   }) => getCurrentProfile();
 
   @override
