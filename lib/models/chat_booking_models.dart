@@ -186,7 +186,7 @@ int _intValue(Object? value) {
   return int.tryParse(value?.toString() ?? '') ?? 0;
 }
 
-const int maxChatBookingVisitors = 6;
+const int maxChatBookingVisitors = 10;
 
 int chatBookingVisitorLimit(int remainingCapacity) {
   if (remainingCapacity <= 0) return 0;
