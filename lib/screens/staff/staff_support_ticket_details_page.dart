@@ -107,7 +107,13 @@ class _StaffSupportTicketDetailsPageState
       _responseController.clear();
       _status = status;
       await _load(showLoader: false);
-      if (mounted) _snack('Response sent to the tourist.');
+      if (mounted) {
+        _snack(
+          _details?.ticket.userRole == 'operator'
+              ? 'Response sent to the operator.'
+              : 'Response sent to the tourist.',
+        );
+      }
     } catch (error) {
       if (mounted) _snack(_message(error));
     } finally {
@@ -358,7 +364,11 @@ class _StaffSupportTicketDetailsPageState
           ),
         ),
         const SizedBox(height: 16),
-        const SectionTitle('Reply to tourist'),
+        SectionTitle(
+          ticket.userRole == 'operator'
+              ? 'Reply to operator'
+              : 'Reply to tourist',
+        ),
         const SizedBox(height: 10),
         ModuleCard(
           child: Column(

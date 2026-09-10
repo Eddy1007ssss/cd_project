@@ -147,7 +147,11 @@ class Module3Repository {
     }
 
     final previous = bookings
-        .where((booking) => !booking.slot.endsAt.isAfter(slot.startsAt))
+        .where(
+          (booking) =>
+              _isSameLocalDay(booking.slot.endsAt, slot.startsAt) &&
+              !booking.slot.endsAt.isAfter(slot.startsAt),
+        )
         .fold<TourBooking?>(
           null,
           (latest, booking) =>
@@ -156,7 +160,11 @@ class Module3Repository {
               : latest,
         );
     final next = bookings
-        .where((booking) => !booking.slot.startsAt.isBefore(slot.endsAt))
+        .where(
+          (booking) =>
+              _isSameLocalDay(booking.slot.startsAt, slot.endsAt) &&
+              !booking.slot.startsAt.isBefore(slot.endsAt),
+        )
         .fold<TourBooking?>(
           null,
           (earliest, booking) =>
@@ -226,6 +234,11 @@ class Module3Repository {
     );
     return LocationService.estimatedTravelMinutes(distance);
   }
+
+  bool _isSameLocalDay(DateTime first, DateTime second) =>
+      first.year == second.year &&
+      first.month == second.month &&
+      first.day == second.day;
 
   Future<List<AttractionSlot>> _fetchAlternativeSlots(
     AttractionSlot selected,

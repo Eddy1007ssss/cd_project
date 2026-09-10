@@ -49,6 +49,16 @@ class _OperatorSupportTicketHistoryPageState
     }
   }
 
+  Future<void> _openTicket(SupportTicket ticket) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OperatorTicketDetailsPage(ticketId: ticket.id),
+      ),
+    );
+    if (mounted) await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     return TourFlowPage(
@@ -119,7 +129,10 @@ class _OperatorSupportTicketHistoryPageState
             ..._tickets.map(
               (ticket) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: _OperatorReportCard(ticket: ticket),
+                child: _OperatorReportCard(
+                  ticket: ticket,
+                  onTap: () => _openTicket(ticket),
+                ),
               ),
             ),
         ],
@@ -129,9 +142,10 @@ class _OperatorSupportTicketHistoryPageState
 }
 
 class _OperatorReportCard extends StatelessWidget {
-  const _OperatorReportCard({required this.ticket});
+  const _OperatorReportCard({required this.ticket, required this.onTap});
 
   final SupportTicket ticket;
+  final VoidCallback onTap;
 
   Color get _statusColor => switch (ticket.status) {
     'resolved' || 'closed' => TourFlowColors.success,
@@ -142,7 +156,13 @@ class _OperatorReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ModuleCard(
-      child: Column(
+      padding: EdgeInsets.zero,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
@@ -197,7 +217,17 @@ class _OperatorReportCard extends StatelessWidget {
             'Last updated ${_formatDate(ticket.updatedAt)}',
             style: const TextStyle(color: TourFlowColors.muted, fontSize: 11),
           ),
+          const SizedBox(height: 8),
+          const Row(
+            children: [
+              Icon(Icons.open_in_new_rounded, size: 15, color: TourFlowColors.primaryText),
+              SizedBox(width: 6),
+              Text('View administrator responses', style: TextStyle(color: TourFlowColors.primaryText, fontSize: 11, fontWeight: FontWeight.w700)),
+            ],
+          ),
         ],
+          ),
+        ),
       ),
     );
   }
@@ -205,4 +235,71 @@ class _OperatorReportCard extends StatelessWidget {
   static String _formatDate(DateTime value) =>
       '${value.day.toString().padLeft(2, '0')}/'
       '${value.month.toString().padLeft(2, '0')}/${value.year}';
+}
+
+class OperatorTicketDetailsPage extends StatefulWidget {
+  const OperatorTicketDetailsPage({required this.ticketId, super.key});
+
+  final String ticketId;
+
+  @override
+  State<OperatorTicketDetailsPage> createState() => _OperatorTicketDetailsPageState();
+}
+
+class _OperatorTicketDetailsPageState extends State<OperatorTicketDetailsPage> {
+  final _service = SupportTicketService();
+  late Future<SupportTicketDetailsData> _details;
+
+  @override
+  void initState() {
+    super.initState();
+    _details = _service.fetchTicketDetails(widget.ticketId);
+  }
+
+  @override
+  Widget build(BuildContext context) => TourFlowPage(
+        title: 'Technical Report Details',
+        role: 'TOURFLOW · OPERATOR',
+        navigationRole: TourFlowNavigationRole.operator,
+        child: FutureBuilder<SupportTicketDetailsData>(
+          future: _details,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()));
+            }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return ModuleCard(child: Column(children: [const Text('Could not load this report.'), TextButton(onPressed: () => setState(() => _details = _service.fetchTicketDetails(widget.ticketId)), child: const Text('Retry'))]));
+            }
+            final data = snapshot.data!;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ModuleCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(data.ticket.subject, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: TourFlowColors.heading)),
+                  const SizedBox(height: 8),
+                  Text(data.ticket.description),
+                  const Divider(height: 24),
+                  Text('Status: ${data.ticket.statusLabel}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                ])),
+                const SizedBox(height: 16),
+                const SectionTitle('Administrator responses and history'),
+                const SizedBox(height: 10),
+                ...data.events.map((event) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: ModuleCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text((event.actorRole == 'admin' || event.actorRole == 'administrator') ? 'Administrator response' : event.actorName, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    if (event.message?.isNotEmpty == true) ...[const SizedBox(height: 6), Text(event.message!)],
+                    const SizedBox(height: 6),
+                    Text(_date(event.createdAt), style: const TextStyle(color: TourFlowColors.muted, fontSize: 11)),
+                  ])),
+                )),
+              ],
+            );
+          },
+        ),
+      );
+
+  static String _date(DateTime value) =>
+      '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year} '
+      '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 }

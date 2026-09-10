@@ -189,7 +189,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
   }
 
   Future<void> _publish(SavedItinerary itinerary) async {
-    final description = TextEditingController();
+    var description = '';
     var showAuthor = true;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -208,7 +208,7 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: description,
+                  onChanged: (value) => description = value,
                   maxLength: 500,
                   maxLines: 3,
                   decoration: const InputDecoration(
@@ -240,14 +240,13 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
       ),
     );
     if (confirmed != true || !mounted) {
-      description.dispose();
       return;
     }
     setState(() => _busy = true);
     try {
       await _repository.publishItinerary(
         itineraryId: itinerary.id,
-        description: description.text,
+        description: description,
         showAuthor: showAuthor,
       );
       await _loadSaved();
@@ -259,7 +258,6 @@ class _ItineraryPlannerPageState extends State<ItineraryPlannerPage> {
     } catch (_) {
       _message('Could not share the itinerary. Save your changes and retry.');
     } finally {
-      description.dispose();
       if (mounted) setState(() => _busy = false);
     }
   }

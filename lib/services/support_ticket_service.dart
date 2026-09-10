@@ -150,6 +150,16 @@ class SupportTicketService {
         .eq('id', ticketId)
         .eq('case_type', 'support')
         .single();
+    final ticketMap = Map<String, dynamic>.from(ticketRow);
+    final requesterId = ticketMap['user_id']?.toString();
+    if (requesterId != null) {
+      final profile = await _client
+          .from('profiles')
+          .select('role')
+          .eq('id', requesterId)
+          .maybeSingle();
+      ticketMap['user_role'] = profile?['role']?.toString() ?? 'tourist';
+    }
     final relatedRows = await Future.wait([
       _client
           .from('support_ticket_events')
@@ -191,7 +201,7 @@ class SupportTicketService {
     );
 
     return SupportTicketDetailsData(
-      ticket: SupportTicket.fromMap(Map<String, dynamic>.from(ticketRow)),
+      ticket: SupportTicket.fromMap(ticketMap),
       events: eventRows
           .map(
             (row) => SupportTicketEvent.fromMap(Map<String, dynamic>.from(row)),
